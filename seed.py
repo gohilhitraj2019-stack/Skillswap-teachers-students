@@ -1,5 +1,5 @@
 import os
-from datetime import datetime, date, timedelta
+from datetime import datetime, timezone, date, timedelta
 from app import create_app
 from app.extensions import db
 from app.models.user import User
@@ -148,7 +148,7 @@ def seed_database():
                 skills_proof="Ex-Senior Software Engineer at Stripe, Mentor to 100+ developers.",
                 languages="English, Spanish",
                 approval_status="approved",
-                approved_at=datetime.utcnow(),
+                approved_at=datetime.now(timezone.utc),
                 total_classes=8,
                 avg_rating=4.9,
                 review_count=5
@@ -205,7 +205,7 @@ def seed_database():
                 skills_proof="Designed SaaS products used by over 500k monthly active users.",
                 languages="English, Hindi",
                 approval_status="approved",
-                approved_at=datetime.utcnow(),
+                approved_at=datetime.now(timezone.utc),
                 total_classes=4,
                 avg_rating=5.0,
                 review_count=3

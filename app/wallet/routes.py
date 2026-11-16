@@ -1,7 +1,7 @@
 from flask import render_template, redirect, url_for, flash, request, jsonify, current_app
 from flask_login import login_required, current_user
 from app.wallet import wallet_bp
-from app.extensions import db
+from app.extensions import db, csrf
 from app.models.payment import CreditPackage, Payment
 from app.models.transaction import CreditTransaction
 from app.models.settings import PlatformSettings
@@ -103,6 +103,7 @@ def simulator_process(payment_ref):
 
 
 @wallet_bp.route('/wallet/payment/verify', methods=['POST'])
+@csrf.exempt
 @login_required
 def razorpay_callback():
     """Handle Razorpay payment response and verify signature."""

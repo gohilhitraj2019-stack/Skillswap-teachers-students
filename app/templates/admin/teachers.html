@@ -115,8 +115,8 @@
                                 <div class="modal-body">
                                   <p class="small text-muted mb-3">Reject application for <strong class="text-dark">{{ t.display_name }}</strong>? The teacher will receive notice and will not appear in the discovery directory.</p>
                                   <div class="mb-2">
-                                    <label class="form-label small fw-semibold text-secondary">Reason for Rejection *</label>
-                                    <textarea name="admin_notes" class="form-control form-control-sm" rows="3" placeholder="e.g. Unverified credentials, broken portfolio link, or incomplete experience history..." required></textarea>
+                                    <label for="reject_notes_{{ t.id }}" class="form-label small fw-semibold text-secondary">Reason for Rejection *</label>
+                                    <textarea id="reject_notes_{{ t.id }}" name="admin_notes" class="form-control form-control-sm" rows="3" placeholder="e.g. Unverified credentials, broken portfolio link, or incomplete experience history..." required></textarea>
                                   </div>
                                 </div>
                                 <div class="modal-footer border-top">

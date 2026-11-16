@@ -98,8 +98,8 @@
                                 <div class="modal-body">
                                   <p class="small text-muted mb-3">Decline session request <strong class="text-dark">#{{ b.booking_ref }}</strong> from <strong class="text-dark">{{ b.student.name }}</strong>? The student's held credits will be released back immediately.</p>
                                   <div class="mb-2">
-                                    <label class="form-label small fw-semibold text-secondary">Reason for Declining *</label>
-                                    <input type="text" name="reason" class="form-control form-control-sm" placeholder="e.g. Schedule conflict or unavailable at this slot" required>
+                                    <label for="reject_reason_{{ b.id }}" class="form-label small fw-semibold text-secondary">Reason for Declining *</label>
+                                    <input type="text" id="reject_reason_{{ b.id }}" name="reason" class="form-control form-control-sm" placeholder="e.g. Schedule conflict or unavailable at this slot" required>
                                   </div>
                                 </div>
                                 <div class="modal-footer border-top">

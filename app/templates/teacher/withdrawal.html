@@ -37,15 +37,15 @@
         {% if wallet.earned_balance > 0 %}
           <form method="POST" action="{{ url_for('teacher.withdrawal') }}">
             <div class="mb-3">
-              <label class="form-label small fw-semibold text-secondary">Credits to Withdraw *</label>
+              <label for="withdraw-credits" class="form-label small fw-semibold text-secondary">Credits to Withdraw *</label>
               <div class="input-group input-group-sm">
-                <input type="number" name="credits_amount" class="form-control" min="1" max="{{ wallet.earned_balance }}" value="{{ wallet.earned_balance }}" required>
+                <input type="number" id="withdraw-credits" name="credits_amount" class="form-control" min="1" max="{{ wallet.earned_balance }}" value="{{ wallet.earned_balance }}" required>
                 <span class="input-group-text bg-white">Credits</span>
               </div>
             </div>
 
             <div class="mb-3">
-              <label class="form-label small fw-semibold text-secondary">Payout Method *</label>
+              <label for="payoutMethodSelect" class="form-label small fw-semibold text-secondary">Payout Method *</label>
               <select name="payout_method" class="form-select form-select-sm" id="payoutMethodSelect" onchange="togglePayoutFields()">
                 <option value="upi">Instant UPI (VPA)</option>
                 <option value="bank_transfer">Direct Bank Transfer (NEFT / IMPS)</option>
@@ -54,23 +54,23 @@
 
             <!-- UPI Field -->
             <div id="upiFieldGroup" class="mb-3">
-              <label class="form-label small fw-semibold text-secondary">UPI ID (VPA) *</label>
-              <input type="text" name="upi_id" class="form-control form-control-sm" placeholder="name@bank or mobile@upi">
+              <label for="withdraw-upi-id" class="form-label small fw-semibold text-secondary">UPI ID (VPA) *</label>
+              <input type="text" id="withdraw-upi-id" name="upi_id" class="form-control form-control-sm" placeholder="name@bank or mobile@upi">
             </div>
 
             <!-- Bank Fields -->
             <div id="bankFieldGroup" class="d-none mb-3">
               <div class="mb-2">
-                <label class="form-label small fw-semibold text-secondary">Account Holder Name</label>
-                <input type="text" name="account_name" class="form-control form-control-sm" placeholder="Full name as in bank records">
+                <label for="withdraw-account-name" class="form-label small fw-semibold text-secondary">Account Holder Name</label>
+                <input type="text" id="withdraw-account-name" name="account_name" class="form-control form-control-sm" placeholder="Full name as in bank records">
               </div>
               <div class="mb-2">
-                <label class="form-label small fw-semibold text-secondary">Account Number</label>
-                <input type="text" name="account_no" class="form-control form-control-sm" placeholder="Bank account number">
+                <label for="withdraw-account-no" class="form-label small fw-semibold text-secondary">Account Number</label>
+                <input type="text" id="withdraw-account-no" name="account_no" class="form-control form-control-sm" placeholder="Bank account number">
               </div>
               <div class="mb-2">
-                <label class="form-label small fw-semibold text-secondary">IFSC Code</label>
-                <input type="text" name="ifsc" class="form-control form-control-sm" placeholder="e.g. HDFC0001234">
+                <label for="withdraw-ifsc" class="form-label small fw-semibold text-secondary">IFSC Code</label>
+                <input type="text" id="withdraw-ifsc" name="ifsc" class="form-control form-control-sm" placeholder="e.g. HDFC0001234">
               </div>
             </div>
 

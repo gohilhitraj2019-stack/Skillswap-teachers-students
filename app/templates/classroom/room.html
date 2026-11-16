@@ -264,8 +264,9 @@
               <!-- Chat Input Form -->
               <div class="p-2 border-top border-secondary">
                 <form id="chat-form" class="d-flex gap-2">
-                  <input type="text" id="chat-input" class="form-control form-control-sm bg-black text-white border-secondary" placeholder="Type a message or code link..." autocomplete="off">
-                  <button type="submit" class="btn btn-primary btn-sm px-3">
+                  <label for="chat-input" class="visually-hidden">Type a message or code link</label>
+                  <input type="text" id="chat-input" name="chat_message" class="form-control form-control-sm bg-black text-white border-secondary" placeholder="Type a message or code link..." autocomplete="off" aria-label="Type a message or code link">
+                  <button type="submit" class="btn btn-primary btn-sm px-3" aria-label="Send message">
                     <i class="bi bi-send-fill"></i>
                   </button>
                 </form>
@@ -303,8 +304,9 @@
               <!-- Doubt Input Form -->
               <div class="p-2 border-top border-secondary">
                 <form id="doubt-form" class="d-flex gap-2">
-                  <input type="text" id="doubt-input" class="form-control form-control-sm bg-black text-white border-secondary" placeholder="Post a question for the instructor..." autocomplete="off">
-                  <button type="submit" class="btn btn-light btn-sm px-3 fw-bold">
+                  <label for="doubt-input" class="visually-hidden">Post a question for the instructor</label>
+                  <input type="text" id="doubt-input" name="doubt_message" class="form-control form-control-sm bg-black text-white border-secondary" placeholder="Post a question for the instructor..." autocomplete="off" aria-label="Post a question for the instructor">
+                  <button type="submit" class="btn btn-light btn-sm px-3 fw-bold" aria-label="Submit doubt question">
                     <i class="bi bi-question-lg"></i>
                   </button>
                 </form>

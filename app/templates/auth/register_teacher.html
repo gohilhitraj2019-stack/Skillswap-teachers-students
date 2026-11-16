@@ -21,27 +21,27 @@
           <h6 class="fw-bold text-dark border-bottom pb-2 mb-3 small text-uppercase" style="letter-spacing: 0.04em;">1. Account Information</h6>
           <div class="row g-3 mb-3">
             <div class="col-md-6">
-              <label class="form-label small fw-semibold text-secondary">Full Name *</label>
-              <input type="text" name="name" class="form-control" placeholder="Sarah Jenkins" required>
+              <label for="teacher-name" class="form-label small fw-semibold text-secondary">Full Name *</label>
+              <input type="text" id="teacher-name" name="name" class="form-control" placeholder="Sarah Jenkins" required>
             </div>
             <div class="col-md-6">
-              <label class="form-label small fw-semibold text-secondary">Email Address *</label>
-              <input type="email" name="email" class="form-control" placeholder="sarah@company.com" required>
+              <label for="teacher-email" class="form-label small fw-semibold text-secondary">Email Address *</label>
+              <input type="email" id="teacher-email" name="email" class="form-control" placeholder="sarah@company.com" required>
             </div>
           </div>
 
           <div class="row g-3 mb-3">
             <div class="col-md-4">
-              <label class="form-label small fw-semibold text-secondary">Phone Number</label>
-              <input type="tel" name="phone" class="form-control" placeholder="+91 9876543210">
+              <label for="teacher-phone" class="form-label small fw-semibold text-secondary">Phone Number</label>
+              <input type="tel" id="teacher-phone" name="phone" class="form-control" placeholder="+91 9876543210">
             </div>
             <div class="col-md-4">
-              <label class="form-label small fw-semibold text-secondary">Password *</label>
-              <input type="password" name="password" class="form-control" placeholder="Min. 6 chars" required minlength="6">
+              <label for="teacher-password" class="form-label small fw-semibold text-secondary">Password *</label>
+              <input type="password" id="teacher-password" name="password" class="form-control" placeholder="Min. 6 chars" required minlength="6">
             </div>
             <div class="col-md-4">
-              <label class="form-label small fw-semibold text-secondary">Confirm Password *</label>
-              <input type="password" name="confirm_password" class="form-control" placeholder="Repeat password" required minlength="6">
+              <label for="teacher-confirm-password" class="form-label small fw-semibold text-secondary">Confirm Password *</label>
+              <input type="password" id="teacher-confirm-password" name="confirm_password" class="form-control" placeholder="Repeat password" required minlength="6">
             </div>
           </div>
 
@@ -49,32 +49,32 @@
           <h6 class="fw-bold text-dark border-bottom pb-2 mb-3 mt-4 small text-uppercase" style="letter-spacing: 0.04em;">2. Professional Background & Rate</h6>
           
           <div class="mb-3">
-            <label class="form-label small fw-semibold text-secondary">Professional Title / Current Role *</label>
-            <input type="text" name="title" class="form-control" placeholder="e.g. Senior Backend Engineer @ Stripe" required>
+            <label for="teacher-title" class="form-label small fw-semibold text-secondary">Professional Title / Current Role *</label>
+            <input type="text" id="teacher-title" name="title" class="form-control" placeholder="e.g. Senior Backend Engineer @ Stripe" required>
           </div>
 
           <div class="mb-3">
-            <label class="form-label small fw-semibold text-secondary">Professional Introduction & Bio *</label>
-            <textarea name="bio" rows="3" class="form-control" placeholder="Summarize your background, industry experience, and how your 1-on-1 sessions help developers and creators succeed..." required></textarea>
+            <label for="teacher-bio" class="form-label small fw-semibold text-secondary">Professional Introduction & Bio *</label>
+            <textarea id="teacher-bio" name="bio" rows="3" class="form-control" placeholder="Summarize your background, industry experience, and how your 1-on-1 sessions help developers and creators succeed..." required></textarea>
           </div>
 
           <div class="row g-3 mb-3">
             <div class="col-md-4">
-              <label class="form-label small fw-semibold text-secondary">Years of Experience *</label>
-              <input type="number" name="experience_years" class="form-control" min="0" max="50" value="4" required>
+              <label for="teacher-exp" class="form-label small fw-semibold text-secondary">Years of Experience *</label>
+              <input type="number" id="teacher-exp" name="experience_years" class="form-control" min="0" max="50" value="4" required>
             </div>
             <div class="col-md-4">
-              <label class="form-label small fw-semibold text-secondary">Hourly Rate (Credits) *</label>
-              <input type="number" name="hourly_rate" class="form-control" min="10" max="1000" value="50" required>
+              <label for="teacher-rate" class="form-label small fw-semibold text-secondary">Hourly Rate (Credits) *</label>
+              <input type="number" id="teacher-rate" name="hourly_rate" class="form-control" min="10" max="1000" value="50" required>
             </div>
             <div class="col-md-4">
-              <label class="form-label small fw-semibold text-secondary">Languages Spoken *</label>
-              <input type="text" name="languages" class="form-control" value="English" required>
+              <label for="teacher-lang" class="form-label small fw-semibold text-secondary">Languages Spoken *</label>
+              <input type="text" id="teacher-lang" name="languages" class="form-control" value="English" required>
             </div>
           </div>
 
-          <div class="mb-3">
-            <label class="form-label small fw-semibold text-secondary">Primary Disciplines & Skills *</label>
+          <fieldset class="mb-3">
+            <legend class="form-label small fw-semibold text-secondary mb-2">Primary Disciplines & Skills *</legend>
             <div class="border rounded p-3 bg-light" style="max-height: 160px; overflow-y: auto;">
               <div class="row g-2">
                 {% for skill in all_skills %}
@@ -87,16 +87,16 @@
                 {% endfor %}
               </div>
             </div>
-          </div>
+          </fieldset>
 
           <div class="row g-3 mb-4">
             <div class="col-md-6">
-              <label class="form-label small fw-semibold text-secondary">Portfolio or GitHub / LinkedIn Profile (Optional)</label>
-              <input type="url" name="portfolio_url" class="form-control" placeholder="https://github.com/yourhandle">
+              <label for="teacher-portfolio" class="form-label small fw-semibold text-secondary">Portfolio or GitHub / LinkedIn Profile (Optional)</label>
+              <input type="url" id="teacher-portfolio" name="portfolio_url" class="form-control" placeholder="https://github.com/yourhandle">
             </div>
             <div class="col-md-6">
-              <label class="form-label small fw-semibold text-secondary">Supporting Verification Proof (Optional)</label>
-              <input type="text" name="skills_proof" class="form-control" placeholder="e.g. AWS Certified Solutions Architect, Ex-Staff Engineer">
+              <label for="teacher-proof" class="form-label small fw-semibold text-secondary">Supporting Verification Proof (Optional)</label>
+              <input type="text" id="teacher-proof" name="skills_proof" class="form-control" placeholder="e.g. AWS Certified Solutions Architect, Ex-Staff Engineer">
             </div>
           </div>
 

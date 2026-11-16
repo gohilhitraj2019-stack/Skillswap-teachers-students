@@ -56,7 +56,7 @@ def test_complete_e2e_acceptance_flow(client, app):
     assert apprv.status_code == 200
 
     with app.app_context():
-        elena = User.query.get(elena_id)
+        elena = db.session.get(User, elena_id)
         assert elena.teacher_profile.approval_status == 'approved'
         assert elena.is_verified_teacher is True
 
@@ -149,7 +149,7 @@ def test_complete_e2e_acceptance_flow(client, app):
     assert accept_resp.status_code == 200
 
     with app.app_context():
-        booking = Booking.query.get(booking_id)
+        booking = db.session.get(Booking, booking_id)
         assert booking.status == 'confirmed'
 
     # -------------------------------------------------------------
@@ -170,7 +170,7 @@ def test_complete_e2e_acceptance_flow(client, app):
     # -------------------------------------------------------------
     with app.app_context():
         # Booking settled
-        booking = Booking.query.get(booking_id)
+        booking = db.session.get(Booking, booking_id)
         assert booking.status == 'completed'
         assert booking.settlement_transaction_id is not None
         assert booking.platform_commission_amount == 20  # 20% of 100 = 20
@@ -202,7 +202,7 @@ def test_complete_e2e_acceptance_flow(client, app):
         review = Review.query.filter_by(booking_id=booking_id).first()
         assert review is not None
         assert review.rating == 5
-        elena = User.query.get(elena_id)
+        elena = db.session.get(User, elena_id)
         assert elena.teacher_profile.avg_rating == 5.0
         assert elena.teacher_profile.review_count == 1
 
@@ -243,7 +243,7 @@ def test_complete_e2e_acceptance_flow(client, app):
     assert payout_resp.status_code == 200
 
     with app.app_context():
-        wd = Withdrawal.query.get(wd_id)
+        wd = db.session.get(Withdrawal, wd_id)
         assert wd.status == 'approved'
         assert wd.payout_reference == 'UTR-AXIS-20261105999'
         t_wallet = Wallet.query.filter_by(user_id=elena_id).first()

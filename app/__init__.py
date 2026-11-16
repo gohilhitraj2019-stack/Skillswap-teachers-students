@@ -1,7 +1,7 @@
 import os
 from flask import Flask
 from config import config_by_name
-from app.extensions import db, login_manager, migrate, socketio
+from app.extensions import db, login_manager, migrate, socketio, csrf
 from app.models.wallet import Wallet
 from app.models.notification import Notification
 
@@ -19,6 +19,7 @@ def create_app(config_name=None):
     login_manager.init_app(app)
     migrate.init_app(app, db)
     socketio.init_app(app, cors_allowed_origins="*", async_mode='threading')
+    csrf.init_app(app)
 
     # Register blueprints
     from app.main import main_bp

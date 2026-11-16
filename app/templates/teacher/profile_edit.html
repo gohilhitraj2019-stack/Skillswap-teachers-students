@@ -22,48 +22,48 @@
           <h6 class="fw-bold mb-3 text-dark small text-uppercase" style="letter-spacing: 0.04em;">1. Public Profile</h6>
           <div class="row g-3 mb-3">
             <div class="col-md-6">
-              <label class="form-label small fw-semibold text-secondary">Display Name</label>
-              <input type="text" name="name" class="form-control" value="{{ current_user.name }}" required>
+              <label for="edit-name" class="form-label small fw-semibold text-secondary">Display Name</label>
+              <input type="text" id="edit-name" name="name" class="form-control" value="{{ current_user.name }}" required>
             </div>
             <div class="col-md-6">
-              <label class="form-label small fw-semibold text-secondary">Avatar URL</label>
-              <input type="url" name="avatar_url" class="form-control" placeholder="https://..." value="{{ current_user.avatar_url or '' }}">
+              <label for="edit-avatar" class="form-label small fw-semibold text-secondary">Avatar URL</label>
+              <input type="url" id="edit-avatar" name="avatar_url" class="form-control" placeholder="https://..." value="{{ current_user.avatar_url or '' }}">
             </div>
           </div>
 
           <div class="mb-3">
-            <label class="form-label small fw-semibold text-secondary">Professional Title / Headline</label>
-            <input type="text" name="title" class="form-control" value="{{ profile.title or '' }}" required>
+            <label for="edit-title" class="form-label small fw-semibold text-secondary">Professional Title / Headline</label>
+            <input type="text" id="edit-title" name="title" class="form-control" value="{{ profile.title or '' }}" required>
           </div>
 
           <div class="mb-3">
-            <label class="form-label small fw-semibold text-secondary">Introduction & Bio</label>
-            <textarea name="bio" rows="4" class="form-control" required>{{ profile.bio or '' }}</textarea>
+            <label for="edit-bio" class="form-label small fw-semibold text-secondary">Introduction & Bio</label>
+            <textarea id="edit-bio" name="bio" rows="4" class="form-control" required>{{ profile.bio or '' }}</textarea>
           </div>
 
           <div class="row g-3 mb-4">
             <div class="col-md-4">
-              <label class="form-label small fw-semibold text-secondary">Experience (Years)</label>
-              <input type="number" name="experience_years" class="form-control" min="0" max="50" value="{{ profile.experience_years }}" required>
+              <label for="edit-exp" class="form-label small fw-semibold text-secondary">Experience (Years)</label>
+              <input type="number" id="edit-exp" name="experience_years" class="form-control" min="0" max="50" value="{{ profile.experience_years }}" required>
             </div>
             <div class="col-md-4">
-              <label class="form-label small fw-semibold text-secondary">Hourly Rate (Credits / Hr)</label>
-              <input type="number" name="hourly_rate" class="form-control" min="10" max="1000" value="{{ profile.hourly_rate }}" required>
+              <label for="edit-rate" class="form-label small fw-semibold text-secondary">Hourly Rate (Credits / Hr)</label>
+              <input type="number" id="edit-rate" name="hourly_rate" class="form-control" min="10" max="1000" value="{{ profile.hourly_rate }}" required>
             </div>
             <div class="col-md-4">
-              <label class="form-label small fw-semibold text-secondary">Languages</label>
-              <input type="text" name="languages" class="form-control" value="{{ profile.languages }}" required>
+              <label for="edit-lang" class="form-label small fw-semibold text-secondary">Languages</label>
+              <input type="text" id="edit-lang" name="languages" class="form-control" value="{{ profile.languages }}" required>
             </div>
           </div>
 
           <div class="row g-3 mb-4">
             <div class="col-md-6">
-              <label class="form-label small fw-semibold text-secondary">Portfolio or GitHub URL</label>
-              <input type="url" name="portfolio_url" class="form-control" value="{{ profile.portfolio_url or '' }}">
+              <label for="edit-portfolio" class="form-label small fw-semibold text-secondary">Portfolio or GitHub URL</label>
+              <input type="url" id="edit-portfolio" name="portfolio_url" class="form-control" value="{{ profile.portfolio_url or '' }}">
             </div>
             <div class="col-md-6">
-              <label class="form-label small fw-semibold text-secondary">Supporting Credential Proof</label>
-              <input type="text" name="skills_proof" class="form-control" value="{{ profile.skills_proof or '' }}">
+              <label for="edit-proof" class="form-label small fw-semibold text-secondary">Supporting Credential Proof</label>
+              <input type="text" id="edit-proof" name="skills_proof" class="form-control" value="{{ profile.skills_proof or '' }}">
             </div>
           </div>
 
@@ -99,14 +99,14 @@
                 </div>
                 <div class="col-md-4 col-6">
                   <div class="input-group input-group-sm">
-                    <span class="input-group-text bg-white">From</span>
-                    <input type="time" name="day_{{ d }}_start" class="form-control" value="{{ av.start_time if av else '09:00' }}">
+                    <label class="input-group-text bg-white" for="day_{{ d }}_start">From</label>
+                    <input type="time" id="day_{{ d }}_start" name="day_{{ d }}_start" class="form-control" value="{{ av.start_time if av else '09:00' }}" aria-label="{{ days[d] }} start time">
                   </div>
                 </div>
                 <div class="col-md-4 col-6">
                   <div class="input-group input-group-sm">
-                    <span class="input-group-text bg-white">To</span>
-                    <input type="time" name="day_{{ d }}_end" class="form-control" value="{{ av.end_time if av else '17:00' }}">
+                    <label class="input-group-text bg-white" for="day_{{ d }}_end">To</label>
+                    <input type="time" id="day_{{ d }}_end" name="day_{{ d }}_end" class="form-control" value="{{ av.end_time if av else '17:00' }}" aria-label="{{ days[d] }} end time">
                   </div>
                 </div>
               </div>

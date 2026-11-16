@@ -19,12 +19,14 @@
     <form method="GET" action="{{ url_for('admin.users') }}" class="row g-2 align-items-center">
       <div class="col-md-5">
         <div class="input-group input-group-sm">
+          <label for="admin-user-search" class="visually-hidden">Search by name or email address</label>
           <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
-          <input type="text" name="q" class="form-control" placeholder="Search by name or email address..." value="{{ q }}">
+          <input type="text" id="admin-user-search" name="q" class="form-control" placeholder="Search by name or email address..." value="{{ q }}" aria-label="Search by name or email address">
         </div>
       </div>
       <div class="col-md-4">
-        <select name="role" class="form-select form-select-sm">
+        <label for="admin-user-role" class="visually-hidden">Filter by user role</label>
+        <select id="admin-user-role" name="role" class="form-select form-select-sm" aria-label="Filter by user role">
           <option value="all">All User Roles</option>
           <option value="student" {{ 'selected' if current_role == 'student' else '' }}>Students</option>
           <option value="teacher" {{ 'selected' if current_role == 'teacher' else '' }}>Teachers</option>

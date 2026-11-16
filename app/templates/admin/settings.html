@@ -24,37 +24,37 @@
           <input type="hidden" name="action" value="update_settings">
 
           <div class="mb-3">
-            <label class="form-label small fw-semibold text-secondary">Platform Commission Percentage (%)</label>
+            <label for="setting-commission" class="form-label small fw-semibold text-secondary">Platform Commission Percentage (%)</label>
             <div class="input-group input-group-sm">
-              <input type="number" name="commission_percent" class="form-control" min="0" max="100" value="{{ settings.commission_percent }}" required>
+              <input type="number" id="setting-commission" name="commission_percent" class="form-control" min="0" max="100" value="{{ settings.commission_percent }}" required>
               <span class="input-group-text bg-white">%</span>
             </div>
             <div class="form-text small">Deducted from student's held credits upon class completion. Currently: {{ settings.commission_percent }}%.</div>
           </div>
 
           <div class="mb-3">
-            <label class="form-label small fw-semibold text-secondary">Free Trial Bonus Credits (New Students)</label>
+            <label for="setting-free-trial" class="form-label small fw-semibold text-secondary">Free Trial Bonus Credits (New Students)</label>
             <div class="input-group input-group-sm">
-              <input type="number" name="free_trial_credits" class="form-control" min="0" max="500" value="{{ settings.free_trial_credits }}" required>
+              <input type="number" id="setting-free-trial" name="free_trial_credits" class="form-control" min="0" max="500" value="{{ settings.free_trial_credits }}" required>
               <span class="input-group-text bg-white">Credits</span>
             </div>
             <div class="form-text small">Automatically credited to new students upon registration.</div>
           </div>
 
           <div class="mb-3">
-            <label class="form-label small fw-semibold text-secondary">Credit to INR Conversion Rate</label>
+            <label for="setting-rate" class="form-label small fw-semibold text-secondary">Credit to INR Conversion Rate</label>
             <div class="input-group input-group-sm">
               <span class="input-group-text bg-white">1 Credit = ₹</span>
-              <input type="number" step="0.5" name="credit_to_inr_rate" class="form-control" min="1" max="1000" value="{{ settings.credit_to_inr_rate }}" required>
+              <input type="number" step="0.5" id="setting-rate" name="credit_to_inr_rate" class="form-control" min="1" max="1000" value="{{ settings.credit_to_inr_rate }}" required>
               <span class="input-group-text bg-white">INR</span>
             </div>
             <div class="form-text small">Used to calculate instructor withdrawal payouts.</div>
           </div>
 
           <div class="mb-3">
-            <label class="form-label small fw-semibold text-secondary">Cancellation Window (Hours Before Class)</label>
+            <label for="setting-cancellation" class="form-label small fw-semibold text-secondary">Cancellation Window (Hours Before Class)</label>
             <div class="input-group input-group-sm">
-              <input type="number" name="cancellation_window_hours" class="form-control" min="0" max="48" value="{{ settings.cancellation_window_hours }}" required>
+              <input type="number" id="setting-cancellation" name="cancellation_window_hours" class="form-control" min="0" max="48" value="{{ settings.cancellation_window_hours }}" required>
               <span class="input-group-text bg-white">Hours</span>
             </div>
           </div>
@@ -98,23 +98,23 @@
 
           <div class="row g-2 mb-2">
             <div class="col-md-6">
-              <label class="form-label small text-secondary">Package Name *</label>
-              <input type="text" name="name" class="form-control form-control-sm" placeholder="e.g. Pro Learner Pack" required>
+              <label for="pkg-name" class="form-label small text-secondary">Package Name *</label>
+              <input type="text" id="pkg-name" name="name" class="form-control form-control-sm" placeholder="e.g. Pro Learner Pack" required>
             </div>
             <div class="col-md-6">
-              <label class="form-label small text-secondary">Badge / Promotion Label</label>
-              <input type="text" name="discount_label" class="form-control form-control-sm" placeholder="e.g. 15% OFF">
+              <label for="pkg-discount-label" class="form-label small text-secondary">Badge / Promotion Label</label>
+              <input type="text" id="pkg-discount-label" name="discount_label" class="form-control form-control-sm" placeholder="e.g. 15% OFF">
             </div>
           </div>
 
           <div class="row g-2 mb-3">
             <div class="col-md-6">
-              <label class="form-label small text-secondary">Credits *</label>
-              <input type="number" name="credits" class="form-control form-control-sm" placeholder="e.g. 250" required>
+              <label for="pkg-credits" class="form-label small text-secondary">Credits *</label>
+              <input type="number" id="pkg-credits" name="credits" class="form-control form-control-sm" placeholder="e.g. 250" required>
             </div>
             <div class="col-md-6">
-              <label class="form-label small text-secondary">Price (INR) *</label>
-              <input type="number" name="price_inr" class="form-control form-control-sm" placeholder="e.g. 1999" required>
+              <label for="pkg-price-inr" class="form-label small text-secondary">Price (INR) *</label>
+              <input type="number" id="pkg-price-inr" name="price_inr" class="form-control form-control-sm" placeholder="e.g. 1999" required>
             </div>
           </div>
 

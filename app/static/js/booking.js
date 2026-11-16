@@ -77,9 +77,13 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   dateInput.addEventListener('change', (e) => {
-    loadSlots(e.target.value);
+    loadSlots(e.target.value).catch((err) => {
+      console.error("Unhandled loadSlots error:", err);
+    });
   });
 
   // Initial load
-  loadSlots(dateInput.value);
+  loadSlots(dateInput.value).catch((err) => {
+    console.error("Unhandled initial loadSlots error:", err);
+  });
 });

@@ -1,6 +1,6 @@
 import hmac
 import hashlib
-from datetime import datetime
+from datetime import datetime, timezone
 from flask import current_app
 from app.extensions import db
 from app.models.payment import CreditPackage, Payment
@@ -114,7 +114,7 @@ def verify_and_complete_payment(payment_ref, gateway_payment_id=None, gateway_si
     payment.gateway_payment_id = gateway_payment_id or f"sim_pay_{payment_ref}"
     payment.gateway_signature = gateway_signature or "sim_verified_sig"
     payment.status = 'success'
-    payment.completed_at = datetime.utcnow()
+    payment.completed_at = datetime.now(timezone.utc)
 
     # Credit the user's wallet
     purchase_credits(

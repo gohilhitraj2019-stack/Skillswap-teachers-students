@@ -99,12 +99,12 @@
                                   <strong>Payout Destination:</strong> {{ w.payout_details }}
                                 </div>
                                 <div class="mb-3">
-                                  <label class="form-label small fw-semibold text-secondary">Bank / UPI UTR Transaction Reference *</label>
-                                  <input type="text" name="payout_reference" class="form-control form-control-sm" placeholder="e.g. UTR202611059923 or UPI-REF-4412" required>
+                                  <label for="payout_ref_{{ w.id }}" class="form-label small fw-semibold text-secondary">Bank / UPI UTR Transaction Reference *</label>
+                                  <input type="text" id="payout_ref_{{ w.id }}" name="payout_reference" class="form-control form-control-sm" placeholder="e.g. UTR202611059923 or UPI-REF-4412" required>
                                 </div>
                                 <div class="mb-2">
-                                  <label class="form-label small fw-semibold text-secondary">Admin Internal Note (Optional)</label>
-                                  <input type="text" name="admin_notes" class="form-control form-control-sm" placeholder="e.g. Disbursed via Corporate Netbanking">
+                                  <label for="admin_notes_{{ w.id }}" class="form-label small fw-semibold text-secondary">Admin Internal Note (Optional)</label>
+                                  <input type="text" id="admin_notes_{{ w.id }}" name="admin_notes" class="form-control form-control-sm" placeholder="e.g. Disbursed via Corporate Netbanking">
                                 </div>
                               </div>
                               <div class="modal-footer border-top">
@@ -131,8 +131,8 @@
                                   <i class="bi bi-shield-check text-primary me-1"></i> The {{ w.credits_amount }} credits will automatically be restored to the teacher's wallet.
                                 </div>
                                 <div class="mb-2">
-                                  <label class="form-label small fw-semibold text-secondary">Reason for Declining *</label>
-                                  <input type="text" name="admin_notes" class="form-control form-control-sm" placeholder="e.g. Incorrect IFSC code or invalid UPI VPA format" required>
+                                  <label for="reject_notes_{{ w.id }}" class="form-label small fw-semibold text-secondary">Reason for Declining *</label>
+                                  <input type="text" id="reject_notes_{{ w.id }}" name="admin_notes" class="form-control form-control-sm" placeholder="e.g. Incorrect IFSC code or invalid UPI VPA format" required>
                                 </div>
                               </div>
                               <div class="modal-footer border-top">

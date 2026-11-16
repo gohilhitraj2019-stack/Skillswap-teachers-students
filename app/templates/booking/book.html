@@ -58,8 +58,8 @@
 
           <!-- Skill topic -->
           <div class="mb-4">
-            <label class="form-label fw-semibold small text-secondary">Session Focus / Topic *</label>
-            <select name="skill_id" class="form-select form-select-sm" required>
+            <label for="booking-skill-id" class="form-label fw-semibold small text-secondary">Session Focus / Topic *</label>
+            <select id="booking-skill-id" name="skill_id" class="form-select form-select-sm" required>
               {% for s in skills %}
                 <option value="{{ s.id }}">{{ s.name }}</option>
               {% endfor %}
@@ -68,7 +68,7 @@
 
           <!-- Date Selection -->
           <div class="mb-4">
-            <label class="form-label fw-semibold small text-secondary">Select Date *</label>
+            <label for="booking-date" class="form-label fw-semibold small text-secondary">Select Date *</label>
             <div class="input-group input-group-sm" style="max-width: 300px;">
               <span class="input-group-text bg-white"><i class="bi bi-calendar3 text-muted"></i></span>
               <input type="date" name="class_date" id="booking-date" class="form-control" required>
@@ -78,7 +78,7 @@
 
           <!-- Dynamic Slots Container -->
           <div class="mb-4">
-            <label class="form-label fw-semibold small text-secondary">Select Hourly Time Slot *</label>
+            <label for="selected-time-slot" class="form-label fw-semibold small text-secondary">Select Hourly Time Slot *</label>
             <div id="slots-container" class="border rounded p-3 bg-light">
               <div class="text-muted small">Select a date above to display available hourly slots.</div>
             </div>
@@ -86,8 +86,8 @@
 
           <!-- Notes -->
           <div class="mb-4">
-            <label class="form-label fw-semibold small text-secondary">Goals for this Session (Optional)</label>
-            <textarea name="student_notes" rows="3" class="form-control" placeholder="Share specific topics, code repositories, or design files you want to review..."></textarea>
+            <label for="booking-notes" class="form-label fw-semibold small text-secondary">Goals for this Session (Optional)</label>
+            <textarea id="booking-notes" name="student_notes" rows="3" class="form-control" placeholder="Share specific topics, code repositories, or design files you want to review..."></textarea>
           </div>
 
           <!-- Booking Actions -->

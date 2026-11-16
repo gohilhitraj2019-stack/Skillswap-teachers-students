@@ -367,5 +367,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Start media initialization
-  initLocalStream();
+  initLocalStream().catch((err) => {
+    console.error("Local stream initialization failed:", err);
+  });
 });

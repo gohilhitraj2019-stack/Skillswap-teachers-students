@@ -22,12 +22,14 @@
         <div class="search-widget-hero mb-4">
           <form method="GET" action="{{ url_for('student.explore') }}" class="d-flex flex-wrap flex-md-nowrap gap-2 align-items-center">
             <div class="d-flex align-items-center flex-grow-1 px-2">
+              <label for="hero-search-skill" class="visually-hidden">What skill do you want to learn?</label>
               <i class="bi bi-search text-muted me-2"></i>
-              <input type="text" name="q" class="form-control" placeholder="What skill do you want to learn? (e.g. Python, Figma, React)...">
+              <input type="text" id="hero-search-skill" name="q" class="form-control" placeholder="What skill do you want to learn? (e.g. Python, Figma, React)..." aria-label="What skill do you want to learn?">
             </div>
             <div class="border-start d-none d-md-block" style="height: 28px;"></div>
             <div class="px-2" style="min-width: 170px;">
-              <select name="category" class="form-select text-muted small">
+              <label for="hero-search-category" class="visually-hidden">Select Category</label>
+              <select id="hero-search-category" name="category" class="form-select text-muted small" aria-label="Select Category">
                 <option value="">All Categories</option>
                 {% for cat in categories %}
                   <option value="{{ cat.slug }}">{{ cat.name }}</option>

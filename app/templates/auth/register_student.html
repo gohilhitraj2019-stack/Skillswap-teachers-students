@@ -18,35 +18,35 @@
 
         <form method="POST" action="{{ url_for('auth.register_student') }}">
           <div class="mb-3">
-            <label class="form-label small fw-semibold text-secondary">Full Name *</label>
-            <input type="text" name="name" class="form-control" placeholder="Alex Johnson" required>
+            <label for="student-name" class="form-label small fw-semibold text-secondary">Full Name *</label>
+            <input type="text" id="student-name" name="name" class="form-control" placeholder="Alex Johnson" required>
           </div>
 
           <div class="row g-2 mb-3">
             <div class="col-md-6">
-              <label class="form-label small fw-semibold text-secondary">Email Address *</label>
-              <input type="email" name="email" class="form-control" placeholder="alex@company.com" required>
+              <label for="student-email" class="form-label small fw-semibold text-secondary">Email Address *</label>
+              <input type="email" id="student-email" name="email" class="form-control" placeholder="alex@company.com" required>
             </div>
             <div class="col-md-6">
-              <label class="form-label small fw-semibold text-secondary">Phone Number</label>
-              <input type="tel" name="phone" class="form-control" placeholder="+91 9876543210">
+              <label for="student-phone" class="form-label small fw-semibold text-secondary">Phone Number</label>
+              <input type="tel" id="student-phone" name="phone" class="form-control" placeholder="+91 9876543210">
             </div>
           </div>
 
           <div class="row g-2 mb-3">
             <div class="col-md-6">
-              <label class="form-label small fw-semibold text-secondary">Password *</label>
-              <input type="password" name="password" class="form-control" placeholder="Min. 6 chars" required minlength="6">
+              <label for="student-password" class="form-label small fw-semibold text-secondary">Password *</label>
+              <input type="password" id="student-password" name="password" class="form-control" placeholder="Min. 6 chars" required minlength="6">
             </div>
             <div class="col-md-6">
-              <label class="form-label small fw-semibold text-secondary">Confirm Password *</label>
-              <input type="password" name="confirm_password" class="form-control" placeholder="Repeat password" required minlength="6">
+              <label for="student-confirm-password" class="form-label small fw-semibold text-secondary">Confirm Password *</label>
+              <input type="password" id="student-confirm-password" name="confirm_password" class="form-control" placeholder="Repeat password" required minlength="6">
             </div>
           </div>
 
           <div class="mb-4">
-            <label class="form-label small fw-semibold text-secondary">Skills You Wish to Learn (Optional)</label>
-            <input type="text" name="learn_interest" class="form-control" placeholder="e.g. Python, System Architecture, Figma">
+            <label for="student-learn-interest" class="form-label small fw-semibold text-secondary">Skills You Wish to Learn (Optional)</label>
+            <input type="text" id="student-learn-interest" name="learn_interest" class="form-control" placeholder="e.g. Python, System Architecture, Figma">
           </div>
 
           <button type="submit" class="btn btn-dark w-100 py-2 fw-semibold">

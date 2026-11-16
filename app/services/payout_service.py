@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from app.extensions import db
 from app.models.withdrawal import Withdrawal
 from app.models.wallet import Wallet
@@ -86,7 +86,7 @@ def approve_withdrawal(withdrawal_id, payout_reference, admin_notes=None):
     withdrawal.status = 'approved'
     withdrawal.payout_reference = payout_reference
     withdrawal.admin_notes = admin_notes
-    withdrawal.processed_at = datetime.utcnow()
+    withdrawal.processed_at = datetime.now(timezone.utc)
 
     tx = CreditTransaction(
         transaction_ref=CreditTransaction.generate_ref(),
@@ -129,7 +129,7 @@ def reject_withdrawal(withdrawal_id, admin_notes="Rejected by admin"):
 
     withdrawal.status = 'rejected'
     withdrawal.admin_notes = admin_notes
-    withdrawal.processed_at = datetime.utcnow()
+    withdrawal.processed_at = datetime.now(timezone.utc)
 
     tx = CreditTransaction(
         transaction_ref=CreditTransaction.generate_ref(),
