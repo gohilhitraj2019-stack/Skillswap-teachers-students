@@ -74,26 +74,129 @@
 
     <!-- Credit Packages Management -->
     <div class="col-lg-6">
-      <div class="card border p-4 mb-4 bg-white">
-        <h6 class="fw-bold mb-3 text-dark text-uppercase" style="letter-spacing: 0.04em; font-size: 0.8rem;">Active Credit Packages</h6>
+      <div class="card border p-4 mb-4 bg-white shadow-sm" style="border-radius: 12px;">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h6 class="fw-bold mb-0 text-dark text-uppercase" style="letter-spacing: 0.04em; font-size: 0.8rem;">Active Credit Packages</h6>
+          <span class="badge bg-light text-muted border">{{ packages|length }} Total</span>
+        </div>
 
         <div class="list-group list-group-flush mb-4">
           {% for pkg in packages %}
-            <div class="list-group-item d-flex justify-content-between align-items-center py-2 px-0">
+            <div class="list-group-item d-flex justify-content-between align-items-center py-2 px-0 border-bottom">
               <div>
-                <span class="fw-semibold text-dark">{{ pkg.name }}</span>
-                {% if pkg.discount_label %}
-                  <span class="badge bg-light text-dark border ms-1" style="font-size: 0.65rem;">{{ pkg.discount_label }}</span>
-                {% endif %}
-                <div class="small text-muted">{{ pkg.credits }} Credits</div>
+                <div class="d-flex align-items-center gap-1">
+                  <span class="fw-semibold text-dark">{{ pkg.name }}</span>
+                  {% if pkg.discount_label %}
+                    <span class="badge bg-light text-dark border ms-1" style="font-size: 0.65rem;">{{ pkg.discount_label }}</span>
+                  {% endif %}
+                  {% if pkg.is_active %}
+                    <span class="badge bg-success-subtle text-success border border-success-subtle ms-1" style="font-size: 0.65rem;">Active</span>
+                  {% else %}
+                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle ms-1" style="font-size: 0.65rem;">Inactive</span>
+                  {% endif %}
+                </div>
+                <div class="small text-muted">{{ pkg.credits }} Credits · <strong class="text-dark">₹{{ pkg.price_inr }}</strong></div>
               </div>
-              <span class="fw-bold text-dark fs-5">₹{{ pkg.price_inr }}</span>
+
+              <div class="d-flex align-items-center gap-1">
+                <!-- Toggle Active Form -->
+                <form method="POST" action="{{ url_for('admin.toggle_package', package_id=pkg.id) }}" class="d-inline">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-outline-secondary btn-sm py-1 px-2" title="{{ 'Deactivate package' if pkg.is_active else 'Activate package' }}" aria-label="{{ 'Deactivate package' if pkg.is_active else 'Activate package' }}">
+                    <i class="bi {{ 'bi-eye-slash' if pkg.is_active else 'bi-eye' }}"></i>
+                  </button>
+                </form>
+
+                <!-- Edit Modal Trigger -->
+                <button type="button" class="btn btn-outline-primary btn-sm py-1 px-2" data-bs-toggle="modal" data-bs-target="#editPkgModal{{ pkg.id }}" title="Edit package" aria-label="Edit package">
+                  <i class="bi bi-pencil-square"></i>
+                </button>
+
+                <!-- Delete Modal Trigger -->
+                <button type="button" class="btn btn-outline-danger btn-sm py-1 px-2" data-bs-toggle="modal" data-bs-target="#deletePkgModal{{ pkg.id }}" title="Delete package" aria-label="Delete package">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
             </div>
+
+            <!-- Edit Package Modal -->
+            <div class="modal fade" id="editPkgModal{{ pkg.id }}" tabindex="-1" aria-labelledby="editPkgModalLabel{{ pkg.id }}" aria-hidden="true">
+              <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow">
+                  <form method="POST" action="{{ url_for('admin.edit_package', package_id=pkg.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="modal-header">
+                      <h6 class="modal-title fw-bold" id="editPkgModalLabel{{ pkg.id }}">Edit Credit Package: {{ pkg.name }}</h6>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                      <div class="row g-2 mb-2">
+                        <div class="col-md-6">
+                          <label for="edit-pkg-name-{{ pkg.id }}" class="form-label small text-secondary">Package Name *</label>
+                          <input type="text" id="edit-pkg-name-{{ pkg.id }}" name="name" class="form-control form-control-sm" value="{{ pkg.name }}" required>
+                        </div>
+                        <div class="col-md-6">
+                          <label for="edit-pkg-label-{{ pkg.id }}" class="form-label small text-secondary">Badge / Promotion Label</label>
+                          <input type="text" id="edit-pkg-label-{{ pkg.id }}" name="discount_label" class="form-control form-control-sm" value="{{ pkg.discount_label or '' }}" placeholder="e.g. 15% OFF">
+                        </div>
+                      </div>
+
+                      <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                          <label for="edit-pkg-credits-{{ pkg.id }}" class="form-label small text-secondary">Credits *</label>
+                          <input type="number" id="edit-pkg-credits-{{ pkg.id }}" name="credits" class="form-control form-control-sm" value="{{ pkg.credits }}" min="1" required>
+                        </div>
+                        <div class="col-md-6">
+                          <label for="edit-pkg-price-{{ pkg.id }}" class="form-label small text-secondary">Price (INR) *</label>
+                          <input type="number" id="edit-pkg-price-{{ pkg.id }}" name="price_inr" class="form-control form-control-sm" value="{{ pkg.price_inr }}" min="1" required>
+                        </div>
+                      </div>
+
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="edit-pkg-active-{{ pkg.id }}" name="is_active" value="1" {{ 'checked' if pkg.is_active else '' }}>
+                        <label class="form-check-label small text-secondary" for="edit-pkg-active-{{ pkg.id }}">
+                          Active (Visible to students on checkout)
+                        </label>
+                      </div>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancel</button>
+                      <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+            <!-- Delete Package Modal -->
+            <div class="modal fade" id="deletePkgModal{{ pkg.id }}" tabindex="-1" aria-labelledby="deletePkgModalLabel{{ pkg.id }}" aria-hidden="true">
+              <div class="modal-dialog modal-dialog-centered modal-sm">
+                <div class="modal-content border-0 shadow">
+                  <form method="POST" action="{{ url_for('admin.delete_package', package_id=pkg.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="modal-header">
+                      <h6 class="modal-title fw-bold text-danger" id="deletePkgModalLabel{{ pkg.id }}">Delete Package</h6>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body small text-muted">
+                      Are you sure you want to delete <strong>{{ pkg.name }}</strong> ({{ pkg.credits }} Credits, ₹{{ pkg.price_inr }})? This action cannot be undone.
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancel</button>
+                      <button type="submit" class="btn btn-danger btn-sm">Delete Package</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          {% else %}
+            <div class="text-center py-4 text-muted small">No credit packages created yet.</div>
           {% endfor %}
         </div>
 
         <h6 class="fw-bold border-top pt-3 mb-3 text-dark text-uppercase" style="letter-spacing: 0.04em; font-size: 0.8rem;">Create New Package</h6>
         <form method="POST" action="{{ url_for('admin.settings') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <input type="hidden" name="action" value="create_package">
 
           <div class="row g-2 mb-2">
@@ -110,11 +213,11 @@
           <div class="row g-2 mb-3">
             <div class="col-md-6">
               <label for="pkg-credits" class="form-label small text-secondary">Credits *</label>
-              <input type="number" id="pkg-credits" name="credits" class="form-control form-control-sm" placeholder="e.g. 250" required>
+              <input type="number" id="pkg-credits" name="credits" class="form-control form-control-sm" placeholder="e.g. 250" min="1" required>
             </div>
             <div class="col-md-6">
               <label for="pkg-price-inr" class="form-label small text-secondary">Price (INR) *</label>
-              <input type="number" id="pkg-price-inr" name="price_inr" class="form-control form-control-sm" placeholder="e.g. 1999" required>
+              <input type="number" id="pkg-price-inr" name="price_inr" class="form-control form-control-sm" placeholder="e.g. 1999" min="1" required>
             </div>
           </div>
 

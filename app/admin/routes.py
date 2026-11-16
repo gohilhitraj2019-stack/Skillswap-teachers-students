@@ -265,14 +265,84 @@ def settings():
             price_inr = request.form.get('price_inr', type=int)
             discount_label = request.form.get('discount_label', '').strip()
 
-            if name and credits and price_inr:
-                pkg = CreditPackage(name=name, credits=credits, price_inr=price_inr, discount_label=discount_label)
+            if name and credits and price_inr and credits > 0 and price_inr > 0:
+                pkg = CreditPackage(
+                    name=name,
+                    credits=credits,
+                    price_inr=price_inr,
+                    discount_label=discount_label if discount_label else None
+                )
                 db.session.add(pkg)
                 db.session.commit()
-                flash('New credit package added!', 'success')
+                flash(f'New credit package "{name}" added successfully!', 'success')
             else:
-                flash('Please fill in all package details.', 'danger')
+                flash('Please provide valid package details (positive credits and price).', 'danger')
 
         return redirect(url_for('admin.settings'))
 
     return render_template('admin/settings.html', settings=cfg, packages=packages)
+
+
+@admin_bp.route('/admin/packages/<int:package_id>/edit', methods=['POST'])
+@login_required
+@require_admin
+def edit_package(package_id):
+    """Update an existing credit package."""
+    pkg = db.session.get(CreditPackage, package_id)
+    if not pkg:
+        flash('Credit package not found.', 'danger')
+        return redirect(url_for('admin.settings'))
+
+    name = request.form.get('name', '').strip()
+    credits = request.form.get('credits', type=int)
+    price_inr = request.form.get('price_inr', type=int)
+    discount_label = request.form.get('discount_label', '').strip()
+    is_active = bool(request.form.get('is_active'))
+
+    if not name or credits is None or price_inr is None or credits <= 0 or price_inr <= 0:
+        flash('Please provide valid package details (name, positive credits, and price).', 'danger')
+        return redirect(url_for('admin.settings'))
+
+    pkg.name = name
+    pkg.credits = credits
+    pkg.price_inr = price_inr
+    pkg.discount_label = discount_label if discount_label else None
+    pkg.is_active = is_active
+
+    db.session.commit()
+    flash(f'Credit package "{pkg.name}" updated successfully.', 'success')
+    return redirect(url_for('admin.settings'))
+
+
+@admin_bp.route('/admin/packages/<int:package_id>/toggle', methods=['POST'])
+@login_required
+@require_admin
+def toggle_package(package_id):
+    """Toggle a package between active and inactive status."""
+    pkg = db.session.get(CreditPackage, package_id)
+    if not pkg:
+        flash('Credit package not found.', 'danger')
+        return redirect(url_for('admin.settings'))
+
+    pkg.is_active = not pkg.is_active
+    db.session.commit()
+    status_str = "activated" if pkg.is_active else "deactivated"
+    flash(f'Credit package "{pkg.name}" has been {status_str}.', 'info')
+    return redirect(url_for('admin.settings'))
+
+
+@admin_bp.route('/admin/packages/<int:package_id>/delete', methods=['POST'])
+@login_required
+@require_admin
+def delete_package(package_id):
+    """Delete a credit package from the platform."""
+    pkg = db.session.get(CreditPackage, package_id)
+    if not pkg:
+        flash('Credit package not found.', 'danger')
+        return redirect(url_for('admin.settings'))
+
+    pkg_name = pkg.name
+    db.session.delete(pkg)
+    db.session.commit()
+    flash(f'Credit package "{pkg_name}" has been deleted.', 'success')
+    return redirect(url_for('admin.settings'))
