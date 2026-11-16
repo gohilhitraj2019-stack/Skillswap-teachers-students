@@ -13,6 +13,7 @@
 
         <!-- Form for callback submission -->
         <form id="razorpay-form" method="POST" action="{{ url_for('wallet.razorpay_callback') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <input type="hidden" name="razorpay_order_id" id="rzp_order_id">
           <input type="hidden" name="razorpay_payment_id" id="rzp_payment_id">
           <input type="hidden" name="razorpay_signature" id="rzp_signature">

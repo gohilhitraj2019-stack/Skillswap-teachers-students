@@ -206,8 +206,8 @@
 
           <!-- Room Link Copy -->
           <div class="d-flex align-items-center gap-2">
-            <span class="small text-secondary d-none d-sm-inline">Room:</span>
-            <input type="text" class="form-control form-control-sm bg-black text-white border-secondary font-monospace" style="max-width: 160px; font-size: 0.75rem;" value="{{ request.url }}" readonly>
+            <label for="room-share-url" class="small text-secondary d-none d-sm-inline mb-0">Room:</label>
+            <input id="room-share-url" aria-label="Room URL" type="text" class="form-control form-control-sm bg-black text-white border-secondary font-monospace" style="max-width: 160px; font-size: 0.75rem;" value="{{ request.url }}" readonly>
             <button class="btn btn-control-dark py-1 px-2" onclick="navigator.clipboard.writeText('{{ request.url }}'); alert('Room link copied!');" title="Copy Room Link">
               <i class="bi bi-clipboard"></i>
             </button>
