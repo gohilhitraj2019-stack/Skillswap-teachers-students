@@ -11,6 +11,10 @@ from app.services.payment_service import create_payment_order, verify_and_comple
 @wallet_bp.route('/wallet')
 @login_required
 def index():
+    if current_user.is_admin:
+        flash('Administrators manage system financials and commissions from the Admin Control Panel.', 'info')
+        return redirect(url_for('admin.dashboard'))
+
     wallet = ensure_wallet(current_user.id)
     settings = PlatformSettings.get_settings()
 
@@ -37,6 +41,10 @@ def index():
 @wallet_bp.route('/wallet/purchase')
 @login_required
 def purchase():
+    if current_user.is_admin:
+        flash('Administrators cannot purchase platform credits.', 'warning')
+        return redirect(url_for('admin.dashboard'))
+
     packages = CreditPackage.query.filter_by(is_active=True).order_by(CreditPackage.credits.asc()).all()
     razorpay_key_id = current_app.config.get('RAZORPAY_KEY_ID', '')
     simulator_enabled = current_app.config.get('ENABLE_PAYMENT_SIMULATOR', True)
@@ -53,6 +61,10 @@ def purchase():
 @login_required
 def checkout(package_id):
     """Initiate an order for the selected credit package."""
+    if current_user.is_admin:
+        flash('Administrators cannot purchase platform credits.', 'warning')
+        return redirect(url_for('admin.dashboard'))
+
     use_simulator = request.form.get('payment_method') == 'simulator' or not current_app.config.get('RAZORPAY_KEY_ID')
     
     try:

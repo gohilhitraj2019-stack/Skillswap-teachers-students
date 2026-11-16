@@ -43,7 +43,7 @@
           <li class="nav-item">
             <a class="nav-link" href="{{ url_for('main.index') }}#how-it-works">How It Works</a>
           </li>
-          {% if not current_user.is_authenticated or not current_user.is_teacher %}
+          {% if not current_user.is_authenticated or (not current_user.is_teacher and not current_user.is_admin) %}
             <li class="nav-item">
               <a class="nav-link" href="{{ url_for('auth.register_teacher') }}">Become an Instructor</a>
             </li>
@@ -52,12 +52,19 @@
 
         <div class="d-flex align-items-center gap-2">
           {% if current_user.is_authenticated %}
-            <!-- Wallet Badge -->
-            <a href="{{ url_for('wallet.index') }}" class="credit-badge-pill" title="View Wallet Balance">
-              <i class="bi bi-coin text-warning"></i>
-              <span>{{ current_wallet.available_balance if current_wallet else 0 }} Credits</span>
-              <span class="credit-add-btn" title="Buy Credits"><i class="bi bi-plus"></i></span>
-            </a>
+            {% if current_user.is_admin %}
+              <!-- Admin Navigation Indicator -->
+              <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-danger btn-sm d-flex align-items-center gap-1 py-1 px-2 border" style="font-size: 0.8rem; font-weight: 500;" title="Admin Control Panel">
+                <i class="bi bi-shield-check"></i> Admin Panel
+              </a>
+            {% else %}
+              <!-- Wallet Badge for Students & Teachers -->
+              <a href="{{ url_for('wallet.index') }}" class="credit-badge-pill" title="View Wallet Balance">
+                <i class="bi bi-coin text-warning"></i>
+                <span>{{ current_wallet.available_balance if current_wallet else 0 }} Credits</span>
+                <span class="credit-add-btn" title="Buy Credits"><i class="bi bi-plus"></i></span>
+              </a>
+            {% endif %}
 
             <!-- Notification Bell -->
             <a href="{{ url_for('student.notifications') }}" class="btn btn-light btn-sm position-relative px-2 py-1 border" title="Notifications">
@@ -91,19 +98,23 @@
                 
                 {% if current_user.is_admin %}
                   <li><a class="dropdown-item py-2 small" href="{{ url_for('admin.dashboard') }}"><i class="bi bi-shield-lock text-danger me-2"></i> Admin Control Panel</a></li>
-                {% endif %}
-
-                {% if current_user.is_teacher %}
-                  <li><a class="dropdown-item py-2 small" href="{{ url_for('teacher.dashboard') }}"><i class="bi bi-easel2 text-primary me-2"></i> Instructor Studio</a></li>
-                  <li><a class="dropdown-item py-2 small" href="{{ url_for('teacher.profile_edit') }}"><i class="bi bi-sliders text-secondary me-2"></i> Edit Teaching Profile</a></li>
-                  <li><a class="dropdown-item py-2 small" href="{{ url_for('teacher.earnings') }}"><i class="bi bi-graph-up-arrow text-success me-2"></i> Earnings & Payouts</a></li>
+                  <li><a class="dropdown-item py-2 small" href="{{ url_for('admin.teachers') }}"><i class="bi bi-person-check text-primary me-2"></i> Teacher Applications</a></li>
+                  <li><a class="dropdown-item py-2 small" href="{{ url_for('admin.withdrawals') }}"><i class="bi bi-cash-stack text-success me-2"></i> Payout Approvals</a></li>
+                  <li><a class="dropdown-item py-2 small" href="{{ url_for('admin.users') }}"><i class="bi bi-people text-secondary me-2"></i> User Management</a></li>
+                  <li><a class="dropdown-item py-2 small" href="{{ url_for('admin.settings') }}"><i class="bi bi-sliders text-secondary me-2"></i> Commission & Settings</a></li>
                 {% else %}
-                  <li><a class="dropdown-item py-2 small" href="{{ url_for('auth.register_teacher') }}"><i class="bi bi-mortarboard text-primary me-2"></i> Apply to Teach</a></li>
-                {% endif %}
+                  {% if current_user.is_teacher %}
+                    <li><a class="dropdown-item py-2 small" href="{{ url_for('teacher.dashboard') }}"><i class="bi bi-easel2 text-primary me-2"></i> Instructor Studio</a></li>
+                    <li><a class="dropdown-item py-2 small" href="{{ url_for('teacher.profile_edit') }}"><i class="bi bi-sliders text-secondary me-2"></i> Edit Teaching Profile</a></li>
+                    <li><a class="dropdown-item py-2 small" href="{{ url_for('teacher.earnings') }}"><i class="bi bi-graph-up-arrow text-success me-2"></i> Earnings & Payouts</a></li>
+                  {% else %}
+                    <li><a class="dropdown-item py-2 small" href="{{ url_for('auth.register_teacher') }}"><i class="bi bi-mortarboard text-primary me-2"></i> Apply to Teach</a></li>
+                  {% endif %}
 
-                <li><a class="dropdown-item py-2 small" href="{{ url_for('student.dashboard') }}"><i class="bi bi-grid text-secondary me-2"></i> Student Workspace</a></li>
-                <li><a class="dropdown-item py-2 small" href="{{ url_for('student.bookings') }}"><i class="bi bi-calendar-check text-secondary me-2"></i> Scheduled Sessions</a></li>
-                <li><a class="dropdown-item py-2 small" href="{{ url_for('wallet.index') }}"><i class="bi bi-wallet2 text-secondary me-2"></i> Credit Wallet & Ledger</a></li>
+                  <li><a class="dropdown-item py-2 small" href="{{ url_for('student.dashboard') }}"><i class="bi bi-grid text-secondary me-2"></i> Student Workspace</a></li>
+                  <li><a class="dropdown-item py-2 small" href="{{ url_for('student.bookings') }}"><i class="bi bi-calendar-check text-secondary me-2"></i> Scheduled Sessions</a></li>
+                  <li><a class="dropdown-item py-2 small" href="{{ url_for('wallet.index') }}"><i class="bi bi-wallet2 text-secondary me-2"></i> Credit Wallet & Ledger</a></li>
+                {% endif %}
                 <li><hr class="dropdown-divider my-1"></li>
                 <li><a class="dropdown-item py-2 small text-danger" href="{{ url_for('auth.logout') }}"><i class="bi bi-box-arrow-right me-2"></i> Log Out</a></li>
               </ul>

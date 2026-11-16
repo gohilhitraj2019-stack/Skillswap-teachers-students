@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from flask import current_app
 from app.extensions import db
 from app.models.payment import CreditPackage, Payment
+from app.models.user import User
 from app.services.credit_service import purchase_credits
 
 class PaymentServiceError(Exception):
@@ -25,6 +26,10 @@ def create_payment_order(user_id, package_id, use_simulator=False):
     Initialize a payment order for a credit package.
     Supports either Razorpay test mode (if credentials present) or Dev Simulator.
     """
+    user = db.session.get(User, user_id)
+    if user and user.is_admin:
+        raise PaymentServiceError("Administrators cannot purchase platform credits.")
+
     package = db.session.get(CreditPackage, package_id)
     if not package or not package.is_active:
         raise PaymentServiceError("Invalid credit package selected.")

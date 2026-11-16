@@ -51,3 +51,32 @@ def test_payment_failure_handling(app):
 
         assert failed.status == 'failed'
         assert wallet.available_balance == initial_balance  # Balance unaffected
+
+
+def test_admin_cannot_purchase_credits(client, app):
+    """Admin users cannot access purchase pages, initiate checkouts, or buy credits."""
+    import pytest
+    from app.services.payment_service import PaymentServiceError
+
+    # 1. Test service layer prevention
+    with app.app_context():
+        admin = User.query.filter_by(role='admin').first()
+        pkg = CreditPackage.query.first()
+        with pytest.raises(PaymentServiceError, match="Administrators cannot purchase platform credits"):
+            create_payment_order(admin.id, pkg.id, use_simulator=True)
+
+    # 2. Test route prevention
+    client.post('/login', data={'email': 'admin@test.com', 'password': 'Admin@123'}, follow_redirects=True)
+
+    # GET /wallet/purchase should redirect away from purchase to admin dashboard
+    resp_get = client.get('/wallet/purchase', follow_redirects=True)
+    assert resp_get.status_code == 200
+    assert b'Administrators cannot purchase platform credits.' in resp_get.data
+    assert b'Admin Control Panel' in resp_get.data
+
+    # POST /wallet/checkout/<id> should redirect away
+    with app.app_context():
+        pkg_id = CreditPackage.query.first().id
+    resp_post = client.post(f'/wallet/checkout/{pkg_id}', follow_redirects=True)
+    assert resp_post.status_code == 200
+    assert b'Administrators cannot purchase platform credits.' in resp_post.data
