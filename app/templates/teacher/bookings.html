@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Bookings — Teacher Studio{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 pb-3 border-bottom">
+    <div>
+      <h3 class="fw-bold mb-1 text-dark">Session Bookings</h3>
+      <p class="text-muted small mb-0">Review incoming student booking requests, manage confirmed classes, and launch classroom sessions.</p>
+    </div>
+    <a href="{{ url_for('teacher.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-arrow-left me-1"></i> Instructor Studio
+    </a>
+  </div>
+
+  <!-- Status Tabs -->
+  <ul class="nav nav-pills gap-1 mb-4 p-1 bg-white border rounded-3 d-inline-flex">
+    <li class="nav-item">
+      <a class="nav-link {{ 'active' if current_status == 'all' else '' }}" href="{{ url_for('teacher.bookings', status='all') }}">All Sessions</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {{ 'active' if current_status == 'requests' else '' }}" href="{{ url_for('teacher.bookings', status='requests') }}">Pending Requests</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {{ 'active' if current_status == 'upcoming' else '' }}" href="{{ url_for('teacher.bookings', status='upcoming') }}">Confirmed / Upcoming</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {{ 'active' if current_status == 'completed' else '' }}" href="{{ url_for('teacher.bookings', status='completed') }}">Completed</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {{ 'active' if current_status == 'cancelled' else '' }}" href="{{ url_for('teacher.bookings', status='cancelled') }}">Cancelled / Declined</a>
+    </li>
+  </ul>
+
+  <!-- Table Card -->
+  <div class="card border bg-white">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+      <span class="fw-bold small text-dark"><i class="bi bi-calendar-event me-2 text-secondary"></i>Bookings Directory</span>
+      <span class="badge bg-light text-muted border font-monospace">{{ bookings|length }} Records</span>
+    </div>
+    <div class="card-body p-0">
+      {% if bookings %}
+        <div class="table-responsive">
+          <table class="table table-custom mb-0">
+            <thead>
+              <tr>
+                <th>Booking Ref</th>
+                <th>Student</th>
+                <th>Skill / Topic</th>
+                <th>Schedule</th>
+                <th>Fee</th>
+                <th>Status</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for b in bookings %}
+                <tr>
+                  <td><span class="ref-code">#{{ b.booking_ref }}</span></td>
+                  <td>
+                    <div class="fw-semibold text-dark">{{ b.student.name }}</div>
+                    <div class="small text-muted">{{ b.student.email }}</div>
+                  </td>
+                  <td>
+                    <span class="fw-medium text-dark">{{ b.skill.name if b.skill else "1-on-1 Class" }}</span>
+                    {% if b.student_notes %}
+                      <div class="small text-muted text-truncate" style="max-width: 200px;" title="{{ b.student_notes }}">{{ b.student_notes }}</div>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <div class="fw-semibold text-dark">{{ b.class_date.strftime('%b %d, %Y') }}</div>
+                    <div class="small text-muted">{{ b.start_time }} – {{ b.end_time }}</div>
+                  </td>
+                  <td>
+                    <span class="fw-semibold text-dark">{{ b.credits_amount }} Cr</span>
+                  </td>
+                  <td>
+                    <span class="badge badge-{{ b.status }}">{{ b.status|replace('_', ' ')|capitalize }}</span>
+                  </td>
+                  <td class="text-end">
+                    <div class="d-flex justify-content-end align-items-center gap-2">
+                      {% if b.status == 'pending' %}
+                        <form method="POST" action="{{ url_for('teacher.accept', booking_id=b.id) }}">
+                          <button type="submit" class="btn btn-dark btn-sm">Accept</button>
+                        </form>
+                        <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#rejectModal{{ b.id }}">Decline</button>
+
+                        <!-- Reject Modal -->
+                        <div class="modal fade" id="rejectModal{{ b.id }}" tabindex="-1" aria-hidden="true">
+                          <div class="modal-dialog modal-dialog-centered text-start">
+                            <div class="modal-content border">
+                              <form method="POST" action="{{ url_for('teacher.reject', booking_id=b.id) }}">
+                                <div class="modal-header border-bottom">
+                                  <h6 class="modal-title fw-bold text-dark">Decline Session Request</h6>
+                                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                  <p class="small text-muted mb-3">Decline session request <strong class="text-dark">#{{ b.booking_ref }}</strong> from <strong class="text-dark">{{ b.student.name }}</strong>? The student's held credits will be released back immediately.</p>
+                                  <div class="mb-2">
+                                    <label class="form-label small fw-semibold text-secondary">Reason for Declining *</label>
+                                    <input type="text" name="reason" class="form-control form-control-sm" placeholder="e.g. Schedule conflict or unavailable at this slot" required>
+                                  </div>
+                                </div>
+                                <div class="modal-footer border-top">
+                                  <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                  <button type="submit" class="btn btn-danger btn-sm">Confirm Decline</button>
+                                </div>
+                              </form>
+                            </div>
+                          </div>
+                        </div>
+                      {% endif %}
+
+                      {% if b.status == 'confirmed' and b.classroom_session %}
+                        <a href="{{ url_for('classroom.room', room_id=b.classroom_session.room_id) }}" class="btn btn-primary btn-sm">
+                          <i class="bi bi-camera-video me-1"></i> Enter Classroom
+                        </a>
+                      {% endif %}
+
+                      {% if b.status == 'completed' %}
+                        <span class="badge badge-confirmed font-monospace">
+                          <i class="bi bi-check2-all me-1"></i> +{{ b.teacher_earnings_amount }} Cr
+                        </span>
+                      {% endif %}
+
+                      {% if b.status == 'cancelled' %}
+                        <span class="small text-muted">Refunded</span>
+                      {% endif %}
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="text-center py-5 text-muted">
+          <i class="bi bi-calendar2-x display-6 mb-2"></i>
+          <p class="small mb-0">No bookings match the selected filter.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

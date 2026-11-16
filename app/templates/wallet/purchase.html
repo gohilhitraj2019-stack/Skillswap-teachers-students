@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}Credit Packages — SkillSwap{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="text-center mb-5" style="max-width: 600px; margin: 0 auto;">
+    <h3 class="fw-bold mb-2">Purchase Platform Credits</h3>
+    <p class="text-muted small">Select a credit package to book one-on-one sessions with verified instructors. Credits are securely held in escrow when booking and never expire.</p>
+  </div>
+
+  <div class="row g-4 justify-content-center">
+    {% for pkg in packages %}
+      <div class="col-md-6 col-lg-3">
+        <div class="package-select-card h-100 d-flex flex-column text-center position-relative {{ 'border-dark shadow-sm' if pkg.discount_label == 'Most Popular' else '' }}">
+          {% if pkg.discount_label %}
+            <span class="position-absolute top-0 start-50 translate-middle badge bg-dark text-white px-3 py-1 rounded-pill" style="font-size: 0.7rem; letter-spacing: 0.02em;">
+              {{ pkg.discount_label }}
+            </span>
+          {% endif %}
+
+          <div class="fw-semibold text-secondary small mb-2 text-uppercase" style="letter-spacing: 0.05em;">{{ pkg.name }}</div>
+          <div class="display-6 fw-bold text-dark my-2">
+            {{ pkg.credits }}
+            <span class="fs-6 fw-normal text-muted d-block mt-1">Platform Credits</span>
+          </div>
+
+          <div class="fs-4 fw-bold text-dark mb-2">₹{{ pkg.price_inr }}</div>
+          <p class="small text-muted mb-4 flex-grow-1">Approx. {{ (pkg.credits / 50)|round(1) }} hours of 1-on-1 private mentoring</p>
+
+          <form method="POST" action="{{ url_for('wallet.checkout', package_id=pkg.id) }}" class="mt-auto">
+            {% if config.RAZORPAY_KEY_ID %}
+              <input type="hidden" name="payment_method" value="razorpay">
+            {% else %}
+              <input type="hidden" name="payment_method" value="simulator">
+            {% endif %}
+            <button type="submit" class="btn btn-dark w-100 py-2">
+              Purchase Package
+            </button>
+          </form>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <div class="text-center mt-5 text-muted small">
+    <i class="bi bi-shield-lock me-1"></i> 256-bit SSL encrypted checkout · Pre-authorized escrow hold · Immediate wallet balance update
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,40 @@
+@media (max-width: 991.98px) {
+  .hero-title {
+    font-size: 2.25rem;
+  }
+  
+  .wallet-hero-card {
+    padding: 1.5rem;
+  }
+
+  .wallet-balance-large {
+    font-size: 2.25rem;
+  }
+
+  .classroom-main {
+    flex-direction: column !important;
+  }
+
+  .classroom-chat-panel {
+    width: 100% !important;
+    height: 400px !important;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .hero-title {
+    font-size: 1.85rem;
+  }
+
+  .kpi-card {
+    padding: 1rem;
+  }
+
+  .kpi-value {
+    font-size: 1.4rem;
+  }
+
+  .table-responsive {
+    font-size: 0.85rem;
+  }
+}

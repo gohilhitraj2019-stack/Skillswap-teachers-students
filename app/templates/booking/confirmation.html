@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}Booking Confirmed — SkillSwap{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-7 col-lg-5">
+      <div class="card border p-4 p-md-5 text-center bg-white shadow-sm rounded-3">
+        
+        <div class="mx-auto mb-3 text-success fs-1">
+          <i class="bi bi-check-circle-fill"></i>
+        </div>
+
+        <h4 class="fw-bold mb-1 text-dark">Session Request Submitted</h4>
+        <p class="text-muted small mb-4">Your class booking has been received and sent to {{ booking.teacher_user.name }}.</p>
+
+        <div class="card bg-light border p-3 mb-4 text-start rounded-3">
+          <div class="d-flex justify-content-between border-bottom pb-2 mb-2">
+            <span class="text-muted small">Reference:</span>
+            <span class="ref-code">#{{ booking.booking_ref }}</span>
+          </div>
+          <div class="d-flex justify-content-between border-bottom pb-2 mb-2">
+            <span class="text-muted small">Instructor:</span>
+            <span class="fw-semibold text-dark small">{{ booking.teacher_user.name }}</span>
+          </div>
+          <div class="d-flex justify-content-between border-bottom pb-2 mb-2">
+            <span class="text-muted small">Topic:</span>
+            <span class="fw-semibold text-dark small">{{ booking.skill.name if booking.skill else "1-on-1 Class" }}</span>
+          </div>
+          <div class="d-flex justify-content-between border-bottom pb-2 mb-2">
+            <span class="text-muted small">Date & Time:</span>
+            <span class="fw-semibold text-dark small">{{ booking.class_date.strftime('%a, %b %d, %Y') }} at {{ booking.start_time }}</span>
+          </div>
+          <div class="d-flex justify-content-between">
+            <span class="text-muted small">Escrow Hold:</span>
+            <span class="fw-bold text-dark small">{{ booking.credits_amount }} Credits</span>
+          </div>
+        </div>
+
+        <div class="alert alert-light border small text-muted text-start mb-4">
+          <i class="bi bi-shield-check text-primary me-1"></i> As soon as the instructor confirms, you can join the live video classroom directly from your dashboard.
+        </div>
+
+        <div class="d-grid gap-2">
+          <a href="{{ url_for('student.bookings') }}" class="btn btn-dark btn-sm py-2">
+            View Scheduled Bookings
+          </a>
+          <a href="{{ url_for('student.dashboard') }}" class="btn btn-outline-secondary btn-sm py-2">
+            Return to Dashboard
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

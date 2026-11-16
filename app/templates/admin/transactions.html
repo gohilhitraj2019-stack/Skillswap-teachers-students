@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}Financial Ledger & System Balances — Admin{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 pb-3 border-bottom">
+    <div>
+      <h3 class="fw-bold mb-1 text-dark">System Financial Ledger & Wallets</h3>
+      <p class="text-muted small mb-0">Immutable platform audit trail, active wallet balances, and live booking escrow holdings.</p>
+    </div>
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-arrow-left me-1"></i> Admin Portal
+    </a>
+  </div>
+
+  <!-- Escrow / Holdings Summary -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <div class="kpi-card">
+        <div>
+          <div class="kpi-title">Active Wallets</div>
+          <div class="kpi-value text-dark">{{ wallets|length }}</div>
+          <div class="small text-muted mt-1">Users with established ledgers</div>
+        </div>
+        <div class="kpi-icon"><i class="bi bi-wallet2"></i></div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="kpi-card">
+        <div>
+          <div class="kpi-title">Circulating Available Credits</div>
+          <div class="kpi-value text-dark">{{ total_available }} Cr</div>
+          <div class="small text-muted mt-1">Purchased & earned in circulation</div>
+        </div>
+        <div class="kpi-icon"><i class="bi bi-coin"></i></div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="kpi-card">
+        <div>
+          <div class="kpi-title">Held in Booking Escrow</div>
+          <div class="kpi-value text-dark">{{ total_held }} Cr</div>
+          <div class="small text-muted mt-1">Locked awaiting session completion</div>
+        </div>
+        <div class="kpi-icon"><i class="bi bi-shield-lock"></i></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- System Ledger Table -->
+  <div class="card border bg-white">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+      <span class="fw-bold small text-dark"><i class="bi bi-journal-text me-2 text-secondary"></i>Global Immutable Ledger</span>
+      <span class="badge bg-light text-muted border font-monospace">{{ transactions|length }} Entries</span>
+    </div>
+    <div class="card-body p-0">
+      {% if transactions %}
+        <div class="table-responsive">
+          <table class="table table-custom mb-0">
+            <thead>
+              <tr>
+                <th>Tx Reference</th>
+                <th>Account</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Amount</th>
+                <th>Balance After</th>
+                <th>Timestamp</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for tx in transactions %}
+                <tr>
+                  <td><span class="ref-code">#{{ tx.transaction_ref }}</span></td>
+                  <td>
+                    <div class="fw-semibold text-dark">{{ tx.user.name }}</div>
+                    <div class="small text-muted">{{ tx.user.email }} ({{ tx.user.role }})</div>
+                  </td>
+                  <td>
+                    <span class="badge bg-light text-dark border font-monospace" style="font-size: 0.7rem;">{{ tx.transaction_type }}</span>
+                  </td>
+                  <td class="small text-secondary">{{ tx.description }}</td>
+                  <td class="fw-bold {{ 'text-success' if tx.is_credit else 'text-dark' }}">
+                    {{ '+' if tx.is_credit else '-' }}{{ tx.amount }} Cr
+                  </td>
+                  <td>
+                    <span class="font-monospace text-dark small">{{ tx.balance_after }} Cr</span>
+                  </td>
+                  <td class="small text-muted">{{ tx.created_at.strftime('%b %d, %Y %H:%M') }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="text-center py-5 text-muted">
+          <i class="bi bi-journal-x display-6 mb-2"></i>
+          <p class="small mb-0">No ledger transactions recorded yet.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

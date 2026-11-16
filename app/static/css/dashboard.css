@@ -1,0 +1,195 @@
+/* -------------------------------------------------------------
+   Dashboard & Ledger Styling - Professional Financial SaaS UI
+   ------------------------------------------------------------- */
+
+.dashboard-container {
+  padding: 2.25rem 0 4rem 0;
+}
+
+/* Metric / KPI Cards */
+.kpi-card {
+  background: #ffffff;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-light);
+  padding: 1.25rem 1.5rem;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.15s ease;
+}
+
+.kpi-title {
+  font-size: 0.775rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--slate-500);
+  margin-bottom: 0.25rem;
+}
+
+.kpi-value {
+  font-size: 1.85rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--slate-950);
+  line-height: 1.15;
+}
+
+.kpi-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  background-color: var(--slate-100);
+  color: var(--slate-700);
+}
+
+.kpi-icon.primary {
+  background-color: var(--primary-subtle);
+  color: var(--primary);
+}
+
+.kpi-icon.success {
+  background-color: var(--emerald-subtle);
+  color: var(--emerald);
+}
+
+.kpi-icon.warning {
+  background-color: var(--amber-subtle);
+  color: var(--amber);
+}
+
+.kpi-icon.info {
+  background-color: var(--slate-100);
+  color: var(--slate-800);
+}
+
+/* Wallet Banner - Professional Dark Slate */
+.wallet-hero-card {
+  background: var(--slate-900);
+  color: #ffffff;
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  box-shadow: var(--shadow-md);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--slate-800);
+}
+
+.wallet-balance-large {
+  font-size: 3rem;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  color: #ffffff;
+  line-height: 1.1;
+}
+
+.wallet-held-chip {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #e2e8f0;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.775rem;
+  font-weight: 500;
+}
+
+/* Tables */
+.table-custom {
+  vertical-align: middle;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.table-custom th {
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--slate-500);
+  background-color: var(--slate-50);
+  border-bottom: 1px solid var(--border-light);
+  border-top: none;
+  padding: 0.85rem 1.15rem;
+}
+
+.table-custom td {
+  padding: 0.95rem 1.15rem;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 0.875rem;
+  color: var(--slate-700);
+}
+
+.table-custom tr:last-child td {
+  border-bottom: none;
+}
+
+.ref-code {
+  font-family: var(--font-mono);
+  font-size: 0.775rem;
+  font-weight: 500;
+  color: var(--slate-600);
+  background-color: var(--slate-100);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* Slot Selection Pills */
+.slot-pill {
+  border: 1px solid var(--slate-200);
+  background: #ffffff;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-block;
+  margin: 3px;
+  color: var(--slate-700);
+}
+
+.slot-pill:hover:not(.disabled) {
+  border-color: var(--slate-400);
+  background: var(--slate-50);
+  color: var(--slate-900);
+}
+
+.slot-pill.selected {
+  background: var(--slate-900);
+  color: #ffffff;
+  border-color: var(--slate-900);
+}
+
+.slot-pill.disabled {
+  background: var(--slate-100);
+  color: var(--slate-400);
+  border-color: var(--slate-200);
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+/* Package Pricing Card */
+.package-select-card {
+  background: #ffffff;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: var(--shadow-card);
+}
+
+.package-select-card:hover {
+  border-color: var(--slate-400);
+  box-shadow: var(--shadow-md);
+}
+
+.package-select-card.selected {
+  border-color: var(--slate-900);
+  box-shadow: 0 0 0 2px var(--slate-900);
+}

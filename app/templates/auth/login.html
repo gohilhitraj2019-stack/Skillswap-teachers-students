@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign In — SkillSwap{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5 col-xl-4">
+      <div class="card shadow-sm border p-4 p-md-4 rounded-3 bg-white">
+        
+        <div class="text-center mb-4">
+          <div class="brand-icon-box mx-auto mb-2" style="width: 36px; height: 36px;">
+            <i class="bi bi-arrow-left-right"></i>
+          </div>
+          <h4 class="fw-bold mb-1">Sign in to your account</h4>
+          <p class="text-muted small">Access your sessions, instructor studio, or wallet</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('auth.login', next=request.args.get('next')) }}">
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-secondary">Email address</label>
+            <input type="email" name="email" id="login-email" class="form-control" placeholder="name@company.com" required>
+          </div>
+
+          <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center">
+              <label class="form-label small fw-semibold text-secondary mb-0">Password</label>
+            </div>
+            <input type="password" name="password" id="login-password" class="form-control mt-1" placeholder="••••••••" required>
+          </div>
+
+          <div class="mb-4 form-check">
+            <input type="checkbox" name="remember" class="form-check-input" id="rememberMe">
+            <label class="form-check-label small text-muted" for="rememberMe">Keep me signed in</label>
+          </div>
+
+          <button type="submit" class="btn btn-dark w-100 py-2 fw-semibold mb-3">
+            Sign In
+          </button>
+        </form>
+
+        <div class="text-center small text-muted pt-3 border-top">
+          New to SkillSwap? <a href="{{ url_for('auth.register_student') }}" class="text-primary fw-semibold text-decoration-none">Create an account</a>
+        </div>
+
+        <!-- Discreet Demo Helper for Testing -->
+        <div class="mt-4 pt-3 border-top text-center">
+          <a class="text-muted small text-decoration-none" data-bs-toggle="collapse" href="#demoAccountsCollapse" role="button" aria-expanded="false" style="font-size: 0.775rem;">
+            <i class="bi bi-key me-1"></i> Testing Deployment? Quick Test Credentials <i class="bi bi-chevron-down ms-1"></i>
+          </a>
+          <div class="collapse mt-2 text-start" id="demoAccountsCollapse">
+            <div class="p-2 border rounded bg-light" style="font-size: 0.75rem;">
+              <div class="d-flex justify-content-between align-items-center py-1 border-bottom">
+                <span><strong>Admin:</strong> admin@skillswap.com</span>
+                <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2" style="font-size: 0.7rem;" onclick="fillDemoLogin('admin@skillswap.com', 'Admin@123')">Fill</button>
+              </div>
+              <div class="d-flex justify-content-between align-items-center py-1 border-bottom">
+                <span><strong>Teacher:</strong> sarah.dev@skillswap.com</span>
+                <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2" style="font-size: 0.7rem;" onclick="fillDemoLogin('sarah.dev@skillswap.com', 'Teacher@123')">Fill</button>
+              </div>
+              <div class="d-flex justify-content-between align-items-center py-1">
+                <span><strong>Student:</strong> student@skillswap.com</span>
+                <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2" style="font-size: 0.7rem;" onclick="fillDemoLogin('student@skillswap.com', 'Student@123')">Fill</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

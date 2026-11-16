@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+
+{% block title %}Instructor Studio — SkillSwap{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+  <div class="container">
+    
+    <!-- Pending Approval Banner if applicable -->
+    {% if profile and profile.approval_status == 'pending' %}
+      <div class="alert alert-warning border p-4 rounded-3 mb-4 d-flex align-items-center gap-3 bg-white">
+        <i class="bi bi-hourglass-split fs-3 text-warning"></i>
+        <div>
+          <h6 class="fw-bold mb-1 text-dark">Instructor Application Under Review</h6>
+          <p class="mb-0 small text-secondary">Your profile credentials have been submitted and are awaiting administrator verification. Once verified, your profile will appear publicly in search results to receive student bookings.</p>
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Top Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 pb-3 border-bottom">
+      <div>
+        <h3 class="fw-bold mb-1">Instructor Studio</h3>
+        <p class="text-muted small mb-0">Manage incoming booking requests, scheduled live classes, and earned credits.</p>
+      </div>
+      <div class="d-flex gap-2">
+        <a href="{{ url_for('teacher.profile_edit') }}" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-sliders me-1"></i> Profile & Rates
+        </a>
+        <a href="{{ url_for('teacher.withdrawal') }}" class="btn btn-dark btn-sm">
+          <i class="bi bi-cash-stack me-1"></i> Request Payout
+        </a>
+      </div>
+    </div>
+
+    <!-- Metrics Cards -->
+    <div class="row g-3 mb-4">
+      <div class="col-sm-6 col-lg-3">
+        <div class="kpi-card">
+          <div>
+            <div class="kpi-title">Earned Balance</div>
+            <div class="kpi-value text-dark">{{ wallet.earned_balance }} Cr</div>
+            <div class="small text-muted mt-1">Eligible for payout</div>
+          </div>
+          <div class="kpi-icon">
+            <i class="bi bi-wallet2 text-success"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-lg-3">
+        <div class="kpi-card">
+          <div>
+            <div class="kpi-title">Pending In Escrow</div>
+            <div class="kpi-value text-dark">{{ pending_earnings }} Cr</div>
+            <div class="small text-muted mt-1">Confirmed upcoming sessions</div>
+          </div>
+          <div class="kpi-icon">
+            <i class="bi bi-shield-lock text-secondary"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-lg-3">
+        <div class="kpi-card">
+          <div>
+            <div class="kpi-title">Classes Taught</div>
+            <div class="kpi-value text-dark">{{ profile.total_classes if profile else 0 }}</div>
+            <div class="small text-muted mt-1">{{ student_count }} distinct students</div>
+          </div>
+          <div class="kpi-icon">
+            <i class="bi bi-mortarboard text-secondary"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-lg-3">
+        <div class="kpi-card">
+          <div>
+            <div class="kpi-title">Average Rating</div>
+            <div class="kpi-value text-dark">
+              <span class="rating-star"><i class="bi bi-star-fill"></i></span> {{ profile.avg_rating if profile else 5.0 }}
+            </div>
+            <div class="small text-muted mt-1">{{ profile.review_count if profile else 0 }} verified reviews</div>
+          </div>
+          <div class="kpi-icon">
+            <i class="bi bi-star text-warning"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Booking Requests & Upcoming Classes -->
+    <div class="row g-4 mb-4">
+      <!-- Pending Requests needing Teacher Action -->
+      <div class="col-lg-6">
+        <div class="card h-100 border">
+          <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <span class="fw-bold small text-dark"><i class="bi bi-bell me-2 text-secondary"></i>Pending Booking Requests</span>
+            <span class="badge bg-light text-dark border font-monospace">{{ pending_requests|length }}</span>
+          </div>
+          <div class="card-body p-0">
+            {% if pending_requests %}
+              <div class="list-group list-group-flush">
+                {% for b in pending_requests %}
+                  <div class="list-group-item p-3">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                      <div>
+                        <h6 class="fw-bold mb-0 text-dark">{{ b.student.name }}</h6>
+                        <div class="small text-muted">{{ b.skill.name if b.skill else "General Session" }} · <span class="fw-semibold text-dark">{{ b.credits_amount }} Credits</span></div>
+                      </div>
+                      <span class="badge badge-pending">Pending</span>
+                    </div>
+
+                    <div class="small text-secondary mb-3">
+                      <i class="bi bi-calendar3 me-1"></i> {{ b.class_date.strftime('%b %d, %Y') }} at {{ b.start_time }} - {{ b.end_time }}
+                      {% if b.student_notes %}
+                        <div class="mt-2 p-2 bg-light border rounded text-dark" style="font-size: 0.8rem;">
+                          <span class="text-muted">Student Note:</span> "{{ b.student_notes }}"
+                        </div>
+                      {% endif %}
+                    </div>
+
+                    <div class="d-flex gap-2">
+                      <form method="POST" action="{{ url_for('teacher.accept', booking_id=b.id) }}" class="flex-grow-1">
+                        <button type="submit" class="btn btn-dark btn-sm w-100">
+                          Accept Booking
+                        </button>
+                      </form>
+                      <form method="POST" action="{{ url_for('teacher.reject', booking_id=b.id) }}">
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">
+                          Decline
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="text-center py-5 text-muted">
+                <i class="bi bi-inbox display-6 mb-2"></i>
+                <p class="small mb-0">No pending booking requests right now.</p>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Upcoming Confirmed Classes -->
+      <div class="col-lg-6">
+        <div class="card h-100 border">
+          <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <span class="fw-bold small text-dark"><i class="bi bi-camera-video me-2 text-secondary"></i>Upcoming Confirmed Classes</span>
+            <a href="{{ url_for('teacher.bookings') }}" class="btn btn-link btn-sm text-decoration-none p-0 small">All Bookings</a>
+          </div>
+          <div class="card-body p-0">
+            {% if upcoming_classes %}
+              <div class="table-responsive">
+                <table class="table table-custom mb-0">
+                  <thead>
+                    <tr>
+                      <th>Student</th>
+                      <th>Schedule</th>
+                      <th>Fee</th>
+                      <th class="text-end">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for b in upcoming_classes %}
+                      <tr>
+                        <td>
+                          <div class="fw-semibold text-dark">{{ b.student.name }}</div>
+                          <div class="text-muted" style="font-size: 0.75rem;">{{ b.skill.name if b.skill else "Class" }}</div>
+                        </td>
+                        <td>
+                          <div class="small fw-semibold text-dark">{{ b.class_date.strftime('%b %d') }}</div>
+                          <div class="small text-muted">{{ b.start_time }}</div>
+                        </td>
+                        <td><span class="fw-semibold">{{ b.credits_amount }} Cr</span></td>
+                        <td class="text-end">
+                          {% if b.classroom_session %}
+                            <a href="{{ url_for('classroom.room', room_id=b.classroom_session.room_id) }}" class="btn btn-primary btn-sm py-1 px-3">
+                              <i class="bi bi-camera-video me-1"></i> Enter Room
+                            </a>
+                          {% endif %}
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% else %}
+              <div class="text-center py-5 text-muted">
+                <i class="bi bi-calendar-check display-6 mb-2"></i>
+                <p class="small mb-0">No confirmed classes scheduled yet.</p>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

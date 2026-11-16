@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block title %}Platform Parameters & Credit Packages — Admin{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 pb-3 border-bottom">
+    <div>
+      <h3 class="fw-bold mb-1 text-dark">Platform Configuration & Parameters</h3>
+      <p class="text-muted small mb-0">Tune commission rates, free trial rewards, INR conversion ratio, cancellation window, and credit purchase packages.</p>
+    </div>
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-arrow-left me-1"></i> Admin Portal
+    </a>
+  </div>
+
+  <div class="row g-4">
+    <!-- Platform Parameters Form -->
+    <div class="col-lg-6">
+      <div class="card border p-4 bg-white">
+        <h6 class="fw-bold mb-3 text-dark text-uppercase" style="letter-spacing: 0.04em; font-size: 0.8rem;">Global Platform Parameters</h6>
+
+        <form method="POST" action="{{ url_for('admin.settings') }}">
+          <input type="hidden" name="action" value="update_settings">
+
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-secondary">Platform Commission Percentage (%)</label>
+            <div class="input-group input-group-sm">
+              <input type="number" name="commission_percent" class="form-control" min="0" max="100" value="{{ settings.commission_percent }}" required>
+              <span class="input-group-text bg-white">%</span>
+            </div>
+            <div class="form-text small">Deducted from student's held credits upon class completion. Currently: {{ settings.commission_percent }}%.</div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-secondary">Free Trial Bonus Credits (New Students)</label>
+            <div class="input-group input-group-sm">
+              <input type="number" name="free_trial_credits" class="form-control" min="0" max="500" value="{{ settings.free_trial_credits }}" required>
+              <span class="input-group-text bg-white">Credits</span>
+            </div>
+            <div class="form-text small">Automatically credited to new students upon registration.</div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-secondary">Credit to INR Conversion Rate</label>
+            <div class="input-group input-group-sm">
+              <span class="input-group-text bg-white">1 Credit = ₹</span>
+              <input type="number" step="0.5" name="credit_to_inr_rate" class="form-control" min="1" max="1000" value="{{ settings.credit_to_inr_rate }}" required>
+              <span class="input-group-text bg-white">INR</span>
+            </div>
+            <div class="form-text small">Used to calculate instructor withdrawal payouts.</div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-secondary">Cancellation Window (Hours Before Class)</label>
+            <div class="input-group input-group-sm">
+              <input type="number" name="cancellation_window_hours" class="form-control" min="0" max="48" value="{{ settings.cancellation_window_hours }}" required>
+              <span class="input-group-text bg-white">Hours</span>
+            </div>
+          </div>
+
+          <div class="mb-4 form-check">
+            <input type="checkbox" name="allow_simulator_payments" class="form-check-input" id="simCheck" {{ 'checked' if settings.allow_simulator_payments else '' }}>
+            <label class="form-check-label small fw-semibold text-dark" for="simCheck">Enable Development Payment Simulator</label>
+            <div class="form-text small">Allows instant testing of purchase workflows without requiring live Razorpay credentials.</div>
+          </div>
+
+          <button type="submit" class="btn btn-dark w-100 py-2 btn-sm fw-semibold">
+            Save Platform Settings
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Credit Packages Management -->
+    <div class="col-lg-6">
+      <div class="card border p-4 mb-4 bg-white">
+        <h6 class="fw-bold mb-3 text-dark text-uppercase" style="letter-spacing: 0.04em; font-size: 0.8rem;">Active Credit Packages</h6>
+
+        <div class="list-group list-group-flush mb-4">
+          {% for pkg in packages %}
+            <div class="list-group-item d-flex justify-content-between align-items-center py-2 px-0">
+              <div>
+                <span class="fw-semibold text-dark">{{ pkg.name }}</span>
+                {% if pkg.discount_label %}
+                  <span class="badge bg-light text-dark border ms-1" style="font-size: 0.65rem;">{{ pkg.discount_label }}</span>
+                {% endif %}
+                <div class="small text-muted">{{ pkg.credits }} Credits</div>
+              </div>
+              <span class="fw-bold text-dark fs-5">₹{{ pkg.price_inr }}</span>
+            </div>
+          {% endfor %}
+        </div>
+
+        <h6 class="fw-bold border-top pt-3 mb-3 text-dark text-uppercase" style="letter-spacing: 0.04em; font-size: 0.8rem;">Create New Package</h6>
+        <form method="POST" action="{{ url_for('admin.settings') }}">
+          <input type="hidden" name="action" value="create_package">
+
+          <div class="row g-2 mb-2">
+            <div class="col-md-6">
+              <label class="form-label small text-secondary">Package Name *</label>
+              <input type="text" name="name" class="form-control form-control-sm" placeholder="e.g. Pro Learner Pack" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary">Badge / Promotion Label</label>
+              <input type="text" name="discount_label" class="form-control form-control-sm" placeholder="e.g. 15% OFF">
+            </div>
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-md-6">
+              <label class="form-label small text-secondary">Credits *</label>
+              <input type="number" name="credits" class="form-control form-control-sm" placeholder="e.g. 250" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-secondary">Price (INR) *</label>
+              <input type="number" name="price_inr" class="form-control form-control-sm" placeholder="e.g. 1999" required>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-outline-secondary btn-sm w-100">
+            <i class="bi bi-plus-lg me-1"></i> Add Credit Package
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

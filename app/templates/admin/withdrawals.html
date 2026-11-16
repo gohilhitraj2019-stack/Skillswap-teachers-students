@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+
+{% block title %}Instructor Payouts & Transfers — Admin{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 pb-3 border-bottom">
+    <div>
+      <h3 class="fw-bold mb-1 text-dark">Instructor Payouts & Settlements</h3>
+      <p class="text-muted small mb-0">Review pending bank transfers and UPI payout requests, record bank transaction UTR reference codes, or decline invalid requests.</p>
+    </div>
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-arrow-left me-1"></i> Admin Portal
+    </a>
+  </div>
+
+  <!-- Status Filters -->
+  <ul class="nav nav-pills gap-1 mb-4 p-1 bg-white border rounded-3 d-inline-flex">
+    <li class="nav-item">
+      <a class="nav-link {{ 'active' if current_status == 'all' else '' }}" href="{{ url_for('admin.withdrawals', status='all') }}">All Payouts</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {{ 'active' if current_status == 'pending' else '' }}" href="{{ url_for('admin.withdrawals', status='pending') }}">Pending Review</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {{ 'active' if current_status == 'approved' else '' }}" href="{{ url_for('admin.withdrawals', status='approved') }}">Approved & Disbursed</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {{ 'active' if current_status == 'rejected' else '' }}" href="{{ url_for('admin.withdrawals', status='rejected') }}">Rejected</a>
+    </li>
+  </ul>
+
+  <div class="card border bg-white">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+      <span class="fw-bold small text-dark"><i class="bi bi-cash-stack me-2 text-secondary"></i>Payout Ledger</span>
+      <span class="badge bg-light text-muted border font-monospace">{{ withdrawals|length }} Requests</span>
+    </div>
+    <div class="card-body p-0">
+      {% if withdrawals %}
+        <div class="table-responsive">
+          <table class="table table-custom mb-0">
+            <thead>
+              <tr>
+                <th>Reference</th>
+                <th>Instructor</th>
+                <th>Credits</th>
+                <th>INR Net</th>
+                <th>Destination Details</th>
+                <th>Status</th>
+                <th>Payout Ref (UTR)</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for w in withdrawals %}
+                <tr>
+                  <td><span class="ref-code">#{{ w.withdrawal_ref }}</span></td>
+                  <td>
+                    <div class="fw-semibold text-dark">{{ w.user.name }}</div>
+                    <div class="small text-muted">{{ w.user.email }}</div>
+                  </td>
+                  <td><span class="fw-semibold text-dark">{{ w.credits_amount }} Cr</span></td>
+                  <td class="fw-bold text-dark">₹{{ w.inr_amount }}</td>
+                  <td class="small text-secondary" style="max-width: 220px;">{{ w.payout_details }}</td>
+                  <td><span class="badge badge-{{ w.status }}">{{ w.status|capitalize }}</span></td>
+                  <td class="small text-muted">
+                    {% if w.payout_reference %}
+                      <span class="font-monospace text-dark">{{ w.payout_reference }}</span>
+                    {% else %}
+                      <span class="text-muted">—</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-end">
+                    {% if w.status == 'pending' %}
+                      <div class="d-flex justify-content-end gap-1">
+                        <!-- Approve Modal Button -->
+                        <button type="button" class="btn btn-dark btn-sm" data-bs-toggle="modal" data-bs-target="#approveModal{{ w.id }}">
+                          Approve
+                        </button>
+
+                        <!-- Reject Modal Button -->
+                        <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#rejectModal{{ w.id }}">
+                          Decline
+                        </button>
+                      </div>
+
+                      <!-- Approve Modal -->
+                      <div class="modal fade" id="approveModal{{ w.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered text-start">
+                          <div class="modal-content border">
+                            <form method="POST" action="{{ url_for('admin.approve_payout', withdrawal_id=w.id) }}">
+                              <div class="modal-header border-bottom">
+                                <h6 class="modal-title fw-bold text-dark">Approve Payout Disbursement</h6>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                              </div>
+                              <div class="modal-body">
+                                <p class="small text-muted mb-3">Confirm external bank/UPI transfer of <strong class="text-dark">₹{{ w.inr_amount }} INR</strong> ({{ w.credits_amount }} Credits) to <strong class="text-dark">{{ w.user.name }}</strong>.</p>
+                                <div class="bg-light p-2 rounded mb-3 small border">
+                                  <strong>Payout Destination:</strong> {{ w.payout_details }}
+                                </div>
+                                <div class="mb-3">
+                                  <label class="form-label small fw-semibold text-secondary">Bank / UPI UTR Transaction Reference *</label>
+                                  <input type="text" name="payout_reference" class="form-control form-control-sm" placeholder="e.g. UTR202611059923 or UPI-REF-4412" required>
+                                </div>
+                                <div class="mb-2">
+                                  <label class="form-label small fw-semibold text-secondary">Admin Internal Note (Optional)</label>
+                                  <input type="text" name="admin_notes" class="form-control form-control-sm" placeholder="e.g. Disbursed via Corporate Netbanking">
+                                </div>
+                              </div>
+                              <div class="modal-footer border-top">
+                                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-dark btn-sm">Confirm Disbursed</button>
+                              </div>
+                            </form>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Reject Modal -->
+                      <div class="modal fade" id="rejectModal{{ w.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered text-start">
+                          <div class="modal-content border">
+                            <form method="POST" action="{{ url_for('admin.reject_payout', withdrawal_id=w.id) }}">
+                              <div class="modal-header border-bottom">
+                                <h6 class="modal-title fw-bold text-dark">Decline Payout Request</h6>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                              </div>
+                              <div class="modal-body">
+                                <p class="small text-muted mb-2">Decline payout request <strong class="text-dark">#{{ w.withdrawal_ref }}</strong> for <strong class="text-dark">{{ w.user.name }}</strong>?</p>
+                                <div class="alert alert-light border py-2 small text-muted mb-3">
+                                  <i class="bi bi-shield-check text-primary me-1"></i> The {{ w.credits_amount }} credits will automatically be restored to the teacher's wallet.
+                                </div>
+                                <div class="mb-2">
+                                  <label class="form-label small fw-semibold text-secondary">Reason for Declining *</label>
+                                  <input type="text" name="admin_notes" class="form-control form-control-sm" placeholder="e.g. Incorrect IFSC code or invalid UPI VPA format" required>
+                                </div>
+                              </div>
+                              <div class="modal-footer border-top">
+                                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-danger btn-sm">Confirm Decline</button>
+                              </div>
+                            </form>
+                          </div>
+                        </div>
+                      </div>
+                    {% else %}
+                      <span class="small text-muted">—</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="text-center py-5 text-muted">
+          <i class="bi bi-cash-stack display-6 mb-2"></i>
+          <p class="small mb-0">No withdrawal requests found under this filter.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

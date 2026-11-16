@@ -1,0 +1,225 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Control Panel — SkillSwap{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+  <div class="container">
+    
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 pb-3 border-bottom">
+      <div>
+        <div class="d-flex align-items-center gap-2 mb-1">
+          <span class="badge bg-dark text-white text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.05em;">Administration</span>
+          <h3 class="fw-bold mb-0">Platform Overview & Operations</h3>
+        </div>
+        <p class="text-muted small mb-0">Monitor instructor verification queues, ledger balances, bookings, and payout distributions.</p>
+      </div>
+
+      <div class="d-flex flex-wrap gap-2">
+        <a href="{{ url_for('admin.teachers', status='pending') }}" class="btn btn-outline-secondary btn-sm">
+          Pending Approvals ({{ pending_approvals }})
+        </a>
+        <a href="{{ url_for('admin.withdrawals', status='pending') }}" class="btn btn-outline-secondary btn-sm">
+          Payout Requests ({{ pending_withdrawals }})
+        </a>
+        <a href="{{ url_for('admin.settings') }}" class="btn btn-dark btn-sm">
+          <i class="bi bi-sliders me-1"></i> System Settings
+        </a>
+      </div>
+    </div>
+
+    <!-- Analytics KPI Cards -->
+    <div class="row g-3 mb-4">
+      <div class="col-sm-6 col-lg-3">
+        <div class="kpi-card">
+          <div>
+            <div class="kpi-title">Total Users</div>
+            <div class="kpi-value text-dark">{{ total_users }}</div>
+            <div class="small text-muted mt-1">{{ total_students }} Students · {{ total_teachers }} Teachers</div>
+          </div>
+          <div class="kpi-icon"><i class="bi bi-people"></i></div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-lg-3">
+        <div class="kpi-card">
+          <div>
+            <div class="kpi-title">Completed Sessions</div>
+            <div class="kpi-value text-dark">{{ total_completed_classes }}</div>
+            <div class="small text-muted mt-1">Live 1-on-1 classes</div>
+          </div>
+          <div class="kpi-icon"><i class="bi bi-mortarboard"></i></div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-lg-3">
+        <div class="kpi-card">
+          <div>
+            <div class="kpi-title">Platform Revenue</div>
+            <div class="kpi-value text-dark">₹{{ total_revenue_inr }}</div>
+            <div class="small text-muted mt-1">From credit purchases</div>
+          </div>
+          <div class="kpi-icon"><i class="bi bi-currency-rupee text-success"></i></div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-lg-3">
+        <div class="kpi-card">
+          <div>
+            <div class="kpi-title">Commission Retained</div>
+            <div class="kpi-value text-dark">{{ total_commission_credits }} Cr</div>
+            <div class="small text-muted mt-1">Platform service share</div>
+          </div>
+          <div class="kpi-icon"><i class="bi bi-percent text-primary"></i></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Hub Pills -->
+    <div class="card border p-3 mb-4 bg-white">
+      <div class="d-flex flex-wrap gap-2">
+        <a href="{{ url_for('admin.teachers') }}" class="btn btn-light btn-sm text-dark"><i class="bi bi-person-badge me-1"></i> Instructors</a>
+        <a href="{{ url_for('admin.users') }}" class="btn btn-light btn-sm text-dark"><i class="bi bi-people me-1"></i> Users</a>
+        <a href="{{ url_for('admin.bookings') }}" class="btn btn-light btn-sm text-dark"><i class="bi bi-calendar-check me-1"></i> Bookings</a>
+        <a href="{{ url_for('admin.transactions') }}" class="btn btn-light btn-sm text-dark"><i class="bi bi-receipt me-1"></i> Ledger & Wallets</a>
+        <a href="{{ url_for('admin.withdrawals') }}" class="btn btn-light btn-sm text-dark"><i class="bi bi-bank me-1"></i> Withdrawals</a>
+        <a href="{{ url_for('admin.settings') }}" class="btn btn-light btn-sm text-dark"><i class="bi bi-gear me-1"></i> Parameters</a>
+      </div>
+    </div>
+
+    <!-- Tables Row: Pending Teachers & Recent Bookings -->
+    <div class="row g-4 mb-4">
+      
+      <!-- Pending Teachers -->
+      <div class="col-lg-6">
+        <div class="card h-100 border">
+          <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <span class="fw-bold small text-dark"><i class="bi bi-clock me-2 text-secondary"></i>Pending Verification Queue</span>
+            <span class="badge bg-light text-dark border font-monospace">{{ pending_teachers|length }}</span>
+          </div>
+          <div class="card-body p-0">
+            {% if pending_teachers %}
+              <div class="table-responsive">
+                <table class="table table-custom mb-0">
+                  <thead>
+                    <tr>
+                      <th>Applicant</th>
+                      <th>Headline</th>
+                      <th>Rate</th>
+                      <th class="text-end">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for t in pending_teachers %}
+                      <tr>
+                        <td class="fw-semibold text-dark">{{ t.display_name }}</td>
+                        <td class="small text-muted text-truncate" style="max-width: 150px;">{{ t.title }}</td>
+                        <td>{{ t.hourly_rate }} Cr/hr</td>
+                        <td class="text-end">
+                          <form method="POST" action="{{ url_for('admin.update_teacher_status', profile_id=t.id) }}" class="d-inline">
+                            <input type="hidden" name="status" value="approved">
+                            <button type="submit" class="btn btn-dark btn-xs py-1 px-2 small">Approve</button>
+                          </form>
+                          <form method="POST" action="{{ url_for('admin.update_teacher_status', profile_id=t.id) }}" class="d-inline ms-1">
+                            <input type="hidden" name="status" value="rejected">
+                            <button type="submit" class="btn btn-outline-secondary btn-xs py-1 px-2 small">Reject</button>
+                          </form>
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% else %}
+              <div class="text-center py-5 text-muted small">
+                <i class="bi bi-check2-circle text-success fs-4 mb-2 d-block"></i>
+                All instructor applications have been reviewed.
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Bookings -->
+      <div class="col-lg-6">
+        <div class="card h-100 border">
+          <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <span class="fw-bold small text-dark"><i class="bi bi-calendar-event me-2 text-secondary"></i>Recent Bookings</span>
+            <a href="{{ url_for('admin.bookings') }}" class="btn btn-link btn-sm text-decoration-none p-0 small">All</a>
+          </div>
+          <div class="card-body p-0">
+            {% if recent_bookings %}
+              <div class="table-responsive">
+                <table class="table table-custom mb-0">
+                  <thead>
+                    <tr>
+                      <th>Ref</th>
+                      <th>Student</th>
+                      <th>Instructor</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for b in recent_bookings %}
+                      <tr>
+                        <td><span class="ref-code">#{{ b.booking_ref }}</span></td>
+                        <td class="small text-dark fw-semibold">{{ b.student.name }}</td>
+                        <td class="small text-dark">{{ b.teacher_user.name }}</td>
+                        <td><span class="badge badge-{{ b.status }}">{{ b.status|capitalize }}</span></td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% else %}
+              <p class="text-muted small text-center py-5 mb-0">No bookings created yet.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Recent Global Ledger Activity -->
+    <div class="card border">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <span class="fw-bold small text-dark"><i class="bi bi-journal-check me-2 text-secondary"></i>Recent Global Ledger Entries</span>
+        <a href="{{ url_for('admin.transactions') }}" class="btn btn-link btn-sm text-decoration-none p-0 small">Full Ledger</a>
+      </div>
+      <div class="card-body p-0">
+        {% if recent_transactions %}
+          <div class="table-responsive">
+            <table class="table table-custom mb-0">
+              <thead>
+                <tr>
+                  <th>Reference</th>
+                  <th>User</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                  <th>Amount</th>
+                  <th>Timestamp</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for tx in recent_transactions %}
+                  <tr>
+                    <td><span class="ref-code">#{{ tx.transaction_ref }}</span></td>
+                    <td class="small text-dark">{{ tx.user.name }} <span class="text-muted">({{ tx.user.role }})</span></td>
+                    <td><span class="badge bg-light text-dark border">{{ tx.transaction_type }}</span></td>
+                    <td class="small text-secondary">{{ tx.description }}</td>
+                    <td class="fw-bold {{ 'text-success' if tx.is_credit else 'text-dark' }}">
+                      {{ '+' if tx.is_credit else '' }}{{ tx.amount }} Cr
+                    </td>
+                    <td class="small text-muted">{{ tx.created_at.strftime('%b %d, %H:%M') }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

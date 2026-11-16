@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+
+{% block title %}Credit Wallet & Financial Ledger — SkillSwap{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 pb-3 border-bottom">
+    <div>
+      <h3 class="fw-bold mb-1">Credit Wallet & Ledger</h3>
+      <p class="text-muted small mb-0">Overview of circulating credits, escrow holdings, and your verified immutable transaction ledger.</p>
+    </div>
+    <a href="{{ url_for('wallet.purchase') }}" class="btn btn-dark btn-sm">
+      <i class="bi bi-plus-circle me-1"></i> Buy Credit Packages
+    </a>
+  </div>
+
+  <!-- Wallet Balance Cards -->
+  <div class="row g-4 mb-4">
+    <div class="col-lg-6">
+      <div class="wallet-hero-card h-100 d-flex flex-column justify-content-between">
+        <div>
+          <span class="wallet-held-chip mb-2 d-inline-block">
+            <i class="bi bi-shield-check me-1"></i> Double-Entry Escrow Ledger
+          </span>
+          <div class="text-white-50 small mt-3">Available Balance</div>
+          <div class="wallet-balance-large">{{ wallet.available_balance }} <span class="fs-4 fw-normal text-white-50">Credits</span></div>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2 pt-3 border-top border-secondary border-opacity-50 mt-4">
+          <span class="wallet-held-chip">
+            <i class="bi bi-lock me-1"></i> {{ wallet.held_balance }} Held in Escrow
+          </span>
+          <span class="wallet-held-chip">
+            <i class="bi bi-gift me-1"></i> {{ free_trial_credits }} Trial Bonus
+          </span>
+          <span class="wallet-held-chip">
+            <i class="bi bi-bag-check me-1"></i> {{ wallet.total_purchased }} Purchased
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="card border h-100 p-4 bg-white">
+        <h6 class="fw-bold mb-3 text-dark"><i class="bi bi-info-circle text-primary me-2"></i>Platform Escrow Model</h6>
+        <ul class="list-unstyled small text-muted d-flex flex-column gap-3 mb-0">
+          <li class="d-flex gap-2">
+            <i class="bi bi-check-circle-fill text-primary"></i>
+            <div>
+              <strong class="text-dark">1 Credit = ₹{{ settings.credit_to_inr_rate }} INR standard conversion.</strong>
+              <div>Platform credits are used across all mentor bookings. Mentor rates generally range from 35 to 90 credits/hour.</div>
+            </div>
+          </li>
+          <li class="d-flex gap-2">
+            <i class="bi bi-check-circle-fill text-primary"></i>
+            <div>
+              <strong class="text-dark">Pre-Authorized Escrow Holding:</strong>
+              <div>When booking a class, credits are moved to <em>Escrow Hold</em>. If either party cancels within the cancellation window, 100% of credits return to your available balance.</div>
+            </div>
+          </li>
+          <li class="d-flex gap-2">
+            <i class="bi bi-check-circle-fill text-primary"></i>
+            <div>
+              <strong class="text-dark">Post-Session Settlement:</strong>
+              <div>Credits are settled only after the live session is marked complete, splitting the funds between the mentor's net earnings (80%) and platform fees (20%).</div>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Immutable Transaction Ledger -->
+  <div class="card border">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+      <span class="fw-bold small text-dark"><i class="bi bi-receipt-cutoff me-2 text-secondary"></i>Immutable Account Ledger</span>
+      <span class="badge bg-light text-muted border font-monospace">{{ transactions|length }} Records</span>
+    </div>
+    <div class="card-body p-0">
+      {% if transactions %}
+        <div class="table-responsive">
+          <table class="table table-custom mb-0">
+            <thead>
+              <tr>
+                <th>Reference</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Amount</th>
+                <th>Balance After</th>
+                <th>Timestamp</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for tx in transactions %}
+                <tr>
+                  <td><span class="ref-code">#{{ tx.transaction_ref }}</span></td>
+                  <td>
+                    {% if tx.transaction_type == 'free_trial' %}
+                      <span class="badge bg-light text-dark border">Trial Bonus</span>
+                    {% elif tx.transaction_type == 'purchase' %}
+                      <span class="badge bg-light text-primary border">Purchase</span>
+                    {% elif tx.transaction_type == 'hold' %}
+                      <span class="badge badge-pending">Escrow Hold</span>
+                    {% elif tx.transaction_type == 'unhold_refund' %}
+                      <span class="badge badge-confirmed">Refund</span>
+                    {% elif tx.transaction_type == 'settle_debit' %}
+                      <span class="badge bg-light text-dark border">Class Settled</span>
+                    {% elif tx.transaction_type == 'settle_credit' %}
+                      <span class="badge badge-confirmed">Earnings</span>
+                    {% elif tx.transaction_type == 'withdrawal_hold' %}
+                      <span class="badge badge-pending">Payout Hold</span>
+                    {% elif tx.transaction_type == 'withdrawal_payout' %}
+                      <span class="badge badge-confirmed">Payout Complete</span>
+                    {% else %}
+                      <span class="badge bg-light text-dark border">{{ tx.transaction_type }}</span>
+                    {% endif %}
+                  </td>
+                  <td class="small">{{ tx.description }}</td>
+                  <td class="fw-bold {{ 'text-success' if tx.is_credit else 'text-dark' }}" style="font-size: 0.85rem;">
+                    {{ '+' if tx.is_credit else '' }}{{ tx.amount }} Cr
+                  </td>
+                  <td><span class="badge bg-light text-dark border font-monospace">{{ tx.balance_after }} Cr</span></td>
+                  <td class="small text-muted">{{ tx.created_at.strftime('%b %d, %Y %H:%M') }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="text-center py-5 text-muted">
+          <p class="mb-0">No ledger transactions found for this account.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

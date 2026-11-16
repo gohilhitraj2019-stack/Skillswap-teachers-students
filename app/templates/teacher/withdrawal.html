@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+
+{% block title %}Instructor Payouts — SkillSwap{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+    <div>
+      <h3 class="fw-bold mb-1">Instructor Payouts & Withdrawals</h3>
+      <p class="text-muted small mb-0">Withdraw your earned credits to real currency (INR) via instant UPI or direct Bank Transfer.</p>
+    </div>
+    <a href="{{ url_for('teacher.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+      Studio
+    </a>
+  </div>
+
+  <div class="row g-4">
+    <!-- Payout Request Form -->
+    <div class="col-lg-5">
+      <div class="card border p-4 bg-white">
+        <h6 class="fw-bold mb-3 text-dark text-uppercase" style="letter-spacing: 0.04em; font-size: 0.8rem;">Submit Payout Request</h6>
+        
+        <div class="p-3 bg-light rounded mb-4 border">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="text-muted small">Eligible Earned Credits:</span>
+            <span class="fw-bold text-dark fs-5">{{ wallet.earned_balance }} Cr</span>
+          </div>
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="text-muted small">Payout Value:</span>
+            <span class="fw-bold text-dark">₹{{ wallet.earned_balance * settings.credit_to_inr_rate }} INR</span>
+          </div>
+          <div class="small text-muted mt-2 border-top pt-2" style="font-size: 0.75rem;">
+            Conversion: 1 Credit = ₹{{ settings.credit_to_inr_rate }} INR
+          </div>
+        </div>
+
+        {% if wallet.earned_balance > 0 %}
+          <form method="POST" action="{{ url_for('teacher.withdrawal') }}">
+            <div class="mb-3">
+              <label class="form-label small fw-semibold text-secondary">Credits to Withdraw *</label>
+              <div class="input-group input-group-sm">
+                <input type="number" name="credits_amount" class="form-control" min="1" max="{{ wallet.earned_balance }}" value="{{ wallet.earned_balance }}" required>
+                <span class="input-group-text bg-white">Credits</span>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label small fw-semibold text-secondary">Payout Method *</label>
+              <select name="payout_method" class="form-select form-select-sm" id="payoutMethodSelect" onchange="togglePayoutFields()">
+                <option value="upi">Instant UPI (VPA)</option>
+                <option value="bank_transfer">Direct Bank Transfer (NEFT / IMPS)</option>
+              </select>
+            </div>
+
+            <!-- UPI Field -->
+            <div id="upiFieldGroup" class="mb-3">
+              <label class="form-label small fw-semibold text-secondary">UPI ID (VPA) *</label>
+              <input type="text" name="upi_id" class="form-control form-control-sm" placeholder="name@bank or mobile@upi">
+            </div>
+
+            <!-- Bank Fields -->
+            <div id="bankFieldGroup" class="d-none mb-3">
+              <div class="mb-2">
+                <label class="form-label small fw-semibold text-secondary">Account Holder Name</label>
+                <input type="text" name="account_name" class="form-control form-control-sm" placeholder="Full name as in bank records">
+              </div>
+              <div class="mb-2">
+                <label class="form-label small fw-semibold text-secondary">Account Number</label>
+                <input type="text" name="account_no" class="form-control form-control-sm" placeholder="Bank account number">
+              </div>
+              <div class="mb-2">
+                <label class="form-label small fw-semibold text-secondary">IFSC Code</label>
+                <input type="text" name="ifsc" class="form-control form-control-sm" placeholder="e.g. HDFC0001234">
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-dark w-100 py-2 btn-sm fw-semibold">
+              Submit Payout Request
+            </button>
+          </form>
+        {% else %}
+          <div class="alert alert-light border mb-0 small text-muted">
+            <i class="bi bi-info-circle me-1"></i> You currently have 0 earned credits available for payout. Complete confirmed sessions to earn credits.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Payout Request History -->
+    <div class="col-lg-7">
+      <div class="card border">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+          <span class="fw-bold small text-dark"><i class="bi bi-clock-history me-2 text-secondary"></i>Payout History</span>
+          <span class="badge bg-light text-muted border font-monospace">{{ withdrawals|length }}</span>
+        </div>
+        <div class="card-body p-0">
+          {% if withdrawals %}
+            <div class="table-responsive">
+              <table class="table table-custom mb-0">
+                <thead>
+                  <tr>
+                    <th>Reference</th>
+                    <th>Credits</th>
+                    <th>Amount</th>
+                    <th>Account</th>
+                    <th>Status</th>
+                    <th>Transaction Ref</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for w in withdrawals %}
+                    <tr>
+                      <td><span class="ref-code">#{{ w.withdrawal_ref }}</span></td>
+                      <td>{{ w.credits_amount }} Cr</td>
+                      <td class="fw-bold text-dark">₹{{ w.inr_amount }}</td>
+                      <td class="small text-muted text-truncate" style="max-width: 140px;" title="{{ w.payout_details }}">{{ w.payout_details }}</td>
+                      <td>
+                        <span class="badge badge-{{ w.status }}">{{ w.status|capitalize }}</span>
+                      </td>
+                      <td class="small text-muted">
+                        {% if w.payout_reference %}
+                          <span class="font-monospace text-dark">{{ w.payout_reference }}</span>
+                        {% else %}
+                          <span class="text-muted">In review</span>
+                        {% endif %}
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <div class="text-center py-5 text-muted">
+              <i class="bi bi-cash-stack display-6 mb-2"></i>
+              <p class="small mb-0">No withdrawal requests submitted yet.</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function togglePayoutFields() {
+  const method = document.getElementById('payoutMethodSelect').value;
+  const upiGroup = document.getElementById('upiFieldGroup');
+  const bankGroup = document.getElementById('bankFieldGroup');
+  if (method === 'upi') {
+    upiGroup.classList.remove('d-none');
+    bankGroup.classList.add('d-none');
+  } else {
+    upiGroup.classList.add('d-none');
+    bankGroup.classList.remove('d-none');
+  }
+}
+</script>
+{% endblock %}

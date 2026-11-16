@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Student Account — SkillSwap{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-7 col-lg-5">
+      <div class="card border p-4 p-md-4 rounded-3 bg-white shadow-sm">
+        
+        <div class="text-center mb-4">
+          <div class="brand-icon-box mx-auto mb-2" style="width: 36px; height: 36px;">
+            <i class="bi bi-mortarboard"></i>
+          </div>
+          <h4 class="fw-bold mb-1">Create Student Account</h4>
+          <p class="text-muted small">Sign up to receive <strong>50 Free Trial Credits</strong></p>
+        </div>
+
+        <form method="POST" action="{{ url_for('auth.register_student') }}">
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-secondary">Full Name *</label>
+            <input type="text" name="name" class="form-control" placeholder="Alex Johnson" required>
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-secondary">Email Address *</label>
+              <input type="email" name="email" class="form-control" placeholder="alex@company.com" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-secondary">Phone Number</label>
+              <input type="tel" name="phone" class="form-control" placeholder="+91 9876543210">
+            </div>
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-secondary">Password *</label>
+              <input type="password" name="password" class="form-control" placeholder="Min. 6 chars" required minlength="6">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-secondary">Confirm Password *</label>
+              <input type="password" name="confirm_password" class="form-control" placeholder="Repeat password" required minlength="6">
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label small fw-semibold text-secondary">Skills You Wish to Learn (Optional)</label>
+            <input type="text" name="learn_interest" class="form-control" placeholder="e.g. Python, System Architecture, Figma">
+          </div>
+
+          <button type="submit" class="btn btn-dark w-100 py-2 fw-semibold">
+            Create Account & Claim 50 Credits
+          </button>
+        </form>
+
+        <div class="text-center mt-4 pt-3 border-top small text-muted">
+          Already registered? <a href="{{ url_for('auth.login') }}" class="text-primary fw-semibold text-decoration-none">Sign in</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}Instructor Earnings & Ledger — SkillSwap{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 pb-3 border-bottom">
+    <div>
+      <h3 class="fw-bold mb-1">Instructor Revenue & Commission</h3>
+      <p class="text-muted small mb-0">Financial accounting for your completed live classes and payout distributions.</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{{ url_for('teacher.withdrawal') }}" class="btn btn-dark btn-sm">
+        <i class="bi bi-cash-stack me-1"></i> Request Payout
+      </a>
+    </div>
+  </div>
+
+  <!-- Financial Summary Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="kpi-card">
+        <div>
+          <div class="kpi-title">Gross Volume</div>
+          <div class="kpi-value text-dark">{{ total_gross }} Cr</div>
+          <div class="small text-muted mt-1">{{ completed_bookings|length }} completed sessions</div>
+        </div>
+        <div class="kpi-icon"><i class="bi bi-coin"></i></div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="kpi-card">
+        <div>
+          <div class="kpi-title">Platform Fee ({{ settings.commission_percent }}%)</div>
+          <div class="kpi-value text-secondary">{{ total_commission }} Cr</div>
+          <div class="small text-muted mt-1">Platform service charge</div>
+        </div>
+        <div class="kpi-icon"><i class="bi bi-percent"></i></div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="kpi-card">
+        <div>
+          <div class="kpi-title">Net Earned Credits</div>
+          <div class="kpi-value text-dark">{{ total_net }} Cr</div>
+          <div class="small text-muted mt-1">Net instructor share (80%)</div>
+        </div>
+        <div class="kpi-icon"><i class="bi bi-graph-up text-success"></i></div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="kpi-card">
+        <div>
+          <div class="kpi-title">Available for Payout</div>
+          <div class="kpi-value text-dark">{{ wallet.earned_balance }} Cr</div>
+          <div class="small text-muted mt-1">₹{{ wallet.earned_balance * settings.credit_to_inr_rate }} INR nominal value</div>
+        </div>
+        <div class="kpi-icon"><i class="bi bi-bank"></i></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Completed Classes Settlement Breakdown -->
+  <div class="card border mb-4">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+      <span class="fw-bold small text-dark"><i class="bi bi-journal-text me-2 text-secondary"></i>Completed Session Settlements</span>
+      <span class="badge bg-light text-muted border font-monospace">{{ completed_bookings|length }} Sessions</span>
+    </div>
+    <div class="card-body p-0">
+      {% if completed_bookings %}
+        <div class="table-responsive">
+          <table class="table table-custom mb-0">
+            <thead>
+              <tr>
+                <th>Reference</th>
+                <th>Student</th>
+                <th>Completion Timestamp</th>
+                <th>Session Fee</th>
+                <th>Platform Fee ({{ settings.commission_percent }}%)</th>
+                <th>Net Credited</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for b in completed_bookings %}
+                <tr>
+                  <td><span class="ref-code">#{{ b.booking_ref }}</span></td>
+                  <td class="fw-semibold text-dark">{{ b.student.name }}</td>
+                  <td class="small text-muted">{{ b.completed_at.strftime('%b %d, %Y %H:%M') if b.completed_at else b.class_date.strftime('%b %d, %Y') }}</td>
+                  <td><span class="text-dark">{{ b.credits_amount }} Cr</span></td>
+                  <td class="text-secondary">-{{ b.platform_commission_amount }} Cr</td>
+                  <td class="fw-bold text-success">+{{ b.teacher_earnings_amount }} Cr</td>
+                  <td><span class="badge badge-confirmed">Settled</span></td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="text-center py-5 text-muted">
+          <i class="bi bi-receipt display-6 mb-2"></i>
+          <p class="small mb-0">No completed sessions yet. Conduct confirmed sessions to earn credits and view settlement breakdown.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

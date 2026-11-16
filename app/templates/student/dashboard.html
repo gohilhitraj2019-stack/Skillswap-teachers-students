@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Workspace — SkillSwap{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+  <div class="container">
+    
+    <!-- Top Welcome Banner -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4 pb-3 border-bottom">
+      <div>
+        <h3 class="fw-bold mb-1">Student Workspace</h3>
+        <p class="text-muted small mb-0">Overview of your upcoming 1-on-1 sessions, escrow holdings, and learning transactions.</p>
+      </div>
+      <div class="d-flex gap-2">
+        <a href="{{ url_for('student.explore') }}" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-search me-1"></i> Browse Instructors
+        </a>
+        <a href="{{ url_for('wallet.purchase') }}" class="btn btn-dark btn-sm">
+          <i class="bi bi-plus-circle me-1"></i> Buy Credits
+        </a>
+      </div>
+    </div>
+
+    <!-- KPI / Credit Overview Cards -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-4">
+        <div class="kpi-card">
+          <div>
+            <div class="kpi-title">Available Credits</div>
+            <div class="kpi-value text-dark">{{ wallet.available_balance }}</div>
+            <div class="small text-muted mt-1">Available for new bookings</div>
+          </div>
+          <div class="kpi-icon">
+            <i class="bi bi-coin text-warning"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="kpi-card">
+          <div>
+            <div class="kpi-title">Held in Booking Escrow</div>
+            <div class="kpi-value text-dark">{{ wallet.held_balance }}</div>
+            <div class="small text-muted mt-1">Protected until class completion</div>
+          </div>
+          <div class="kpi-icon">
+            <i class="bi bi-shield-lock text-secondary"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="kpi-card">
+          <div>
+            <div class="kpi-title">Completed Sessions</div>
+            <div class="kpi-value text-dark">{{ completed_bookings|length }}</div>
+            <div class="small text-muted mt-1">1-on-1 hours learned</div>
+          </div>
+          <div class="kpi-icon">
+            <i class="bi bi-mortarboard text-secondary"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+      <!-- Upcoming Classes -->
+      <div class="col-lg-8">
+        <div class="card h-100 border">
+          <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <span class="fw-bold small text-dark"><i class="bi bi-calendar-event me-2 text-secondary"></i>Scheduled Sessions</span>
+            <a href="{{ url_for('student.bookings') }}" class="btn btn-link btn-sm text-decoration-none p-0 small">View All</a>
+          </div>
+          <div class="card-body p-0">
+            {% if upcoming_bookings %}
+              <div class="table-responsive">
+                <table class="table table-custom mb-0">
+                  <thead>
+                    <tr>
+                      <th>Ref</th>
+                      <th>Instructor</th>
+                      <th>Date & Time</th>
+                      <th>Fee</th>
+                      <th>Status</th>
+                      <th class="text-end">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for b in upcoming_bookings %}
+                      <tr>
+                        <td><span class="ref-code">#{{ b.booking_ref }}</span></td>
+                        <td>
+                          <div class="d-flex align-items-center gap-2">
+                            {% if b.teacher_user.avatar_url %}
+                              <img src="{{ b.teacher_user.avatar_url }}" alt="{{ b.teacher_user.name }}" class="rounded-circle" width="28" height="28" style="object-fit: cover;">
+                            {% else %}
+                              <div class="bg-dark text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 28px; height: 28px; font-size: 0.75rem;">
+                                {{ b.teacher_user.name[0] }}
+                              </div>
+                            {% endif %}
+                            <div>
+                              <div class="fw-semibold text-dark">{{ b.teacher_user.name }}</div>
+                              <div class="text-muted" style="font-size: 0.75rem;">{{ b.skill.name if b.skill else "General Session" }}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <div class="fw-semibold text-dark">{{ b.class_date.strftime('%b %d, %Y') }}</div>
+                          <div class="small text-muted">{{ b.start_time }} - {{ b.end_time }}</div>
+                        </td>
+                        <td><span class="fw-semibold">{{ b.credits_amount }} Cr</span></td>
+                        <td>
+                          <span class="badge badge-{{ b.status }}">{{ b.status|capitalize }}</span>
+                        </td>
+                        <td class="text-end">
+                          {% if b.status == 'confirmed' and b.classroom_session %}
+                            <a href="{{ url_for('classroom.room', room_id=b.classroom_session.room_id) }}" class="btn btn-primary btn-sm py-1 px-3">
+                              <i class="bi bi-camera-video me-1"></i> Join Class
+                            </a>
+                          {% else %}
+                            <span class="text-muted small">Awaiting teacher</span>
+                          {% endif %}
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% else %}
+              <div class="text-center py-5 text-muted">
+                <i class="bi bi-calendar-x display-6 mb-2"></i>
+                <p class="small mb-3">You have no upcoming sessions booked.</p>
+                <a href="{{ url_for('student.explore') }}" class="btn btn-dark btn-sm">Browse Mentors & Book</a>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Transactions -->
+      <div class="col-lg-4">
+        <div class="card h-100 border">
+          <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <span class="fw-bold small text-dark"><i class="bi bi-receipt me-2 text-secondary"></i>Recent Activity</span>
+            <a href="{{ url_for('wallet.index') }}" class="btn btn-link btn-sm text-decoration-none p-0 small">Ledger</a>
+          </div>
+          <div class="card-body p-3">
+            {% if recent_transactions %}
+              <div class="d-flex flex-column gap-3">
+                {% for tx in recent_transactions %}
+                  <div class="d-flex align-items-center justify-content-between border-bottom pb-2">
+                    <div class="overflow-hidden me-2">
+                      <div class="small fw-semibold text-dark text-truncate">{{ tx.description }}</div>
+                      <div class="text-muted" style="font-size: 0.7rem;">{{ tx.created_at.strftime('%b %d, %H:%M') }}</div>
+                    </div>
+                    <div class="text-end text-nowrap">
+                      <span class="fw-bold {{ 'text-success' if tx.is_credit else 'text-dark' }}" style="font-size: 0.85rem;">
+                        {{ '+' if tx.is_credit else '' }}{{ tx.amount }} Cr
+                      </span>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <p class="text-muted small text-center py-4 mb-0">No transactions recorded yet.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recommended Instructors -->
+    <div class="mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0">Recommended Mentors</h5>
+        <a href="{{ url_for('student.explore') }}" class="btn btn-link btn-sm text-decoration-none small">View All Directory</a>
+      </div>
+
+      <div class="row g-3">
+        {% for teacher in recommended_teachers %}
+          <div class="col-md-6 col-lg-3">
+            <div class="card h-100 p-3 card-hover border">
+              <div class="d-flex align-items-center gap-2 mb-2">
+                {% if teacher.user.avatar_url %}
+                  <img src="{{ teacher.user.avatar_url }}" alt="{{ teacher.display_name }}" class="rounded-circle" width="44" height="44" style="object-fit: cover;">
+                {% else %}
+                  <div class="bg-dark text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; font-weight: bold;">
+                    {{ teacher.display_name[0] }}
+                  </div>
+                {% endif %}
+                <div class="overflow-hidden">
+                  <h6 class="fw-bold mb-0 text-dark text-truncate">{{ teacher.display_name }}</h6>
+                  <span class="rating-star small"><i class="bi bi-star-fill"></i> {{ teacher.avg_rating }}</span>
+                </div>
+              </div>
+
+              <div class="small text-muted mb-3 text-truncate">{{ teacher.title }}</div>
+              <div class="d-flex justify-content-between align-items-center pt-2 border-top mt-auto">
+                <span class="fw-bold text-dark">{{ teacher.hourly_rate }} Cr/hr</span>
+                <a href="{{ url_for('booking.book_class', teacher_id=teacher.user_id) }}" class="btn btn-outline-secondary btn-sm py-1 px-2">Book</a>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

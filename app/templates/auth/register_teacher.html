@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}Instructor Application — SkillSwap{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-9 col-lg-7">
+      <div class="card border p-4 p-md-5 rounded-3 bg-white shadow-sm">
+        
+        <div class="text-center mb-4">
+          <div class="brand-icon-box mx-auto mb-2" style="width: 36px; height: 36px;">
+            <i class="bi bi-briefcase"></i>
+          </div>
+          <h4 class="fw-bold mb-1">Apply to Teach on SkillSwap</h4>
+          <p class="text-muted small">Share your expertise through 1-on-1 live mentoring and earn escrow-backed credits</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('auth.register_teacher') }}">
+          <!-- Basic Info -->
+          <h6 class="fw-bold text-dark border-bottom pb-2 mb-3 small text-uppercase" style="letter-spacing: 0.04em;">1. Account Information</h6>
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-secondary">Full Name *</label>
+              <input type="text" name="name" class="form-control" placeholder="Sarah Jenkins" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-secondary">Email Address *</label>
+              <input type="email" name="email" class="form-control" placeholder="sarah@company.com" required>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold text-secondary">Phone Number</label>
+              <input type="tel" name="phone" class="form-control" placeholder="+91 9876543210">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold text-secondary">Password *</label>
+              <input type="password" name="password" class="form-control" placeholder="Min. 6 chars" required minlength="6">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold text-secondary">Confirm Password *</label>
+              <input type="password" name="confirm_password" class="form-control" placeholder="Repeat password" required minlength="6">
+            </div>
+          </div>
+
+          <!-- Professional Profile -->
+          <h6 class="fw-bold text-dark border-bottom pb-2 mb-3 mt-4 small text-uppercase" style="letter-spacing: 0.04em;">2. Professional Background & Rate</h6>
+          
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-secondary">Professional Title / Current Role *</label>
+            <input type="text" name="title" class="form-control" placeholder="e.g. Senior Backend Engineer @ Stripe" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-secondary">Professional Introduction & Bio *</label>
+            <textarea name="bio" rows="3" class="form-control" placeholder="Summarize your background, industry experience, and how your 1-on-1 sessions help developers and creators succeed..." required></textarea>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold text-secondary">Years of Experience *</label>
+              <input type="number" name="experience_years" class="form-control" min="0" max="50" value="4" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold text-secondary">Hourly Rate (Credits) *</label>
+              <input type="number" name="hourly_rate" class="form-control" min="10" max="1000" value="50" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold text-secondary">Languages Spoken *</label>
+              <input type="text" name="languages" class="form-control" value="English" required>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-secondary">Primary Disciplines & Skills *</label>
+            <div class="border rounded p-3 bg-light" style="max-height: 160px; overflow-y: auto;">
+              <div class="row g-2">
+                {% for skill in all_skills %}
+                  <div class="col-6 col-md-4">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" name="skills" value="{{ skill.id }}" id="skill_{{ skill.id }}">
+                      <label class="form-check-label small" for="skill_{{ skill.id }}">{{ skill.name }}</label>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-secondary">Portfolio or GitHub / LinkedIn Profile (Optional)</label>
+              <input type="url" name="portfolio_url" class="form-control" placeholder="https://github.com/yourhandle">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-secondary">Supporting Verification Proof (Optional)</label>
+              <input type="text" name="skills_proof" class="form-control" placeholder="e.g. AWS Certified Solutions Architect, Ex-Staff Engineer">
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-dark w-100 py-2 fw-semibold">
+            Submit Application for Review
+          </button>
+        </form>
+
+        <div class="text-center mt-4 pt-3 border-top small text-muted">
+          Already registered as an instructor? <a href="{{ url_for('auth.login') }}" class="text-primary fw-semibold text-decoration-none">Sign in</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

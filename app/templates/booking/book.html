@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block title %}Schedule Session with {{ profile.display_name }} — SkillSwap{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-9">
+      <div class="card border p-4 p-md-5 bg-white">
+        
+        <div class="d-flex align-items-center gap-3 border-bottom pb-4 mb-4">
+          {% if profile.user.avatar_url %}
+            <img src="{{ profile.user.avatar_url }}" alt="{{ profile.display_name }}" class="teacher-avatar">
+          {% else %}
+            <div class="bg-dark text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 56px; height: 56px; font-weight: bold; font-size: 1.25rem;">
+              {{ profile.display_name[0] }}
+            </div>
+          {% endif %}
+          <div>
+            <h4 class="fw-bold mb-1 text-dark">Schedule 1-on-1 Session with {{ profile.display_name }}</h4>
+            <div class="text-secondary small">{{ profile.title }}</div>
+            <div class="small text-muted mt-1">
+              <span class="rating-star"><i class="bi bi-star-fill"></i> {{ profile.avg_rating }}</span> · 
+              <span class="fw-semibold text-dark">{{ profile.hourly_rate }} Credits / Session</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Student Wallet Balance Status -->
+        <div class="card bg-light border p-3 mb-4 rounded-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="small text-muted">Your Available Balance:</div>
+              <div class="fw-bold fs-5 {{ 'text-success' if wallet.available_balance >= profile.hourly_rate else 'text-danger' }}">
+                {{ wallet.available_balance }} Credits
+              </div>
+            </div>
+            <div class="text-end">
+              <div class="small text-muted">Session Escrow Hold:</div>
+              <div class="fw-bold fs-5 text-dark">{{ profile.hourly_rate }} Credits</div>
+            </div>
+          </div>
+          {% if wallet.available_balance < profile.hourly_rate %}
+            <div class="alert alert-warning py-2 px-3 small mt-3 mb-0 d-flex justify-content-between align-items-center bg-white border">
+              <span><i class="bi bi-exclamation-triangle me-1 text-warning"></i> You need {{ profile.hourly_rate - wallet.available_balance }} more credits to book this session.</span>
+              <a href="{{ url_for('wallet.purchase') }}" class="btn btn-sm btn-dark">Top Up Credits</a>
+            </div>
+          {% else %}
+            <div class="small text-muted mt-2 border-top pt-2">
+              <i class="bi bi-shield-check text-primary me-1"></i> Credits are held in escrow and settled only after you mark the session complete.
+            </div>
+          {% endif %}
+        </div>
+
+        <form method="POST" action="{{ url_for('booking.book_class', teacher_id=profile.user_id) }}">
+          <input type="hidden" id="teacher-profile-id" value="{{ profile.id }}">
+          <input type="hidden" name="time_slot" id="selected-time-slot" value="">
+
+          <!-- Skill topic -->
+          <div class="mb-4">
+            <label class="form-label fw-semibold small text-secondary">Session Focus / Topic *</label>
+            <select name="skill_id" class="form-select form-select-sm" required>
+              {% for s in skills %}
+                <option value="{{ s.id }}">{{ s.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Date Selection -->
+          <div class="mb-4">
+            <label class="form-label fw-semibold small text-secondary">Select Date *</label>
+            <div class="input-group input-group-sm" style="max-width: 300px;">
+              <span class="input-group-text bg-white"><i class="bi bi-calendar3 text-muted"></i></span>
+              <input type="date" name="class_date" id="booking-date" class="form-control" required>
+            </div>
+            <div class="form-text small">Select a date to check the mentor's open hours.</div>
+          </div>
+
+          <!-- Dynamic Slots Container -->
+          <div class="mb-4">
+            <label class="form-label fw-semibold small text-secondary">Select Hourly Time Slot *</label>
+            <div id="slots-container" class="border rounded p-3 bg-light">
+              <div class="text-muted small">Select a date above to display available hourly slots.</div>
+            </div>
+          </div>
+
+          <!-- Notes -->
+          <div class="mb-4">
+            <label class="form-label fw-semibold small text-secondary">Goals for this Session (Optional)</label>
+            <textarea name="student_notes" rows="3" class="form-control" placeholder="Share specific topics, code repositories, or design files you want to review..."></textarea>
+          </div>
+
+          <!-- Booking Actions -->
+          <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+            <a href="{{ url_for('student.teacher_profile', teacher_id=profile.user_id) }}" class="btn btn-outline-secondary btn-sm">
+              Back to Profile
+            </a>
+            <button type="submit" id="btn-confirm-booking" class="btn btn-dark px-4 py-2" {{ 'disabled' if wallet.available_balance < profile.hourly_rate else '' }}>
+              <i class="bi bi-lock me-1"></i> Confirm & Hold {{ profile.hourly_rate }} Credits
+            </button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/booking.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Teaching Profile — SkillSwap{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-9">
+      <div class="card border p-4 p-md-5 bg-white">
+        <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
+          <div>
+            <h3 class="fw-bold mb-1">Teaching Profile & Availability</h3>
+            <p class="text-muted small mb-0">Update your public headline, rates, skills, and weekly calendar hours.</p>
+          </div>
+          <a href="{{ url_for('teacher.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+            Studio
+          </a>
+        </div>
+
+        <form method="POST" action="{{ url_for('teacher.profile_edit') }}">
+          <!-- Basic Info -->
+          <h6 class="fw-bold mb-3 text-dark small text-uppercase" style="letter-spacing: 0.04em;">1. Public Profile</h6>
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-secondary">Display Name</label>
+              <input type="text" name="name" class="form-control" value="{{ current_user.name }}" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-secondary">Avatar URL</label>
+              <input type="url" name="avatar_url" class="form-control" placeholder="https://..." value="{{ current_user.avatar_url or '' }}">
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-secondary">Professional Title / Headline</label>
+            <input type="text" name="title" class="form-control" value="{{ profile.title or '' }}" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-semibold text-secondary">Introduction & Bio</label>
+            <textarea name="bio" rows="4" class="form-control" required>{{ profile.bio or '' }}</textarea>
+          </div>
+
+          <div class="row g-3 mb-4">
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold text-secondary">Experience (Years)</label>
+              <input type="number" name="experience_years" class="form-control" min="0" max="50" value="{{ profile.experience_years }}" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold text-secondary">Hourly Rate (Credits / Hr)</label>
+              <input type="number" name="hourly_rate" class="form-control" min="10" max="1000" value="{{ profile.hourly_rate }}" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold text-secondary">Languages</label>
+              <input type="text" name="languages" class="form-control" value="{{ profile.languages }}" required>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-secondary">Portfolio or GitHub URL</label>
+              <input type="url" name="portfolio_url" class="form-control" value="{{ profile.portfolio_url or '' }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-secondary">Supporting Credential Proof</label>
+              <input type="text" name="skills_proof" class="form-control" value="{{ profile.skills_proof or '' }}">
+            </div>
+          </div>
+
+          <!-- Skills Checklist -->
+          <h6 class="fw-bold mb-3 text-dark small text-uppercase" style="letter-spacing: 0.04em;">2. Teaching Skills</h6>
+          <div class="border rounded p-3 bg-light mb-4" style="max-height: 180px; overflow-y: auto;">
+            <div class="row g-2">
+              {% for skill in all_skills %}
+                <div class="col-md-4 col-sm-6">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="skills" value="{{ skill.id }}" id="edit_skill_{{ skill.id }}" {{ 'checked' if skill.id in teacher_skill_ids else '' }}>
+                    <label class="form-check-label small" for="edit_skill_{{ skill.id }}">{{ skill.name }}</label>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- Availability Schedule -->
+          <h6 class="fw-bold mb-2 text-dark small text-uppercase" style="letter-spacing: 0.04em;">3. Weekly Availability Schedule</h6>
+          <p class="text-muted small mb-3">Check the days you conduct sessions and set open working hours.</p>
+
+          <div class="border rounded p-3 mb-4 bg-white">
+            {% set days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] %}
+            {% for d in range(7) %}
+              {% set av = availabilities.get(d) %}
+              <div class="row align-items-center py-2 border-bottom g-2">
+                <div class="col-md-3 col-6">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="day_{{ d }}_active" id="day_{{ d }}" {{ 'checked' if av and av.is_active else '' }}>
+                    <label class="form-check-label fw-semibold small text-dark" for="day_{{ d }}">{{ days[d] }}</label>
+                  </div>
+                </div>
+                <div class="col-md-4 col-6">
+                  <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-white">From</span>
+                    <input type="time" name="day_{{ d }}_start" class="form-control" value="{{ av.start_time if av else '09:00' }}">
+                  </div>
+                </div>
+                <div class="col-md-4 col-6">
+                  <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-white">To</span>
+                    <input type="time" name="day_{{ d }}_end" class="form-control" value="{{ av.end_time if av else '17:00' }}">
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+
+          <div class="d-flex justify-content-end gap-2">
+            <a href="{{ url_for('teacher.dashboard') }}" class="btn btn-outline-secondary btn-sm">Cancel</a>
+            <button type="submit" class="btn btn-dark btn-sm px-4">Save Profile Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
