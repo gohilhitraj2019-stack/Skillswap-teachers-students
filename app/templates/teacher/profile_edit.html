@@ -17,28 +17,73 @@
           </a>
         </div>
 
-        <form method="POST" action="{{ url_for('teacher.profile_edit') }}">
-          <!-- Basic Info -->
+        <form method="POST" action="{{ url_for('teacher.profile_edit') }}" enctype="multipart/form-data">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+          <!-- 1. Public Profile -->
           <h6 class="fw-bold mb-3 text-dark small text-uppercase" style="letter-spacing: 0.04em;">1. Public Profile</h6>
+          
+          <!-- Avatar Upload & Visual Alignment Box -->
+          <div class="card bg-light border p-3 p-md-4 mb-4 rounded-3">
+            <div class="row align-items-center g-3">
+              <div class="col-auto">
+                <div class="position-relative">
+                  {% if current_user.avatar_url %}
+                    <img id="avatar-preview-img" src="{{ current_user.avatar_url }}" alt="{{ current_user.name }}" class="rounded-circle border shadow-sm" width="88" height="88" style="object-fit: cover;">
+                  {% else %}
+                    <div id="avatar-preview-fallback" class="bg-dark text-white rounded-circle d-flex align-items-center justify-content-center border shadow-sm" style="width: 88px; height: 88px; font-size: 2rem; font-weight: bold;">
+                      {{ current_user.name[0]|upper if current_user.name else 'T' }}
+                    </div>
+                    <img id="avatar-preview-img" src="" alt="Avatar Preview" class="rounded-circle border shadow-sm d-none" width="88" height="88" style="object-fit: cover;">
+                  {% endif %}
+                </div>
+              </div>
+              <div class="col">
+                <label for="avatar_file" class="form-label small fw-bold text-dark mb-1">
+                  <i class="bi bi-camera text-primary me-1"></i> Profile Photo / Avatar
+                </label>
+                <div class="input-group input-group-sm mb-2">
+                  <input type="file" id="avatar_file" name="avatar_file" class="form-control" accept="image/png, image/jpeg, image/jpg, image/webp" onchange="previewAvatar(this)">
+                </div>
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                  <span class="small text-muted" style="font-size: 0.75rem;">Supported: JPG, PNG, WEBP (Max 5MB). High quality square photo recommended.</span>
+                  <a class="small text-decoration-none text-secondary" data-bs-toggle="collapse" href="#avatarUrlCollapse" role="button" aria-expanded="false" aria-controls="avatarUrlCollapse" style="font-size: 0.75rem;">
+                    <i class="bi bi-link-45deg me-1"></i> Or paste image URL
+                  </a>
+                </div>
+                <div class="collapse mt-2" id="avatarUrlCollapse">
+                  <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-white small text-muted">URL</span>
+                    <input type="url" id="edit-avatar" name="avatar_url" class="form-control" placeholder="https://images.unsplash.com/..." value="{{ current_user.avatar_url or '' }}" oninput="previewUrlAvatar(this.value)">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="row g-3 mb-3">
             <div class="col-md-6">
-              <label for="edit-name" class="form-label small fw-semibold text-secondary">Display Name</label>
+              <label for="edit-name" class="form-label small fw-semibold text-secondary">Display Name *</label>
               <input type="text" id="edit-name" name="name" class="form-control" value="{{ current_user.name }}" required>
             </div>
             <div class="col-md-6">
-              <label for="edit-avatar" class="form-label small fw-semibold text-secondary">Avatar URL</label>
-              <input type="url" id="edit-avatar" name="avatar_url" class="form-control" placeholder="https://..." value="{{ current_user.avatar_url or '' }}">
+              <label for="edit-title" class="form-label small fw-semibold text-secondary">Professional Title / Headline *</label>
+              <input type="text" id="edit-title" name="title" class="form-control" placeholder="e.g. Senior Full Stack Engineer" value="{{ profile.title or '' }}" required>
             </div>
           </div>
 
-          <div class="mb-3">
-            <label for="edit-title" class="form-label small fw-semibold text-secondary">Professional Title / Headline</label>
-            <input type="text" id="edit-title" name="title" class="form-control" value="{{ profile.title or '' }}" required>
-          </div>
-
-          <div class="mb-3">
-            <label for="edit-bio" class="form-label small fw-semibold text-secondary">Introduction & Bio</label>
-            <textarea id="edit-bio" name="bio" rows="4" class="form-control" required>{{ profile.bio or '' }}</textarea>
+          <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <label for="edit-bio" class="form-label small fw-semibold text-secondary mb-0">Introduction & Bio *</label>
+              <span id="bio-word-counter" class="badge bg-light text-secondary border font-monospace" style="font-size: 0.75rem;">0 / 500 words</span>
+            </div>
+            <textarea id="edit-bio" name="bio" rows="5" class="form-control" placeholder="Describe your technical expertise, career milestones, and how your 1-on-1 mentorship helps students excel..." required oninput="updateBioWordCount()">{{ profile.bio or '' }}</textarea>
+            <div class="d-flex justify-content-between align-items-center mt-1">
+              <span class="small text-muted" style="font-size: 0.75rem;">Write an engaging introduction for potential students (maximum 500 words).</span>
+              <span id="bio-word-warning" class="small text-danger fw-semibold d-none" style="font-size: 0.75rem;">
+                <i class="bi bi-exclamation-triangle-fill me-1"></i> Exceeds maximum 500 words limit
+              </span>
+            </div>
           </div>
 
           <div class="row g-3 mb-4">
@@ -122,4 +167,84 @@
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function previewAvatar(input) {
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Selected image exceeds the 5MB size limit. Please choose a smaller image.');
+      input.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = document.getElementById('avatar-preview-img');
+      const fallback = document.getElementById('avatar-preview-fallback');
+      if (img) {
+        img.src = e.target.result;
+        img.classList.remove('d-none');
+      }
+      if (fallback) {
+        fallback.classList.add('d-none');
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+function previewUrlAvatar(url) {
+  if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+    const img = document.getElementById('avatar-preview-img');
+    const fallback = document.getElementById('avatar-preview-fallback');
+    if (img) {
+      img.src = url;
+      img.classList.remove('d-none');
+    }
+    if (fallback) {
+      fallback.classList.add('d-none');
+    }
+  }
+}
+
+function updateBioWordCount() {
+  const bioInput = document.getElementById('edit-bio');
+  const counter = document.getElementById('bio-word-counter');
+  const warning = document.getElementById('bio-word-warning');
+  if (!bioInput || !counter) return;
+
+  const text = bioInput.value.trim();
+  const words = text.length > 0 ? text.split(/\s+/).length : 0;
+  counter.textContent = `${words} / 500 words`;
+
+  if (words > 500) {
+    counter.className = 'badge bg-danger text-white border font-monospace';
+    if (warning) warning.classList.remove('d-none');
+  } else {
+    counter.className = 'badge bg-light text-secondary border font-monospace';
+    if (warning) warning.classList.add('d-none');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  updateBioWordCount();
+  const form = document.querySelector('form');
+  if (form) {
+    form.addEventListener('submit', function(e) {
+      const bioInput = document.getElementById('edit-bio');
+      if (bioInput) {
+        const text = bioInput.value.trim();
+        const words = text.length > 0 ? text.split(/\s+/).length : 0;
+        if (words > 500) {
+          e.preventDefault();
+          alert(`Your Introduction & Bio exceeds the maximum allowed 500 words (currently ${words} words). Please reduce it before saving.`);
+          bioInput.focus();
+        }
+      }
+    });
+  }
+});
+</script>
 {% endblock %}

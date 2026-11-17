@@ -54,8 +54,17 @@
           </div>
 
           <div class="mb-3">
-            <label for="teacher-bio" class="form-label small fw-semibold text-secondary">Professional Introduction & Bio *</label>
-            <textarea id="teacher-bio" name="bio" rows="3" class="form-control" placeholder="Summarize your background, industry experience, and how your 1-on-1 sessions help developers and creators succeed..." required></textarea>
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <label for="teacher-bio" class="form-label small fw-semibold text-secondary mb-0">Professional Introduction & Bio *</label>
+              <span id="register-bio-counter" class="badge bg-light text-secondary border font-monospace" style="font-size: 0.75rem;">0 / 500 words</span>
+            </div>
+            <textarea id="teacher-bio" name="bio" rows="4" class="form-control" placeholder="Summarize your background, industry experience, and how your 1-on-1 sessions help developers and creators succeed (max 500 words)..." required oninput="updateRegisterBioCount()"></textarea>
+            <div class="d-flex justify-content-between align-items-center mt-1">
+              <span class="small text-muted" style="font-size: 0.75rem;">Highlight your expertise, accomplishments, and teaching approach (maximum 500 words).</span>
+              <span id="register-bio-warning" class="small text-danger fw-semibold d-none" style="font-size: 0.75rem;">
+                <i class="bi bi-exclamation-triangle-fill me-1"></i> Exceeds maximum 500 words limit
+              </span>
+            </div>
           </div>
 
           <div class="row g-3 mb-3">
@@ -112,4 +121,46 @@
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function updateRegisterBioCount() {
+  const bioInput = document.getElementById('teacher-bio');
+  const counter = document.getElementById('register-bio-counter');
+  const warning = document.getElementById('register-bio-warning');
+  if (!bioInput || !counter) return;
+
+  const text = bioInput.value.trim();
+  const words = text.length > 0 ? text.split(/\s+/).length : 0;
+  counter.textContent = `${words} / 500 words`;
+
+  if (words > 500) {
+    counter.className = 'badge bg-danger text-white border font-monospace';
+    if (warning) warning.classList.remove('d-none');
+  } else {
+    counter.className = 'badge bg-light text-secondary border font-monospace';
+    if (warning) warning.classList.add('d-none');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  updateRegisterBioCount();
+  const form = document.querySelector('form');
+  if (form) {
+    form.addEventListener('submit', function(e) {
+      const bioInput = document.getElementById('teacher-bio');
+      if (bioInput) {
+        const text = bioInput.value.trim();
+        const words = text.length > 0 ? text.split(/\s+/).length : 0;
+        if (words > 500) {
+          e.preventDefault();
+          alert(`Your bio exceeds the maximum 500 words limit (currently ${words} words). Please shorten your bio before submitting.`);
+          bioInput.focus();
+        }
+      }
+    });
+  }
+});
+</script>
 {% endblock %}

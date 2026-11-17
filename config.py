@@ -50,6 +50,11 @@ class Config:
     RAZORPAY_KEY_SECRET = os.getenv('RAZORPAY_KEY_SECRET', '').strip()
     ENABLE_PAYMENT_SIMULATOR = os.getenv('ENABLE_PAYMENT_SIMULATOR', 'True').lower() in ('true', '1', 'yes')
 
+    # File Uploads Configuration
+    UPLOAD_FOLDER = BASE_DIR / 'app' / 'static' / 'uploads'
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp', 'gif'}
+    MAX_CONTENT_LENGTH = 16 * 1024 * 1024
+
 class DevelopmentConfig(Config):
     DEBUG = True
 

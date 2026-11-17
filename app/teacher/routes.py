@@ -10,6 +10,7 @@ from app.models.settings import PlatformSettings
 from app.services.credit_service import ensure_wallet
 from app.services.booking_service import accept_booking, reject_booking, BookingError
 from app.services.payout_service import submit_withdrawal_request, PayoutError
+from app.services.upload_service import save_avatar_image
 
 def require_teacher(f):
     """Decorator or check ensuring the user is a teacher."""
@@ -82,10 +83,34 @@ def profile_edit():
 
     if request.method == 'POST':
         current_user.name = request.form.get('name', '').strip() or current_user.name
-        current_user.avatar_url = request.form.get('avatar_url', '').strip() or current_user.avatar_url
+
+        # 1. Profile Picture: Uploaded file takes precedence, then optional URL
+        avatar_file = request.files.get('avatar_file')
+        if avatar_file and avatar_file.filename:
+            success, result = save_avatar_image(avatar_file, current_user.id)
+            if success:
+                current_user.avatar_url = result
+            else:
+                flash(result, 'danger')
+                return redirect(url_for('teacher.profile_edit'))
+        else:
+            custom_avatar_url = request.form.get('avatar_url', '').strip()
+            if custom_avatar_url:
+                current_user.avatar_url = custom_avatar_url
         
         profile.title = request.form.get('title', '').strip() or profile.title
-        profile.bio = request.form.get('bio', '').strip() or profile.bio
+
+        # 2. Introduction & Bio (Enforce maximum 500 words)
+        bio = request.form.get('bio', '').strip()
+        if bio:
+            word_count = len(bio.split())
+            if word_count > 500:
+                flash(f'Introduction & Bio exceeds the maximum allowed limit of 500 words (currently {word_count} words). Please shorten your bio.', 'danger')
+                return redirect(url_for('teacher.profile_edit'))
+            profile.bio = bio
+        else:
+            profile.bio = profile.bio
+
         profile.languages = request.form.get('languages', 'English').strip()
         profile.portfolio_url = request.form.get('portfolio_url', '').strip()
         profile.skills_proof = request.form.get('skills_proof', '').strip()

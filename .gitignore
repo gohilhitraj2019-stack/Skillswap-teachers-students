@@ -30,6 +30,10 @@ instance/
 *.db
 .webassets-cache
 
+# Uploads
+app/static/uploads/*
+!app/static/uploads/**/.gitkeep
+
 # Environment
 .env
 .env.local

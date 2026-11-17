@@ -180,6 +180,11 @@ def register_teacher():
             flash('Please fill in all mandatory application fields.', 'danger')
             return render_template('auth/register_teacher.html', categories=categories, all_skills=all_skills)
 
+        bio_words = len(bio.split())
+        if bio_words > 500:
+            flash(f'Introduction & Bio exceeds maximum 500 words (currently {bio_words} words).', 'danger')
+            return render_template('auth/register_teacher.html', categories=categories, all_skills=all_skills)
+
         if password != confirm_password:
             flash('Passwords do not match.', 'danger')
             return render_template('auth/register_teacher.html', categories=categories, all_skills=all_skills)
