@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from datetime import timedelta
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -8,6 +9,25 @@ load_dotenv(BASE_DIR / '.env')
 class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'skillswap-mvp-default-secret-key-replace-in-prod')
     
+    # Custom Non-Obvious Admin URL Configuration
+    ADMIN_ROUTE_PREFIX = os.getenv('ADMIN_ROUTE_PREFIX', '/control-center-8f7b2a9d').strip()
+    if not ADMIN_ROUTE_PREFIX.startswith('/'):
+        ADMIN_ROUTE_PREFIX = '/' + ADMIN_ROUTE_PREFIX
+    ADMIN_ROUTE_PREFIX = ADMIN_ROUTE_PREFIX.rstrip('/')
+
+    # Security & Cookie Management (HttpOnly, SameSite, Secure flags)
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    SESSION_COOKIE_SECURE = os.getenv('SESSION_COOKIE_SECURE', 'False').lower() in ('true', '1')
+    REMEMBER_COOKIE_HTTPONLY = True
+    REMEMBER_COOKIE_SAMESITE = 'Lax'
+    REMEMBER_COOKIE_SECURE = os.getenv('SESSION_COOKIE_SECURE', 'False').lower() in ('true', '1')
+    PERMANENT_SESSION_LIFETIME = timedelta(hours=int(os.getenv('SESSION_LIFETIME_HOURS', 8)))
+
+    # Admin Login Rate Limiting & Account Lockout
+    ADMIN_MAX_LOGIN_ATTEMPTS = int(os.getenv('ADMIN_MAX_LOGIN_ATTEMPTS', 5))
+    ADMIN_LOCKOUT_MINUTES = int(os.getenv('ADMIN_LOCKOUT_MINUTES', 15))
+
     # SQLite default path inside instance/
     INSTANCE_PATH = BASE_DIR / 'instance'
     INSTANCE_PATH.mkdir(parents=True, exist_ok=True)

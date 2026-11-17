@@ -3,13 +3,15 @@ from app.models.payment import CreditPackage
 
 def test_admin_credit_packages_crud_lifecycle(client, app):
     """Verify full Create, Read, Update, Delete, and Toggle operations for Credit Packages in Admin Panel."""
-    # 1. Login as Admin
-    client.post('/login', data={'email': 'admin@test.com', 'password': 'Admin@123'}, follow_redirects=True)
+    admin_prefix = app.config.get('ADMIN_ROUTE_PREFIX', '/admin')
+
+    # 1. Login as Super Admin (Settings modification & package deletion require Super Admin)
+    client.post('/login', data={'email': 'superadmin@test.com', 'password': 'SuperAdmin@123'}, follow_redirects=True)
 
     # -------------------------------------------------------------
     # CREATE: Admin creates a new credit package
     # -------------------------------------------------------------
-    create_resp = client.post('/admin/settings', data={
+    create_resp = client.post(f'{admin_prefix}/settings', data={
         'action': 'create_package',
         'name': 'Weekend Mastery Pack',
         'discount_label': 'Flash Sale',
@@ -31,7 +33,7 @@ def test_admin_credit_packages_crud_lifecycle(client, app):
     # -------------------------------------------------------------
     # READ: Admin views the settings page containing the package
     # -------------------------------------------------------------
-    get_resp = client.get('/admin/settings')
+    get_resp = client.get(f'{admin_prefix}/settings')
     assert get_resp.status_code == 200
     assert b'Weekend Mastery Pack' in get_resp.data
     assert b'150 Credits' in get_resp.data
@@ -40,7 +42,7 @@ def test_admin_credit_packages_crud_lifecycle(client, app):
     # -------------------------------------------------------------
     # UPDATE: Admin edits package details
     # -------------------------------------------------------------
-    edit_resp = client.post(f'/admin/packages/{pkg_id}/edit', data={
+    edit_resp = client.post(f'{admin_prefix}/packages/{pkg_id}/edit', data={
         'name': 'Weekend Super Mastery Pack',
         'discount_label': 'Super Deal',
         'credits': '200',
@@ -60,7 +62,7 @@ def test_admin_credit_packages_crud_lifecycle(client, app):
     # -------------------------------------------------------------
     # TOGGLE: Admin toggles package to inactive
     # -------------------------------------------------------------
-    toggle_resp = client.post(f'/admin/packages/{pkg_id}/toggle', follow_redirects=True)
+    toggle_resp = client.post(f'{admin_prefix}/packages/{pkg_id}/toggle', follow_redirects=True)
     assert toggle_resp.status_code == 200
 
     with app.app_context():
@@ -70,7 +72,7 @@ def test_admin_credit_packages_crud_lifecycle(client, app):
     # -------------------------------------------------------------
     # DELETE: Admin deletes the package
     # -------------------------------------------------------------
-    del_resp = client.post(f'/admin/packages/{pkg_id}/delete', follow_redirects=True)
+    del_resp = client.post(f'{admin_prefix}/packages/{pkg_id}/delete', follow_redirects=True)
     assert del_resp.status_code == 200
 
     with app.app_context():

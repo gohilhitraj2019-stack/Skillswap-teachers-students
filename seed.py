@@ -99,6 +99,22 @@ def seed_database():
         db.session.commit()
 
         # 4. Users & Roles
+        # Super Admin Account
+        super_admin = User.query.filter_by(email="superadmin@skillswap.com").first()
+        if not super_admin:
+            super_admin = User(
+                name="Platform Super Administrator",
+                email="superadmin@skillswap.com",
+                phone="+91 9876543200",
+                role="super_admin",
+                is_active=True
+            )
+            super_admin.set_password("SuperAdmin@123")
+            db.session.add(super_admin)
+            db.session.flush()
+            ensure_wallet(super_admin.id)
+            print("  ✓ Created Super Admin: superadmin@skillswap.com / SuperAdmin@123")
+
         # Admin Account
         admin = User.query.filter_by(email="admin@skillswap.com").first()
         if not admin:

@@ -4,6 +4,7 @@ from config import config_by_name
 from app.extensions import db, login_manager, migrate, socketio, csrf
 from app.models.wallet import Wallet
 from app.models.notification import Notification
+from app.models.audit_log import AdminAuditLog
 
 def create_app(config_name=None):
     if config_name is None:
@@ -17,6 +18,24 @@ def create_app(config_name=None):
     # Initialize extensions
     db.init_app(app)
     login_manager.init_app(app)
+    login_manager.login_view = 'auth.login'
+    login_manager.login_message = 'Please log in to access this page.'
+    login_manager.login_message_category = 'warning'
+
+    @login_manager.unauthorized_handler
+    def unauthorized_callback():
+        from flask import request, jsonify, redirect, url_for, flash
+        if (
+            request.is_json
+            or '/api/' in request.path
+            or request.path.endswith('/api')
+            or request.headers.get('Accept') == 'application/json'
+            or request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        ):
+            return jsonify({'error': 'Unauthorized', 'message': 'Authentication required.'}), 401
+        flash(login_manager.login_message, login_manager.login_message_category)
+        return redirect(url_for(login_manager.login_view, next=request.path))
+
     migrate.init_app(app, db)
     socketio.init_app(app, cors_allowed_origins="*", async_mode='threading')
     csrf.init_app(app)
@@ -31,6 +50,8 @@ def create_app(config_name=None):
     from app.classroom import classroom_bp
     from app.admin import admin_bp
 
+    admin_prefix = app.config.get('ADMIN_ROUTE_PREFIX', '/control-center-8f7b2a9d')
+
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(student_bp)
@@ -38,7 +59,18 @@ def create_app(config_name=None):
     app.register_blueprint(booking_bp)
     app.register_blueprint(wallet_bp)
     app.register_blueprint(classroom_bp)
-    app.register_blueprint(admin_bp)
+    app.register_blueprint(admin_bp, url_prefix=admin_prefix)
+
+    # Trap and block old/legacy admin routes to prevent discovery (returns 404)
+    @app.route('/admin', defaults={'subpath': ''}, methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH'])
+    @app.route('/admin/<path:subpath>', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH'])
+    def legacy_admin_trap(subpath):
+        from flask import abort
+        abort(404)
+
+    # Auto-create tables and apply schema safeguards
+    with app.app_context():
+        db.create_all()
 
     # Context processors for global template variables
     @app.context_processor

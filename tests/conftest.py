@@ -32,6 +32,11 @@ def app():
         skill = Skill(category_id=cat.id, name="Python", description="Learn Python")
         db.session.add(skill)
 
+        # Sample Super Admin
+        superadmin = User(name="Super Admin User", email="superadmin@test.com", role="super_admin", is_active=True)
+        superadmin.set_password("SuperAdmin@123")
+        db.session.add(superadmin)
+
         # Sample Admin
         admin = User(name="Admin User", email="admin@test.com", role="admin", is_active=True)
         admin.set_password("Admin@123")

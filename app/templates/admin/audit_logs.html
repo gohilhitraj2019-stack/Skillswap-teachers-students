@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}Security Audit Logs — Admin{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 pb-3 border-bottom">
+    <div>
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <span class="badge bg-dark text-white text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.05em;">Security</span>
+        <h3 class="fw-bold mb-0">Platform Audit Trail</h3>
+      </div>
+      <p class="text-muted small mb-0">Immutable records of administrative operations, authentication events, and authorization checks.</p>
+    </div>
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-arrow-left me-1"></i> Control Panel
+    </a>
+  </div>
+
+  <!-- Filter Card -->
+  <div class="card border p-3 mb-4 bg-white shadow-sm" style="border-radius: 10px;">
+    <form method="GET" action="{{ url_for('admin.audit_logs') }}" class="row g-2 align-items-center">
+      <div class="col-md-6 col-lg-4">
+        <label for="action-filter" class="form-label small text-secondary fw-semibold mb-1">Filter by Action</label>
+        <div class="input-group input-group-sm">
+          <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+          <input type="text" id="action-filter" name="action" class="form-control border-start-0" placeholder="e.g. LOGIN, TEACHER, USER, SETTINGS..." value="{{ current_action }}">
+        </div>
+      </div>
+      <div class="col-auto mt-auto">
+        <button type="submit" class="btn btn-dark btn-sm px-3">Filter Logs</button>
+        {% if current_action %}
+          <a href="{{ url_for('admin.audit_logs') }}" class="btn btn-outline-secondary btn-sm ms-1">Reset</a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+
+  <!-- Logs Table Card -->
+  <div class="card border bg-white shadow-sm" style="border-radius: 12px; overflow: hidden;">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0 small">
+        <thead class="table-light border-bottom text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.04em;">
+          <tr>
+            <th class="ps-3 py-3">Timestamp (UTC)</th>
+            <th>Administrator</th>
+            <th>Role</th>
+            <th>Action</th>
+            <th>Target</th>
+            <th>IP Address</th>
+            <th class="pe-3">Details / Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in logs %}
+            <tr>
+              <td class="ps-3 text-muted font-monospace" style="font-size: 0.75rem;">
+                {{ log.created_at.strftime('%Y-%m-%d %H:%M:%S') if log.created_at else '—' }}
+              </td>
+              <td>
+                <span class="fw-semibold text-dark">{{ log.admin.name if log.admin else log.admin_email }}</span>
+                {% if log.admin and log.admin.email != log.admin.name %}
+                  <div class="text-muted" style="font-size: 0.7rem;">{{ log.admin_email }}</div>
+                {% endif %}
+              </td>
+              <td>
+                {% if log.admin_role == 'super_admin' %}
+                  <span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size: 0.65rem;">Super Admin</span>
+                {% elif log.admin_role == 'admin' %}
+                  <span class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size: 0.65rem;">Admin</span>
+                {% else %}
+                  <span class="badge bg-light text-muted border" style="font-size: 0.65rem;">{{ log.admin_role }}</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if 'SUCCESS' in log.action or 'APPROVED' in log.action or 'ACTIVATED' in log.action %}
+                  <span class="badge bg-success text-white" style="font-size: 0.7rem;">{{ log.action }}</span>
+                {% elif 'FAILED' in log.action or 'REJECTED' in log.action or 'DELETED' in log.action or 'LOCKED' in log.action %}
+                  <span class="badge bg-danger text-white" style="font-size: 0.7rem;">{{ log.action }}</span>
+                {% elif 'UNAUTHORIZED' in log.action %}
+                  <span class="badge bg-warning text-dark border" style="font-size: 0.7rem;">{{ log.action }}</span>
+                {% else %}
+                  <span class="badge bg-dark text-white" style="font-size: 0.7rem;">{{ log.action }}</span>
+                {% endif %}
+              </td>
+              <td class="text-secondary">
+                {% if log.target_type %}
+                  <code>{{ log.target_type }}{% if log.target_id %}#{{ log.target_id }}{% endif %}</code>
+                {% else %}
+                  <span class="text-muted">—</span>
+                {% endif %}
+              </td>
+              <td class="font-monospace text-muted" style="font-size: 0.75rem;">
+                {{ log.ip_address or '—' }}
+              </td>
+              <td class="pe-3 text-secondary" style="max-width: 320px;">
+                {{ log.details or '—' }}
+              </td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="7" class="text-center py-5 text-muted">
+                <i class="bi bi-shield-check fs-2 d-block text-secondary mb-2"></i>
+                No audit logs found matching criteria.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

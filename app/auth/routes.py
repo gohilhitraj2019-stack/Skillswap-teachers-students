@@ -1,10 +1,12 @@
-from flask import render_template, redirect, url_for, flash, request
+from datetime import datetime, timezone
+from flask import render_template, redirect, url_for, flash, request, session, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from app.auth import auth_bp
 from app.extensions import db
 from app.models.user import User
 from app.models.teacher import TeacherProfile, Availability
 from app.models.skill import Skill, SkillCategory, TeacherSkill
+from app.models.audit_log import AdminAuditLog
 from app.services.credit_service import ensure_wallet, grant_free_trial
 from app.services.notification_service import create_notification
 
@@ -28,7 +30,36 @@ def login():
 
         user = User.query.filter_by(email=email).first()
 
+        # Check account lockout before password evaluation
+        if user and user.is_locked():
+            now_utc = datetime.now(timezone.utc)
+            locked_aware = user.locked_until if user.locked_until.tzinfo else user.locked_until.replace(tzinfo=timezone.utc)
+            remaining_mins = max(1, int((locked_aware - now_utc).total_seconds() / 60))
+            if user.is_admin:
+                AdminAuditLog.log(
+                    action='LOGIN_BLOCKED_LOCKED',
+                    admin=user,
+                    ip_address=request.remote_addr,
+                    user_agent=request.user_agent.string if request.user_agent else None,
+                    details=f"Login attempt while account locked. {remaining_mins} minutes remaining."
+                )
+            flash(f'Account is temporarily locked due to repeated failed login attempts. Please try again in {remaining_mins} minutes.', 'danger')
+            return render_template('auth/login.html'), 429
+
         if not user or not user.check_password(password):
+            if user:
+                max_attempts = current_app.config.get('ADMIN_MAX_LOGIN_ATTEMPTS', 5)
+                lockout_mins = current_app.config.get('ADMIN_LOCKOUT_MINUTES', 15)
+                user.record_failed_login(max_attempts=max_attempts, lockout_minutes=lockout_mins)
+                if user.is_admin:
+                    action = 'ADMIN_ACCOUNT_LOCKED' if user.is_locked() else 'ADMIN_LOGIN_FAILED'
+                    AdminAuditLog.log(
+                        action=action,
+                        admin=user,
+                        ip_address=request.remote_addr,
+                        user_agent=request.user_agent.string if request.user_agent else None,
+                        details=f"Failed login attempt ({user.failed_login_attempts}/{max_attempts})."
+                    )
             flash('Invalid email or password.', 'danger')
             return render_template('auth/login.html')
 
@@ -36,7 +67,22 @@ def login():
             flash('Your account has been deactivated. Please contact support.', 'danger')
             return render_template('auth/login.html')
 
+        # Reset failed attempts and record successful login
+        user.record_successful_login(ip_address=request.remote_addr)
+
+        # Invalidate old session to prevent session fixation attacks
+        session.clear()
         login_user(user, remember=remember)
+
+        if user.is_admin:
+            AdminAuditLog.log(
+                action='ADMIN_LOGIN_SUCCESS',
+                admin=user,
+                ip_address=request.remote_addr,
+                user_agent=request.user_agent.string if request.user_agent else None,
+                details=f"Successful admin login as {user.role}"
+            )
+
         flash(f'Welcome back, {user.name}!', 'success')
 
         next_page = request.args.get('next')
@@ -223,6 +269,15 @@ def register_teacher():
 @auth_bp.route('/logout')
 @login_required
 def logout():
+    if current_user.is_admin:
+        AdminAuditLog.log(
+            action='ADMIN_LOGOUT',
+            admin=current_user,
+            ip_address=request.remote_addr,
+            user_agent=request.user_agent.string if request.user_agent else None,
+            details="Admin session terminated."
+        )
+    session.clear()
     logout_user()
     flash('You have been logged out successfully.', 'info')
     return redirect(url_for('main.index'))

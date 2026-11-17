@@ -101,7 +101,10 @@
                   <li><a class="dropdown-item py-2 small" href="{{ url_for('admin.teachers') }}"><i class="bi bi-person-check text-primary me-2"></i> Teacher Applications</a></li>
                   <li><a class="dropdown-item py-2 small" href="{{ url_for('admin.withdrawals') }}"><i class="bi bi-cash-stack text-success me-2"></i> Payout Approvals</a></li>
                   <li><a class="dropdown-item py-2 small" href="{{ url_for('admin.users') }}"><i class="bi bi-people text-secondary me-2"></i> User Management</a></li>
-                  <li><a class="dropdown-item py-2 small" href="{{ url_for('admin.settings') }}"><i class="bi bi-sliders text-secondary me-2"></i> Commission & Settings</a></li>
+                  {% if current_user.is_super_admin %}
+                    <li><a class="dropdown-item py-2 small" href="{{ url_for('admin.audit_logs') }}"><i class="bi bi-journal-text text-danger me-2"></i> Security Audit Logs</a></li>
+                    <li><a class="dropdown-item py-2 small" href="{{ url_for('admin.settings') }}"><i class="bi bi-sliders text-secondary me-2"></i> Commission & Settings</a></li>
+                  {% endif %}
                 {% else %}
                   {% if current_user.is_teacher %}
                     <li><a class="dropdown-item py-2 small" href="{{ url_for('teacher.dashboard') }}"><i class="bi bi-easel2 text-primary me-2"></i> Instructor Studio</a></li>

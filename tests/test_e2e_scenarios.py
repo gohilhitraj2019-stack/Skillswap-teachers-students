@@ -42,14 +42,15 @@ def test_complete_e2e_acceptance_flow(client, app):
     # -------------------------------------------------------------
     # 2. ADMIN WORKFLOW: Approval of Teacher Application
     # -------------------------------------------------------------
+    admin_prefix = app.config.get('ADMIN_ROUTE_PREFIX', '/admin')
     client.get('/logout', follow_redirects=True)
     # Log in as admin
     client.post('/login', data={'email': 'admin@test.com', 'password': 'Admin@123'}, follow_redirects=True)
-    admin_dash = client.get('/admin/dashboard')
+    admin_dash = client.get(f'{admin_prefix}/dashboard')
     assert admin_dash.status_code == 200
 
     # Approve Elena's application
-    apprv = client.post(f'/admin/teachers/{elena_profile_id}/status', data={
+    apprv = client.post(f'{admin_prefix}/teachers/{elena_profile_id}/status', data={
         'status': 'approved',
         'admin_notes': 'Credentials and publications verified successfully.'
     }, follow_redirects=True)
@@ -236,7 +237,7 @@ def test_complete_e2e_acceptance_flow(client, app):
     client.get('/logout', follow_redirects=True)
     client.post('/login', data={'email': 'admin@test.com', 'password': 'Admin@123'}, follow_redirects=True)
 
-    payout_resp = client.post(f'/admin/withdrawals/{wd_id}/approve', data={
+    payout_resp = client.post(f'{admin_prefix}/withdrawals/{wd_id}/approve', data={
         'payout_reference': 'UTR-AXIS-20261105999',
         'admin_notes': 'Bank UPI reference verified.'
     }, follow_redirects=True)

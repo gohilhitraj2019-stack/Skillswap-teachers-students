@@ -22,9 +22,14 @@
         <a href="{{ url_for('admin.withdrawals', status='pending') }}" class="btn btn-outline-secondary btn-sm">
           Payout Requests ({{ pending_withdrawals }})
         </a>
+        {% if current_user.is_super_admin %}
+        <a href="{{ url_for('admin.audit_logs') }}" class="btn btn-outline-danger btn-sm">
+          <i class="bi bi-shield-check me-1"></i> Audit Logs
+        </a>
         <a href="{{ url_for('admin.settings') }}" class="btn btn-dark btn-sm">
           <i class="bi bi-sliders me-1"></i> System Settings
         </a>
+        {% endif %}
       </div>
     </div>
 
@@ -83,7 +88,10 @@
         <a href="{{ url_for('admin.bookings') }}" class="btn btn-light btn-sm text-dark"><i class="bi bi-calendar-check me-1"></i> Bookings</a>
         <a href="{{ url_for('admin.transactions') }}" class="btn btn-light btn-sm text-dark"><i class="bi bi-receipt me-1"></i> Ledger & Wallets</a>
         <a href="{{ url_for('admin.withdrawals') }}" class="btn btn-light btn-sm text-dark"><i class="bi bi-bank me-1"></i> Withdrawals</a>
+        {% if current_user.is_super_admin %}
+        <a href="{{ url_for('admin.audit_logs') }}" class="btn btn-light btn-sm text-dark"><i class="bi bi-shield-check me-1"></i> Audit Logs</a>
         <a href="{{ url_for('admin.settings') }}" class="btn btn-light btn-sm text-dark"><i class="bi bi-gear me-1"></i> Parameters</a>
+        {% endif %}
       </div>
     </div>
 
