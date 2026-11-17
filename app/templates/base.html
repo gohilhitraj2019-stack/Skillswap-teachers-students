@@ -24,7 +24,7 @@
   <!-- Top Navigation Bar -->
   <nav class="navbar navbar-expand-lg sticky-top">
     <div class="container">
-      <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url_for('main.index') }}">
+      <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url_for('admin.dashboard') if (current_user.is_authenticated and current_user.is_admin) else url_for('main.index') }}">
         <div class="brand-icon-box">
           <i class="bi bi-arrow-left-right"></i>
         </div>
@@ -37,16 +37,18 @@
 
       <div class="collapse navbar-collapse" id="navbarMain">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
-          <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('student.explore') }}">Explore Instructors</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('main.index') }}#how-it-works">How It Works</a>
-          </li>
-          {% if not current_user.is_authenticated or (not current_user.is_teacher and not current_user.is_admin) %}
+          {% if not current_user.is_authenticated or not current_user.is_admin %}
             <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('auth.register_teacher') }}">Become an Instructor</a>
+              <a class="nav-link" href="{{ url_for('student.explore') }}">Explore Instructors</a>
             </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('main.index') }}#how-it-works">How It Works</a>
+            </li>
+            {% if not current_user.is_teacher %}
+              <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('auth.register_teacher') }}">Become an Instructor</a>
+              </li>
+            {% endif %}
           {% endif %}
         </ul>
 
@@ -171,15 +173,19 @@
           <p class="text-muted small mb-0">Learn directly from verified practitioners with peer escrow security.</p>
         </div>
         <div class="col-md-6 text-center text-md-end">
-          <ul class="list-inline mb-0 small text-muted">
-            <li class="list-inline-item"><a href="{{ url_for('student.explore') }}">Browse Instructors</a></li>
-            <li class="list-inline-item">·</li>
-            <li class="list-inline-item"><a href="{{ url_for('auth.register_teacher') }}">Apply to Teach</a></li>
-            <li class="list-inline-item">·</li>
-            <li class="list-inline-item"><a href="{{ url_for('wallet.purchase') }}">Credit Packages</a></li>
-            <li class="list-inline-item">·</li>
-            <li class="list-inline-item"><a href="{{ url_for('main.index') }}#how-it-works">Escrow Security</a></li>
-          </ul>
+          {% if current_user.is_authenticated and current_user.is_admin %}
+            <span class="small text-muted">Admin Control Center · SkillSwap Management</span>
+          {% else %}
+            <ul class="list-inline mb-0 small text-muted">
+              <li class="list-inline-item"><a href="{{ url_for('student.explore') }}">Browse Instructors</a></li>
+              <li class="list-inline-item">·</li>
+              <li class="list-inline-item"><a href="{{ url_for('auth.register_teacher') }}">Apply to Teach</a></li>
+              <li class="list-inline-item">·</li>
+              <li class="list-inline-item"><a href="{{ url_for('wallet.purchase') }}">Credit Packages</a></li>
+              <li class="list-inline-item">·</li>
+              <li class="list-inline-item"><a href="{{ url_for('main.index') }}#how-it-works">Escrow Security</a></li>
+            </ul>
+          {% endif %}
         </div>
       </div>
     </div>

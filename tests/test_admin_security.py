@@ -260,3 +260,34 @@ def test_scenario_12_audit_log_persists_administrative_actions(client, app):
         assert log is not None
         assert log.admin_email == 'superadmin@test.com'
         assert 'Audit Test Pack' in log.details
+
+def test_scenario_13_admin_dashboard_hides_consumer_nav_links(client, app):
+    """
+    Verify that consumer links (Explore Instructors, How It Works, Become an Instructor)
+    are removed from the admin dashboard and when logged in as administrator.
+    """
+    admin_prefix = app.config['ADMIN_ROUTE_PREFIX']
+
+    # 1. Guest user sees public links on homepage
+    guest_home = client.get('/')
+    assert b'Explore Instructors' in guest_home.data
+    assert b'How It Works' in guest_home.data
+
+    # 2. Log in as Admin
+    client.post('/login', data={'email': 'admin@test.com', 'password': 'Admin@123'}, follow_redirects=True)
+    admin_dash = client.get(f'{admin_prefix}/dashboard')
+    assert admin_dash.status_code == 200
+    assert b'Explore Instructors' not in admin_dash.data
+    assert b'How It Works' not in admin_dash.data
+    assert b'Become an Instructor' not in admin_dash.data
+    assert b'Browse Instructors' not in admin_dash.data
+
+    # 3. Log in as Super Admin
+    client.get('/logout', follow_redirects=True)
+    client.post('/login', data={'email': 'superadmin@test.com', 'password': 'SuperAdmin@123'}, follow_redirects=True)
+    super_dash = client.get(f'{admin_prefix}/dashboard')
+    assert super_dash.status_code == 200
+    assert b'Explore Instructors' not in super_dash.data
+    assert b'How It Works' not in super_dash.data
+    assert b'Become an Instructor' not in super_dash.data
+    assert b'Browse Instructors' not in super_dash.data
