@@ -130,7 +130,7 @@
               <div class="row g-3 mb-3">
                 <div class="col-md-6">
                   <label for="edit-name" class="form-label small fw-semibold text-secondary">Full Name *</label>
-                  <input type="text" id="edit-name" name="name" class="form-control" value="{{ current_user.name }}" minlength="2" maxlength="100" required>
+                  <input type="text" id="edit-name" name="name" class="form-control" value="{{ current_user.name }}" minlength="3" maxlength="100" pattern="^[A-Za-z\s'\-]+$" title="Please enter a valid full name." required>
                 </div>
                 <div class="col-md-6">
                   <label for="edit-email" class="form-label small fw-semibold text-secondary">Email Address</label>
@@ -139,7 +139,7 @@
                 </div>
                 <div class="col-md-4">
                   <label for="edit-dob" class="form-label small fw-semibold text-secondary">Date of Birth</label>
-                  <input type="date" id="edit-dob" name="dob" class="form-control" value="{{ profile.dob.strftime('%Y-%m-%d') if profile.dob else '' }}">
+                  <input type="date" id="edit-dob" name="dob" class="form-control" value="{{ profile.dob.strftime('%Y-%m-%d') if profile.dob else '' }}" max="2008-01-01">
                 </div>
                 <div class="col-md-4">
                   <label for="edit-gender" class="form-label small fw-semibold text-secondary">Gender</label>
@@ -153,27 +153,72 @@
                 </div>
                 <div class="col-md-4">
                   <label for="edit-phone" class="form-label small fw-semibold text-secondary">Mobile Number *</label>
-                  <input type="tel" id="edit-phone" name="phone" class="form-control" value="{{ current_user.phone or '' }}" pattern="[0-9]{10}" maxlength="10" placeholder="10-digit mobile number">
+                  <input type="tel" id="edit-phone" name="phone" class="form-control" value="{{ current_user.phone or '' }}" pattern="[6-9][0-9]{9}" maxlength="10" placeholder="10-digit mobile number">
                 </div>
                 <div class="col-12">
                   <label for="edit-address" class="form-label small fw-semibold text-secondary">Current Residential Address</label>
-                  <input type="text" id="edit-address" name="address" class="form-control" value="{{ profile.address or '' }}" placeholder="Flat, Street, Area">
+                  <input type="text" id="edit-address" name="address" class="form-control" value="{{ profile.address or '' }}" minlength="10" maxlength="250" placeholder="Flat, Street, Area">
                 </div>
                 <div class="col-md-4">
                   <label for="edit-city" class="form-label small fw-semibold text-secondary">City</label>
-                  <input type="text" id="edit-city" name="city" class="form-control" value="{{ profile.city or '' }}" placeholder="City">
+                  <input type="text" id="edit-city" name="city" class="form-control" value="{{ profile.city or '' }}" minlength="2" maxlength="100" pattern="^[A-Za-z\s\-]+$" placeholder="City">
                 </div>
                 <div class="col-md-4">
                   <label for="edit-state" class="form-label small fw-semibold text-secondary">State</label>
-                  <input type="text" id="edit-state" name="state" class="form-control" value="{{ profile.state or '' }}" placeholder="State">
+                  <input type="text" id="edit-state" name="state" class="form-control" list="profileStateOptions" value="{{ profile.state or '' }}" placeholder="State">
+                  <datalist id="profileStateOptions">
+                    <option value="Andhra Pradesh">
+                    <option value="Arunachal Pradesh">
+                    <option value="Assam">
+                    <option value="Bihar">
+                    <option value="Chhattisgarh">
+                    <option value="Goa">
+                    <option value="Gujarat">
+                    <option value="Haryana">
+                    <option value="Himachal Pradesh">
+                    <option value="Jharkhand">
+                    <option value="Karnataka">
+                    <option value="Kerala">
+                    <option value="Madhya Pradesh">
+                    <option value="Maharashtra">
+                    <option value="Manipur">
+                    <option value="Meghalaya">
+                    <option value="Mizoram">
+                    <option value="Nagaland">
+                    <option value="Odisha">
+                    <option value="Punjab">
+                    <option value="Rajasthan">
+                    <option value="Sikkim">
+                    <option value="Tamil Nadu">
+                    <option value="Telangana">
+                    <option value="Tripura">
+                    <option value="Uttar Pradesh">
+                    <option value="Uttarakhand">
+                    <option value="West Bengal">
+                    <option value="Delhi">
+                    <option value="Jammu and Kashmir">
+                    <option value="Ladakh">
+                    <option value="Puducherry">
+                    <option value="Chandigarh">
+                    <option value="Andaman and Nicobar Islands">
+                    <option value="Dadra and Nagar Haveli and Daman and Diu">
+                    <option value="Lakshadweep">
+                  </datalist>
                 </div>
                 <div class="col-md-2">
                   <label for="edit-pin" class="form-label small fw-semibold text-secondary">PIN Code</label>
-                  <input type="text" id="edit-pin" name="pin_code" class="form-control" value="{{ profile.pin_code or '' }}" pattern="[0-9]{6}" maxlength="6" placeholder="6-digit PIN">
+                  <input type="text" id="edit-pin" name="pin_code" class="form-control" value="{{ profile.pin_code or '' }}" pattern="[1-9][0-9]{5}" maxlength="6" placeholder="6-digit PIN">
                 </div>
                 <div class="col-md-2">
                   <label for="edit-country" class="form-label small fw-semibold text-secondary">Country</label>
-                  <input type="text" id="edit-country" name="country" class="form-control" value="{{ profile.country or 'India' }}">
+                  <select id="edit-country" name="country" class="form-select">
+                    <option value="India" {% if profile.country == 'India' or not profile.country %}selected{% endif %}>India</option>
+                    <option value="United States" {% if profile.country == 'United States' %}selected{% endif %}>United States</option>
+                    <option value="United Kingdom" {% if profile.country == 'United Kingdom' %}selected{% endif %}>United Kingdom</option>
+                    <option value="Canada" {% if profile.country == 'Canada' %}selected{% endif %}>Canada</option>
+                    <option value="Australia" {% if profile.country == 'Australia' %}selected{% endif %}>Australia</option>
+                    <option value="Other" {% if profile.country not in ['India', 'United States', 'United Kingdom', 'Canada', 'Australia'] and profile.country %}selected{% endif %}>Other</option>
+                  </select>
                 </div>
               </div>
             </div>
@@ -705,6 +750,39 @@ function syncClassLevels() {
   });
 }
 
+const VERHOEFF_D = [
+  [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+  [1, 2, 3, 4, 0, 6, 7, 8, 9, 5],
+  [2, 3, 4, 0, 1, 7, 8, 9, 5, 6],
+  [3, 4, 0, 1, 2, 8, 9, 5, 6, 7],
+  [4, 0, 1, 2, 3, 9, 5, 6, 7, 8],
+  [5, 9, 8, 7, 6, 0, 4, 3, 2, 1],
+  [6, 5, 9, 8, 7, 1, 0, 4, 3, 2],
+  [7, 6, 5, 9, 8, 2, 1, 0, 4, 3],
+  [8, 7, 6, 5, 9, 3, 2, 1, 0, 4],
+  [9, 8, 7, 6, 5, 4, 3, 2, 1, 0]
+];
+const VERHOEFF_P = [
+  [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+  [1, 5, 7, 6, 2, 8, 3, 0, 9, 4],
+  [5, 8, 0, 3, 7, 9, 6, 1, 4, 2],
+  [8, 9, 1, 6, 0, 4, 3, 5, 2, 7],
+  [9, 4, 5, 3, 1, 2, 6, 8, 7, 0],
+  [4, 2, 8, 6, 5, 7, 3, 9, 0, 1],
+  [2, 7, 9, 3, 8, 0, 6, 4, 1, 5],
+  [7, 0, 4, 6, 9, 1, 3, 2, 5, 8]
+];
+
+function validateVerhoeff(str) {
+  if (!str || !/^\d+$/.test(str)) return false;
+  let c = 0;
+  const reversed = str.split('').reverse();
+  for (let i = 0; i < reversed.length; i++) {
+    c = VERHOEFF_D[c][VERHOEFF_P[i % 8][parseInt(reversed[i], 10)]];
+  }
+  return c === 0;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   updateBioWordCount();
   syncClassLevels();
@@ -712,7 +790,112 @@ document.addEventListener('DOMContentLoaded', function() {
   const form = document.getElementById('profileForm');
   if (form) {
     form.addEventListener('submit', function(e) {
-      // 1. Bio validation
+      // 1. Full Name validation
+      const nameInput = document.getElementById('edit-name');
+      if (nameInput) {
+        const val = nameInput.value.trim();
+        const regex = /^[A-Za-z\s'\-]+$/;
+        if (val.length < 3 || val.length > 100 || !regex.test(val)) {
+          e.preventDefault();
+          alert('Please enter a valid full name (3-100 characters, alphabetic characters only).');
+          const tab = new bootstrap.Tab(document.getElementById('personal-tab'));
+          tab.show();
+          nameInput.focus();
+          return;
+        }
+      }
+
+      // 2. Mobile Phone validation
+      const phoneInput = document.getElementById('edit-phone');
+      if (phoneInput && phoneInput.value.trim()) {
+        const cleanPhone = phoneInput.value.replace(/\D/g, '');
+        if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
+          e.preventDefault();
+          alert('Please enter a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9.');
+          const tab = new bootstrap.Tab(document.getElementById('personal-tab'));
+          tab.show();
+          phoneInput.focus();
+          return;
+        }
+      }
+
+      // 3. Date of Birth validation
+      const dobInput = document.getElementById('edit-dob');
+      if (dobInput && dobInput.value) {
+        const birthDate = new Date(dobInput.value);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+        if (age < 18) {
+          e.preventDefault();
+          alert(`You must be at least 18 years old to register as an instructor (calculated age: ${age} years).`);
+          const tab = new bootstrap.Tab(document.getElementById('personal-tab'));
+          tab.show();
+          dobInput.focus();
+          return;
+        }
+      }
+
+      // 4. PIN Code validation
+      const pinInput = document.getElementById('edit-pin');
+      if (pinInput && pinInput.value.trim()) {
+        const cleanPin = pinInput.value.replace(/\D/g, '');
+        if (!/^[1-9]\d{5}$/.test(cleanPin)) {
+          e.preventDefault();
+          alert('Please enter a valid 6-digit PIN code (first digit cannot be 0).');
+          const tab = new bootstrap.Tab(document.getElementById('personal-tab'));
+          tab.show();
+          pinInput.focus();
+          return;
+        }
+      }
+
+      // 5. Aadhaar Card validation
+      const aadhInput = document.querySelector('input[name="aadhaar_number"]');
+      if (aadhInput && aadhInput.value.trim() && !aadhInput.value.includes('XXXX')) {
+        const cleanAadh = aadhInput.value.replace(/\D/g, '');
+        if (cleanAadh.length !== 12) {
+          e.preventDefault();
+          alert('Aadhaar number must be exactly 12 numeric digits.');
+          const tab = new bootstrap.Tab(document.getElementById('kyc-tab'));
+          tab.show();
+          aadhInput.focus();
+          return;
+        }
+        if (/^(\d)\1{11}$/.test(cleanAadh)) {
+          e.preventDefault();
+          alert('Please enter a valid Aadhaar number (repetitive digits not permitted).');
+          const tab = new bootstrap.Tab(document.getElementById('kyc-tab'));
+          tab.show();
+          aadhInput.focus();
+          return;
+        }
+        if (!validateVerhoeff(cleanAadh)) {
+          e.preventDefault();
+          alert('Please enter a valid Aadhaar number (Verhoeff checksum verification failed).');
+          const tab = new bootstrap.Tab(document.getElementById('kyc-tab'));
+          tab.show();
+          aadhInput.focus();
+          return;
+        }
+      }
+
+      // 6. PAN Card validation
+      const panInput = document.querySelector('input[name="pan_number"]');
+      if (panInput && panInput.value.trim() && !panInput.value.includes('XXXX')) {
+        const panVal = panInput.value.trim().toUpperCase();
+        if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(panVal)) {
+          e.preventDefault();
+          alert('PAN number must match standard format (e.g. ABCDE1234F).');
+          const tab = new bootstrap.Tab(document.getElementById('kyc-tab'));
+          tab.show();
+          panInput.focus();
+          return;
+        }
+      }
+
+      // 7. Bio validation
       const bioInput = document.getElementById('edit-bio');
       if (bioInput) {
         const text = bioInput.value.trim();
@@ -735,67 +918,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       }
 
-      // 2. Mobile Phone validation
-      const phoneInput = document.getElementById('edit-phone');
-      if (phoneInput && phoneInput.value.trim()) {
-        const cleanPhone = phoneInput.value.replace(/\D/g, '');
-        if (cleanPhone.length !== 10) {
-          e.preventDefault();
-          alert('Mobile number must be exactly 10 digits.');
-          const tab = new bootstrap.Tab(document.getElementById('personal-tab'));
-          tab.show();
-          phoneInput.focus();
-          return;
-        }
-      }
-
-      // 3. Date of Birth validation
-      const dobInput = document.getElementById('edit-dob');
-      if (dobInput && dobInput.value) {
-        const birthDate = new Date(dobInput.value);
-        const today = new Date();
-        let age = today.getFullYear() - birthDate.getFullYear();
-        const m = today.getMonth() - birthDate.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
-        if (age < 18) {
-          e.preventDefault();
-          alert(`Instructors must be at least 18 years old (calculated age: ${age} years).`);
-          const tab = new bootstrap.Tab(document.getElementById('personal-tab'));
-          tab.show();
-          dobInput.focus();
-          return;
-        }
-      }
-
-      // 4. Aadhaar Card validation
-      const aadhInput = document.querySelector('input[name="aadhaar_number"]');
-      if (aadhInput && aadhInput.value.trim() && !aadhInput.value.includes('XXXX')) {
-        const cleanAadh = aadhInput.value.replace(/\D/g, '');
-        if (cleanAadh.length !== 12) {
-          e.preventDefault();
-          alert('Aadhaar number must be exactly 12 numeric digits.');
-          const tab = new bootstrap.Tab(document.getElementById('kyc-tab'));
-          tab.show();
-          aadhInput.focus();
-          return;
-        }
-      }
-
-      // 5. PAN Card validation
-      const panInput = document.querySelector('input[name="pan_number"]');
-      if (panInput && panInput.value.trim() && !panInput.value.includes('XXXX')) {
-        const panVal = panInput.value.trim().toUpperCase();
-        if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(panVal)) {
-          e.preventDefault();
-          alert('PAN number must match standard format (e.g. ABCDE1234F).');
-          const tab = new bootstrap.Tab(document.getElementById('kyc-tab'));
-          tab.show();
-          panInput.focus();
-          return;
-        }
-      }
-
-      // 6. Availability Schedule validation (start_time < end_time)
+      // 8. Availability Schedule validation (start_time < end_time)
       for (let d = 0; d < 7; d++) {
         const dayActive = document.getElementById(`day_${d}_active`);
         if (dayActive && dayActive.checked) {
@@ -810,6 +933,13 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
           }
         }
+      }
+
+      // Disable submit button to prevent duplicate submissions
+      const saveBtn = form.querySelector('button[type="submit"]');
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Saving Profile...';
       }
     });
   }

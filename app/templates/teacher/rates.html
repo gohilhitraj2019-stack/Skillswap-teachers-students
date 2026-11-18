@@ -137,7 +137,7 @@
                                     </div>
                                     <div class="col-md-6">
                                       <label for="edit_dur_{{ r.id }}" class="form-label small fw-semibold text-secondary">Session Duration (Minutes)</label>
-                                      <input type="number" id="edit_dur_{{ r.id }}" name="session_duration" class="form-control" min="15" max="300" step="15" value="{{ r.session_duration or 60 }}">
+                                      <input type="number" id="edit_dur_{{ r.id }}" name="session_duration" class="form-control" min="15" max="480" step="15" value="{{ r.session_duration or 60 }}">
                                     </div>
                                     <div class="col-md-6 d-flex align-items-center">
                                       <div class="form-check mt-3">
@@ -148,6 +148,9 @@
                                       </div>
                                     </div>
                                     <div class="col-12">
+                                      <label for="edit_desc_{{ r.id }}" class="form-label small fw-semibold text-secondary">Description / Notes (Optional, max 500 characters)</label>
+                                      <textarea id="edit_desc_{{ r.id }}" name="description" rows="2" class="form-control" maxlength="500">{{ r.description or '' }}</textarea>
+                                    </div>
                                       <label for="edit_desc_{{ r.id }}" class="form-label small fw-semibold text-secondary">Description / Curriculum Notes</label>
                                       <textarea id="edit_desc_{{ r.id }}" name="description" rows="2" class="form-control" maxlength="1000" placeholder="Outline syllabus, key topics covered, or session prerequisites...">{{ r.description or '' }}</textarea>
                                     </div>
@@ -254,17 +257,17 @@
             </div>
             <div class="col-md-6">
               <label for="add_duration" class="form-label small fw-semibold text-secondary">Session Duration (Mins)</label>
-              <input type="number" id="add_duration" name="session_duration" class="form-control" min="15" max="300" step="15" value="60">
+              <input type="number" id="add_duration" name="session_duration" class="form-control" min="15" max="480" step="15" value="60">
             </div>
             <div class="col-12">
-              <label for="add_description" class="form-label small fw-semibold text-secondary">Description / Notes (Optional)</label>
-              <textarea id="add_description" name="description" rows="2" class="form-control" maxlength="1000" placeholder="Key topics covered, curriculum board, homework support..."></textarea>
+              <label for="add_description" class="form-label small fw-semibold text-secondary">Description / Notes (Optional, max 500 characters)</label>
+              <textarea id="add_description" name="description" rows="2" class="form-control" maxlength="500" placeholder="Key topics covered, curriculum board, homework support..."></textarea>
             </div>
           </div>
         </div>
         <div class="modal-footer border-top">
           <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-dark btn-sm">Create Rate</button>
+          <button type="submit" class="btn btn-dark btn-sm" id="createRateBtn">Create Rate</button>
         </div>
       </form>
     </div>
@@ -276,11 +279,29 @@ function updateAddClassLevels(category) {
   const levelInput = document.getElementById('add_class_level');
   if (category === 'School') {
     levelInput.placeholder = 'e.g. Class 9-10, Class 11-12';
+    levelInput.required = true;
   } else if (category === 'College') {
     levelInput.placeholder = 'e.g. Undergraduate, Engineering, Medical';
+    levelInput.required = false;
   } else {
     levelInput.placeholder = 'e.g. JEE Main/Advanced, NEET, GATE';
+    levelInput.required = false;
   }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const forms = document.querySelectorAll('form[action*="/teacher/rates"]');
+  forms.forEach(form => {
+    form.addEventListener('submit', function() {
+      const btn = form.querySelector('button[type="submit"]');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Saving...';
+      }
+    });
+  });
+});
+</script>
 }
 </script>
 {% endblock %}

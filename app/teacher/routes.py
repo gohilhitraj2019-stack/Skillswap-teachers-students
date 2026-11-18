@@ -20,9 +20,19 @@ from app.services.upload_service import (
     delete_secure_file, get_secure_documents_base
 )
 from app.services.validation_service import (
-    validate_phone, validate_dob, validate_pin_code,
-    validate_aadhaar, validate_pan, validate_bio,
-    validate_url, validate_rate_amount, validate_passing_year,
+    validate_full_name, validate_dob, validate_gender,
+    validate_phone, validate_email, validate_address,
+    validate_city, validate_state, validate_pin_code,
+    validate_country, validate_aadhaar, validate_pan,
+    validate_highest_qualification, validate_degree_name,
+    validate_university_name, validate_college_name,
+    validate_passing_year, validate_percentage_cgpa,
+    validate_specialization, validate_teaching_subjects,
+    validate_teaching_categories, validate_class_level,
+    validate_board, validate_teaching_languages,
+    validate_demo_video, validate_bio, validate_url,
+    validate_rate_amount, validate_rate_type,
+    validate_session_duration, sanitize_description,
     validate_time_slot
 )
 
@@ -111,8 +121,17 @@ def profile_edit():
     db.session.commit()
 
     if request.method == 'POST':
+        kyc_or_edu_changed = False
+
         # --- Section 1: Personal Details ---
-        current_user.name = request.form.get('name', '').strip() or current_user.name
+        new_name = request.form.get('name', '').strip()
+        if new_name:
+            name_ok, clean_name, name_err = validate_full_name(new_name)
+            if not name_ok:
+                flash(name_err, 'danger')
+                return redirect(url_for('teacher.profile_edit'))
+            current_user.name = clean_name
+
         phone = request.form.get('phone', '').strip()
         if phone:
             phone_ok, clean_phone, phone_err = validate_phone(phone, required=False)
@@ -147,39 +166,75 @@ def profile_edit():
                 return redirect(url_for('teacher.profile_edit'))
             profile.dob = dob_val
 
-        profile.gender = request.form.get('gender', '').strip() or profile.gender
-        profile.address = request.form.get('address', '').strip() or profile.address
-        profile.city = request.form.get('city', '').strip() or profile.city
-        profile.state = request.form.get('state', '').strip() or profile.state
+        gender_val = request.form.get('gender', '').strip()
+        if gender_val:
+            gender_ok, clean_gender, gender_err = validate_gender(gender_val)
+            if not gender_ok:
+                flash(gender_err, 'danger')
+                return redirect(url_for('teacher.profile_edit'))
+            profile.gender = clean_gender
+
+        address_val = request.form.get('address', '').strip()
+        if address_val:
+            addr_ok, clean_addr, addr_err = validate_address(address_val)
+            if not addr_ok:
+                flash(addr_err, 'danger')
+                return redirect(url_for('teacher.profile_edit'))
+            profile.address = clean_addr
+
+        city_val = request.form.get('city', '').strip()
+        if city_val:
+            city_ok, clean_city, city_err = validate_city(city_val)
+            if not city_ok:
+                flash(city_err, 'danger')
+                return redirect(url_for('teacher.profile_edit'))
+            profile.city = clean_city
+
+        country_val = request.form.get('country', '').strip()
+        if country_val:
+            country_ok, clean_country, country_err = validate_country(country_val)
+            if not country_ok:
+                flash(country_err, 'danger')
+                return redirect(url_for('teacher.profile_edit'))
+            profile.country = clean_country
+
+        state_val = request.form.get('state', '').strip()
+        if state_val:
+            state_ok, clean_state, state_err = validate_state(state_val, country=profile.country or 'India')
+            if not state_ok:
+                flash(state_err, 'danger')
+                return redirect(url_for('teacher.profile_edit'))
+            profile.state = clean_state
 
         pin_code = request.form.get('pin_code', '').strip()
         if pin_code:
-            pin_ok, clean_pin, pin_err = validate_pin_code(pin_code, required=False)
+            pin_ok, clean_pin, pin_err = validate_pin_code(pin_code, required=False, country=profile.country or 'India')
             if not pin_ok:
                 flash(pin_err, 'danger')
                 return redirect(url_for('teacher.profile_edit'))
             profile.pin_code = clean_pin
 
-        profile.country = request.form.get('country', '').strip() or profile.country or 'India'
-
         # --- Section 2: Identity Verification (KYC) ---
         new_aadhaar = request.form.get('aadhaar_number', '').strip()
         if new_aadhaar and 'XXXX' not in new_aadhaar:
-            aadhaar_ok, clean_aadhaar, aadhaar_err = validate_aadhaar(new_aadhaar, allow_masked=False, required=False)
+            aadhaar_ok, clean_aadhaar, aadhaar_err = validate_aadhaar(new_aadhaar, allow_masked=False, required=False, enforce_checksum=True)
             if not aadhaar_ok:
                 flash(aadhaar_err, 'danger')
                 return redirect(url_for('teacher.profile_edit'))
-            profile.kyc.aadhaar_number = clean_aadhaar
+            if profile.kyc.aadhaar_number != clean_aadhaar:
+                profile.kyc.aadhaar_number = clean_aadhaar
+                kyc_or_edu_changed = True
 
         aadhaar_doc = request.files.get('aadhaar_doc')
         if aadhaar_doc and aadhaar_doc.filename:
-            success, result = save_secure_document(aadhaar_doc, 'kyc', current_user.id)
+            success, result = save_secure_document(aadhaar_doc, 'kyc', current_user.id, doc_name="Aadhaar document")
             if success:
                 if profile.kyc.aadhaar_doc_path:
                     delete_secure_file('kyc', profile.kyc.aadhaar_doc_path)
                 profile.kyc.aadhaar_doc_path = result
+                kyc_or_edu_changed = True
             else:
-                flash(f"Aadhaar document error: {result}", 'danger')
+                flash(result, 'danger')
                 return redirect(url_for('teacher.profile_edit'))
 
         new_pan = request.form.get('pan_number', '').strip().upper()
@@ -188,17 +243,20 @@ def profile_edit():
             if not pan_ok:
                 flash(pan_err, 'danger')
                 return redirect(url_for('teacher.profile_edit'))
-            profile.kyc.pan_number = clean_pan
+            if profile.kyc.pan_number != clean_pan:
+                profile.kyc.pan_number = clean_pan
+                kyc_or_edu_changed = True
 
         pan_doc = request.files.get('pan_doc')
         if pan_doc and pan_doc.filename:
-            success, result = save_secure_document(pan_doc, 'kyc', current_user.id)
+            success, result = save_secure_document(pan_doc, 'kyc', current_user.id, doc_name="PAN document")
             if success:
                 if profile.kyc.pan_doc_path:
                     delete_secure_file('kyc', profile.kyc.pan_doc_path)
                 profile.kyc.pan_doc_path = result
+                kyc_or_edu_changed = True
             else:
-                flash(f"PAN document error: {result}", 'danger')
+                flash(result, 'danger')
                 return redirect(url_for('teacher.profile_edit'))
 
         other_id_type = request.form.get('other_id_type', '').strip()
@@ -210,20 +268,49 @@ def profile_edit():
 
         other_doc = request.files.get('other_doc')
         if other_doc and other_doc.filename:
-            success, result = save_secure_document(other_doc, 'kyc', current_user.id)
+            success, result = save_secure_document(other_doc, 'kyc', current_user.id, doc_name="Government ID document")
             if success:
                 if profile.kyc.other_doc_path:
                     delete_secure_file('kyc', profile.kyc.other_doc_path)
                 profile.kyc.other_doc_path = result
             else:
-                flash(f"Other ID document error: {result}", 'danger')
+                flash(result, 'danger')
                 return redirect(url_for('teacher.profile_edit'))
 
         # --- Section 3: Educational Qualification ---
-        profile.education.highest_qualification = request.form.get('highest_qualification', '').strip() or profile.education.highest_qualification
-        profile.education.degree_name = request.form.get('degree_name', '').strip() or profile.education.degree_name
-        profile.education.university_name = request.form.get('university_name', '').strip() or profile.education.university_name
-        profile.education.college_name = request.form.get('college_name', '').strip() or profile.education.college_name
+        qual_input = request.form.get('highest_qualification', '').strip()
+        if qual_input:
+            qual_ok, clean_qual, qual_err = validate_highest_qualification(qual_input)
+            if not qual_ok:
+                flash(qual_err, 'danger')
+                return redirect(url_for('teacher.profile_edit'))
+            if profile.education.highest_qualification != clean_qual:
+                profile.education.highest_qualification = clean_qual
+                kyc_or_edu_changed = True
+
+        deg_input = request.form.get('degree_name', '').strip()
+        if deg_input:
+            deg_ok, clean_deg, deg_err = validate_degree_name(deg_input, qual=profile.education.highest_qualification or '')
+            if not deg_ok:
+                flash(deg_err, 'danger')
+                return redirect(url_for('teacher.profile_edit'))
+            profile.education.degree_name = clean_deg
+
+        uni_input = request.form.get('university_name', '').strip()
+        if uni_input:
+            uni_ok, clean_uni, uni_err = validate_university_name(uni_input, qual=profile.education.highest_qualification or '')
+            if not uni_ok:
+                flash(uni_err, 'danger')
+                return redirect(url_for('teacher.profile_edit'))
+            profile.education.university_name = clean_uni
+
+        col_input = request.form.get('college_name', '').strip()
+        if col_input:
+            col_ok, clean_col, col_err = validate_college_name(col_input, qual=profile.education.highest_qualification or '')
+            if not col_ok:
+                flash(col_err, 'danger')
+                return redirect(url_for('teacher.profile_edit'))
+            profile.education.college_name = clean_col
 
         passing_year_str = request.form.get('passing_year', '').strip()
         if passing_year_str:
@@ -233,29 +320,43 @@ def profile_edit():
                 return redirect(url_for('teacher.profile_edit'))
             profile.education.passing_year = clean_pyear
 
-        profile.education.percentage_cgpa = request.form.get('percentage_cgpa', '').strip() or profile.education.percentage_cgpa
-        profile.education.specialization = request.form.get('specialization', '').strip() or profile.education.specialization
+        cgpa_input = request.form.get('percentage_cgpa', '').strip()
+        if cgpa_input:
+            cgpa_ok, clean_cgpa, cgpa_err = validate_percentage_cgpa(cgpa_input)
+            if not cgpa_ok:
+                flash(cgpa_err, 'danger')
+                return redirect(url_for('teacher.profile_edit'))
+            profile.education.percentage_cgpa = clean_cgpa
+
+        spec_input = request.form.get('specialization', '').strip()
+        if spec_input:
+            spec_ok, clean_spec, spec_err = validate_specialization(spec_input)
+            if not spec_ok:
+                flash(spec_err, 'danger')
+                return redirect(url_for('teacher.profile_edit'))
+            profile.education.specialization = clean_spec
 
         cert_doc = request.files.get('certificate_doc')
         if cert_doc and cert_doc.filename:
-            success, result = save_secure_document(cert_doc, 'education', current_user.id)
+            success, result = save_secure_document(cert_doc, 'education', current_user.id, doc_name="degree certificate")
             if success:
                 if profile.education.certificate_doc_path:
                     delete_secure_file('education', profile.education.certificate_doc_path)
                 profile.education.certificate_doc_path = result
+                kyc_or_edu_changed = True
             else:
-                flash(f"Degree certificate error: {result}", 'danger')
+                flash(result, 'danger')
                 return redirect(url_for('teacher.profile_edit'))
 
         marksheet_doc = request.files.get('marksheet_doc')
         if marksheet_doc and marksheet_doc.filename:
-            success, result = save_secure_document(marksheet_doc, 'education', current_user.id)
+            success, result = save_secure_document(marksheet_doc, 'education', current_user.id, doc_name="marksheet document")
             if success:
                 if profile.education.marksheet_doc_path:
                     delete_secure_file('education', profile.education.marksheet_doc_path)
                 profile.education.marksheet_doc_path = result
             else:
-                flash(f"Marksheet document error: {result}", 'danger')
+                flash(result, 'danger')
                 return redirect(url_for('teacher.profile_edit'))
 
         # --- Section 4: Teaching Details ---
@@ -362,11 +463,15 @@ def profile_edit():
         for av in avail_to_add:
             db.session.add(av)
 
-        # Check if teacher requested resubmission or was previously rejected
+        # Check if teacher requested resubmission, was previously rejected, or changed verified KYC/education credentials
         resubmit = request.form.get('resubmit_application') == '1'
         if resubmit or profile.approval_status == 'rejected':
             profile.approval_status = 'pending'
             flash('Your profile has been updated and resubmitted for verification. An administrator will review your application shortly.', 'success')
+        elif kyc_or_edu_changed and profile.approval_status == 'approved':
+            profile.approval_status = 'pending'
+            profile.kyc.is_verified = False
+            flash('Changes to verified KYC or educational credentials require administrative re-verification. Your profile status is now pending review.', 'info')
         else:
             flash('Teacher profile updated successfully!', 'success')
 
@@ -491,8 +596,9 @@ def create_rate():
         flash('Please select a valid teaching category (School, College, or Competitive Exams).', 'danger')
         return redirect(url_for('teacher.rates'))
 
-    if rate_type not in ('Hourly', 'Per Session'):
-        flash('Please select a valid rate type (Hourly or Per Session).', 'danger')
+    type_ok, clean_type, type_err = validate_rate_type(rate_type)
+    if not type_ok:
+        flash(type_err, 'danger')
         return redirect(url_for('teacher.rates'))
 
     rate_ok, rate_amount, rate_err = validate_rate_amount(rate_amount_str, min_amount=10.0, max_amount=50000.0)
@@ -500,17 +606,30 @@ def create_rate():
         flash(rate_err, 'danger')
         return redirect(url_for('teacher.rates'))
 
-    try:
-        session_duration = int(session_duration_str) if session_duration_str else 60
-        if session_duration < 15 or session_duration > 300:
-            flash('Session duration must be between 15 and 300 minutes.', 'danger')
-            return redirect(url_for('teacher.rates'))
-    except ValueError:
-        flash('Session duration must be a valid integer number of minutes.', 'danger')
+    if category == 'School' and not class_level:
+        flash('Please select your teaching class level.', 'danger')
         return redirect(url_for('teacher.rates'))
 
-    if len(description) > 1000:
-        flash('Description cannot exceed 1000 characters.', 'danger')
+    dur_ok, session_duration, dur_err = validate_session_duration(session_duration_str, clean_type)
+    if not dur_ok:
+        flash(dur_err, 'danger')
+        return redirect(url_for('teacher.rates'))
+
+    desc_ok, clean_desc, desc_err = sanitize_description(description, max_chars=500)
+    if not desc_ok:
+        flash(desc_err, 'danger')
+        return redirect(url_for('teacher.rates'))
+
+    # Check for duplicate rate configuration
+    duplicate = TeacherRate.query.filter_by(
+        teacher_profile_id=profile.id,
+        subject=subject,
+        category=category,
+        class_level=class_level,
+        rate_type=clean_type
+    ).first()
+    if duplicate:
+        flash('A rate configuration with this subject, category, class level, and rate type already exists.', 'danger')
         return redirect(url_for('teacher.rates'))
 
     new_rate = TeacherRate(
@@ -519,9 +638,9 @@ def create_rate():
         category=category,
         class_level=class_level,
         rate_amount=rate_amount,
-        rate_type=rate_type,
+        rate_type=clean_type,
         session_duration=session_duration,
-        description=description,
+        description=clean_desc,
         is_active=True
     )
     db.session.add(new_rate)
@@ -559,8 +678,13 @@ def edit_rate(rate_id):
         flash('Please select a valid teaching category (School, College, or Competitive Exams).', 'danger')
         return redirect(url_for('teacher.rates'))
 
-    if rate_type not in ('Hourly', 'Per Session'):
-        flash('Please select a valid rate type (Hourly or Per Session).', 'danger')
+    if category == 'School' and not class_level:
+        flash('Please select your teaching class level.', 'danger')
+        return redirect(url_for('teacher.rates'))
+
+    type_ok, clean_type, type_err = validate_rate_type(rate_type)
+    if not type_ok:
+        flash(type_err, 'danger')
         return redirect(url_for('teacher.rates'))
 
     rate_ok, rate_amount, rate_err = validate_rate_amount(rate_amount_str, min_amount=10.0, max_amount=50000.0)
@@ -568,31 +692,36 @@ def edit_rate(rate_id):
         flash(rate_err, 'danger')
         return redirect(url_for('teacher.rates'))
 
-    try:
-        session_duration = int(session_duration_str) if session_duration_str else 60
-        if session_duration < 15 or session_duration > 300:
-            flash('Session duration must be between 15 and 300 minutes.', 'danger')
-            return redirect(url_for('teacher.rates'))
-    except ValueError:
-        flash('Session duration must be a valid integer number of minutes.', 'danger')
+    dur_ok, session_duration, dur_err = validate_session_duration(session_duration_str, clean_type)
+    if not dur_ok:
+        flash(dur_err, 'danger')
         return redirect(url_for('teacher.rates'))
 
-    if len(description) > 1000:
-        flash('Description cannot exceed 1000 characters.', 'danger')
+    desc_ok, clean_desc, desc_err = sanitize_description(description, max_chars=500)
+    if not desc_ok:
+        flash(desc_err, 'danger')
         return redirect(url_for('teacher.rates'))
 
-    try:
-        session_duration = int(session_duration_str) if session_duration_str else 60
-    except ValueError:
-        session_duration = 60
+    # Check for duplicate rate configuration (excluding current rate)
+    duplicate = TeacherRate.query.filter(
+        TeacherRate.teacher_profile_id == profile.id,
+        TeacherRate.id != rate.id,
+        TeacherRate.subject == subject,
+        TeacherRate.category == category,
+        TeacherRate.class_level == class_level,
+        TeacherRate.rate_type == clean_type
+    ).first()
+    if duplicate:
+        flash('A rate configuration with this subject, category, class level, and rate type already exists.', 'danger')
+        return redirect(url_for('teacher.rates'))
 
     rate.subject = subject
     rate.category = category
     rate.class_level = class_level
     rate.rate_amount = rate_amount
-    rate.rate_type = rate_type
+    rate.rate_type = clean_type
     rate.session_duration = session_duration
-    rate.description = description
+    rate.description = clean_desc
     rate.is_active = is_active
     db.session.commit()
 

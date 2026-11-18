@@ -35,7 +35,7 @@ def test_teacher_registration_flow(client, app):
         'pin_code': '560001',
         'country': 'India',
         # KYC
-        'aadhaar_number': '123456789012',
+        'aadhaar_number': '123456789010',
         'pan_number': 'ABCDE1234F',
         'other_id_type': 'Passport',
         'other_id_number': 'Z1234567',
@@ -81,8 +81,8 @@ def test_teacher_registration_flow(client, app):
 
         # Verify KYC
         assert profile.kyc is not None
-        assert profile.kyc.aadhaar_number == '123456789012'
-        assert profile.kyc.masked_aadhaar == 'XXXX-XXXX-9012'
+        assert profile.kyc.aadhaar_number == '123456789010'
+        assert profile.kyc.masked_aadhaar == 'XXXX-XXXX-9010'
         assert profile.kyc.pan_number == 'ABCDE1234F'
         assert profile.kyc.masked_pan == 'XXXXX1234F'
 
@@ -364,43 +364,56 @@ def test_registration_validation_rules(client, app):
     base_data['pan_number'] = 'INVALIDPAN123'
     resp = client.post('/register/teacher', data=base_data, follow_redirects=True)
     assert resp.status_code == 200
-    assert b'PAN number must be in standard' in resp.data
+    assert b'Please enter a valid PAN number' in resp.data
 
     # 3. Invalid Aadhaar format rejected
     base_data['pan_number'] = 'ABCDE1234F'
     base_data['aadhaar_number'] = '123'
     resp = client.post('/register/teacher', data=base_data, follow_redirects=True)
     assert resp.status_code == 200
-    assert b'Aadhaar number must be exactly 12' in resp.data
+    assert b'Please enter a valid Aadhaar number' in resp.data
 
 def test_rates_crud_validation_rules(client, app):
-    """Test validation boundaries on teaching rates (min/max price, duration, category)."""
+    """Test validation boundaries on teaching rates (min/max price, duration, category, duplicate)."""
     client.post('/login', data={'email': 'teacher@test.com', 'password': 'Teacher@123'}, follow_redirects=True)
 
     # 1. Negative / below min rate rejected
     payload = {
         'subject': 'Physics',
         'category': 'School',
+        'class_level': 'Class 11',
         'rate_amount': '5',  # Below ₹10
         'rate_type': 'Hourly',
         'session_duration': '60'
     }
     resp = client.post('/teacher/rates/create', data=payload, follow_redirects=True)
     assert resp.status_code == 200
-    assert b'at least' in resp.data
+    assert b'Please enter a valid teaching rate' in resp.data
 
     # 2. Exceeding max rate rejected
     payload['rate_amount'] = '60000'
     resp = client.post('/teacher/rates/create', data=payload, follow_redirects=True)
     assert resp.status_code == 200
-    assert b'cannot exceed' in resp.data
+    assert b'Please enter a valid teaching rate' in resp.data
 
     # 3. Invalid session duration rejected
     payload['rate_amount'] = '500'
+    payload['rate_type'] = 'Per Session'
     payload['session_duration'] = '10'  # Below 15 mins
     resp = client.post('/teacher/rates/create', data=payload, follow_redirects=True)
     assert resp.status_code == 200
-    assert b'Session duration must be between 15 and 300 minutes' in resp.data
+    assert b'Session duration must be between 15 and 480 minutes' in resp.data
+
+    # 4. Valid rate creation
+    payload['session_duration'] = '60'
+    resp = client.post('/teacher/rates/create', data=payload, follow_redirects=True)
+    assert resp.status_code == 200
+    assert b'New teaching rate for Physics added successfully' in resp.data
+
+    # 5. Duplicate rate rejected
+    resp_dup = client.post('/teacher/rates/create', data=payload, follow_redirects=True)
+    assert resp_dup.status_code == 200
+    assert b'already exists' in resp_dup.data
 
 def test_admin_rejection_requires_mandatory_notes(client, app):
     """Admin cannot reject teacher application without providing rejection feedback."""

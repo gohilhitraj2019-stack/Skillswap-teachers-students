@@ -170,11 +170,13 @@
             <div class="row g-3 mb-3">
               <div class="col-md-6">
                 <label for="name" class="form-label small fw-semibold text-secondary">Full Legal Name *</label>
-                <input type="text" id="name" name="name" class="form-control" placeholder="Sarah Jenkins" value="{{ current_user.name if current_user.is_authenticated else '' }}" minlength="2" maxlength="100" required>
+                <input type="text" id="name" name="name" class="form-control" placeholder="Sarah Jenkins" value="{{ current_user.name if current_user.is_authenticated else '' }}" minlength="3" maxlength="100" pattern="^[A-Za-z\s'\-\.]+$" title="Please enter a valid full name." required>
+                <div class="invalid-feedback small">Please enter a valid full name (3-100 characters, alphabets only).</div>
               </div>
               <div class="col-md-3">
                 <label for="dob" class="form-label small fw-semibold text-secondary">Date of Birth *</label>
-                <input type="date" id="dob" name="dob" class="form-control" required max="2008-01-01">
+                <input type="date" id="dob" name="dob" class="form-control" required max="2008-01-01" title="You must be at least 18 years old to register as an instructor.">
+                <div class="invalid-feedback small">You must be at least 18 years old to register as an instructor.</div>
               </div>
               <div class="col-md-3">
                 <label for="gender" class="form-label small fw-semibold text-secondary">Gender *</label>
@@ -185,6 +187,7 @@
                   <option value="Other">Other</option>
                   <option value="Prefer not to say">Prefer not to say</option>
                 </select>
+                <div class="invalid-feedback small">Please select your gender.</div>
               </div>
             </div>
 
@@ -192,34 +195,86 @@
               <div class="col-md-6">
                 <label for="email" class="form-label small fw-semibold text-secondary">Email Address *</label>
                 <input type="email" id="email" name="email" class="form-control" placeholder="sarah@example.com" value="{{ current_user.email if current_user.is_authenticated else '' }}" required>
+                <div class="invalid-feedback small">Please enter a valid email address.</div>
               </div>
               <div class="col-md-6">
                 <label for="phone" class="form-label small fw-semibold text-secondary">Mobile Number (WhatsApp Enabled) *</label>
-                <input type="tel" id="phone" name="phone" class="form-control" placeholder="10-digit mobile number" value="{{ current_user.phone if current_user.is_authenticated else '' }}" pattern="[0-9]{10}" maxlength="10" required>
+                <input type="tel" id="phone" name="phone" class="form-control" placeholder="10-digit mobile number" value="{{ current_user.phone if current_user.is_authenticated else '' }}" pattern="[6-9][0-9]{9}" maxlength="10" title="Please enter a valid 10-digit Indian mobile number." required>
+                <div class="invalid-feedback small">Please enter a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9.</div>
               </div>
             </div>
 
             <div class="mb-3">
               <label for="address" class="form-label small fw-semibold text-secondary">Current Residential Address *</label>
-              <input type="text" id="address" name="address" class="form-control" placeholder="House/Flat No., Street, Locality" required>
+              <input type="text" id="address" name="address" class="form-control" placeholder="House/Flat No., Street, Locality (min 10 characters)" minlength="10" maxlength="250" required>
+              <div class="invalid-feedback small">Please enter a valid current address (10 to 250 characters).</div>
             </div>
 
             <div class="row g-3 mb-3">
               <div class="col-md-4">
                 <label for="city" class="form-label small fw-semibold text-secondary">City *</label>
-                <input type="text" id="city" name="city" class="form-control" placeholder="e.g. Mumbai, Bengaluru" required>
+                <input type="text" id="city" name="city" class="form-control" placeholder="e.g. Mumbai, Bengaluru" minlength="2" maxlength="100" pattern="^[A-Za-z\s\-]+$" title="Please enter a valid city." required>
+                <div class="invalid-feedback small">Please enter a valid city.</div>
               </div>
               <div class="col-md-4">
                 <label for="state" class="form-label small fw-semibold text-secondary">State / Province *</label>
-                <input type="text" id="state" name="state" class="form-control" placeholder="e.g. Maharashtra, Karnataka" required>
+                <input type="text" id="state" name="state" class="form-control" list="stateOptions" placeholder="Select or type State" required>
+                <datalist id="stateOptions">
+                  <option value="Andhra Pradesh">
+                  <option value="Arunachal Pradesh">
+                  <option value="Assam">
+                  <option value="Bihar">
+                  <option value="Chhattisgarh">
+                  <option value="Goa">
+                  <option value="Gujarat">
+                  <option value="Haryana">
+                  <option value="Himachal Pradesh">
+                  <option value="Jharkhand">
+                  <option value="Karnataka">
+                  <option value="Kerala">
+                  <option value="Madhya Pradesh">
+                  <option value="Maharashtra">
+                  <option value="Manipur">
+                  <option value="Meghalaya">
+                  <option value="Mizoram">
+                  <option value="Nagaland">
+                  <option value="Odisha">
+                  <option value="Punjab">
+                  <option value="Rajasthan">
+                  <option value="Sikkim">
+                  <option value="Tamil Nadu">
+                  <option value="Telangana">
+                  <option value="Tripura">
+                  <option value="Uttar Pradesh">
+                  <option value="Uttarakhand">
+                  <option value="West Bengal">
+                  <option value="Delhi">
+                  <option value="Jammu and Kashmir">
+                  <option value="Ladakh">
+                  <option value="Puducherry">
+                  <option value="Chandigarh">
+                  <option value="Andaman and Nicobar Islands">
+                  <option value="Dadra and Nagar Haveli and Daman and Diu">
+                  <option value="Lakshadweep">
+                </datalist>
+                <div class="invalid-feedback small">Please select your state.</div>
               </div>
               <div class="col-md-2">
                 <label for="pin_code" class="form-label small fw-semibold text-secondary">PIN Code *</label>
-                <input type="text" id="pin_code" name="pin_code" class="form-control" placeholder="400001" pattern="[0-9]{6}" maxlength="6" required>
+                <input type="text" id="pin_code" name="pin_code" class="form-control" placeholder="400001" pattern="[1-9][0-9]{5}" maxlength="6" title="Please enter a valid 6-digit PIN code." required>
+                <div class="invalid-feedback small">Please enter a valid 6-digit PIN code (first digit cannot be 0).</div>
               </div>
               <div class="col-md-2">
                 <label for="country" class="form-label small fw-semibold text-secondary">Country *</label>
-                <input type="text" id="country" name="country" class="form-control" value="India" required>
+                <select id="country" name="country" class="form-select" required>
+                  <option value="India" selected>India</option>
+                  <option value="United States">United States</option>
+                  <option value="United Kingdom">United Kingdom</option>
+                  <option value="Canada">Canada</option>
+                  <option value="Australia">Australia</option>
+                  <option value="Other">Other</option>
+                </select>
+                <div class="invalid-feedback small">Please select your country.</div>
               </div>
             </div>
 
@@ -708,6 +763,39 @@ function navigateToStep(step) {
   window.scrollTo({ top: 100, behavior: 'smooth' });
 }
 
+const VERHOEFF_D = [
+  [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+  [1, 2, 3, 4, 0, 6, 7, 8, 9, 5],
+  [2, 3, 4, 0, 1, 7, 8, 9, 5, 6],
+  [3, 4, 0, 1, 2, 8, 9, 5, 6, 7],
+  [4, 0, 1, 2, 3, 9, 5, 6, 7, 8],
+  [5, 9, 8, 7, 6, 0, 4, 3, 2, 1],
+  [6, 5, 9, 8, 7, 1, 0, 4, 3, 2],
+  [7, 6, 5, 9, 8, 2, 1, 0, 4, 3],
+  [8, 7, 6, 5, 9, 3, 2, 1, 0, 4],
+  [9, 8, 7, 6, 5, 4, 3, 2, 1, 0]
+];
+const VERHOEFF_P = [
+  [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+  [1, 5, 7, 6, 2, 8, 3, 0, 9, 4],
+  [5, 8, 0, 3, 7, 9, 6, 1, 4, 2],
+  [8, 9, 1, 6, 0, 4, 3, 5, 2, 7],
+  [9, 4, 5, 3, 1, 2, 6, 8, 7, 0],
+  [4, 2, 8, 6, 5, 7, 3, 9, 0, 1],
+  [2, 7, 9, 3, 8, 0, 6, 4, 1, 5],
+  [7, 0, 4, 6, 9, 1, 3, 2, 5, 8]
+];
+
+function validateVerhoeff(str) {
+  if (!str || !/^\d+$/.test(str)) return false;
+  let c = 0;
+  const reversed = str.split('').reverse();
+  for (let i = 0; i < reversed.length; i++) {
+    c = VERHOEFF_D[c][VERHOEFF_P[i % 8][parseInt(reversed[i], 10)]];
+  }
+  return c === 0;
+}
+
 function validateAndGo(fromStep, toStep) {
   const currentPane = document.getElementById('step-' + fromStep);
   if (!currentPane) return;
@@ -728,6 +816,17 @@ function validateAndGo(fromStep, toStep) {
 
   // Step-specific validations
   if (fromStep === 1) {
+    const nameInput = document.getElementById('name');
+    if (nameInput) {
+      const nameVal = nameInput.value.trim();
+      const nameRegex = /^[A-Za-z\s'\-\.]+$/;
+      if (nameVal.length < 3 || nameVal.length > 100 || !nameRegex.test(nameVal)) {
+        alert('Please enter a valid full name (3-100 characters, letters, spaces, hyphens, and apostrophes only).');
+        nameInput.focus();
+        return;
+      }
+    }
+
     const dobInput = document.getElementById('dob');
     if (dobInput && dobInput.value) {
       const birthDate = new Date(dobInput.value);
@@ -738,8 +837,37 @@ function validateAndGo(fromStep, toStep) {
         age--;
       }
       if (age < 18) {
-        alert(`Instructors must be at least 18 years old (calculated age: ${age} years).`);
+        alert(`You must be at least 18 years old to register as an instructor (calculated age: ${age} years).`);
         dobInput.focus();
+        return;
+      }
+    }
+
+    const phoneInput = document.getElementById('phone');
+    if (phoneInput) {
+      const phoneDigits = phoneInput.value.replace(/\D/g, '');
+      const phoneRegex = /^[6-9]\d{9}$/;
+      if (!phoneRegex.test(phoneDigits)) {
+        alert('Please enter a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9.');
+        phoneInput.focus();
+        return;
+      }
+    }
+
+    const addrInput = document.getElementById('address');
+    if (addrInput && addrInput.value.trim().length < 10) {
+      alert('Please enter a valid current address (minimum 10 characters).');
+      addrInput.focus();
+      return;
+    }
+
+    const pinInput = document.getElementById('pin_code');
+    if (pinInput) {
+      const pinDigits = pinInput.value.replace(/\D/g, '');
+      const pinRegex = /^[1-9]\d{5}$/;
+      if (!pinRegex.test(pinDigits)) {
+        alert('Please enter a valid 6-digit PIN code (first digit cannot be 0).');
+        pinInput.focus();
         return;
       }
     }
@@ -754,13 +882,24 @@ function validateAndGo(fromStep, toStep) {
         aadhInput.focus();
         return;
       }
+      if (/^(\d)\1{11}$/.test(aadhDigits)) {
+        alert('Please enter a valid Aadhaar number (repetitive digits not permitted).');
+        aadhInput.focus();
+        return;
+      }
+      if (!validateVerhoeff(aadhDigits)) {
+        alert('Please enter a valid Aadhaar number (Verhoeff checksum verification failed).');
+        aadhInput.focus();
+        return;
+      }
     }
+
     const panInput = document.getElementById('pan_number');
     if (panInput) {
       const panVal = panInput.value.trim().toUpperCase();
       const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
       if (!panRegex.test(panVal)) {
-        alert('PAN number must match standard format (e.g. ABCDE1234F).');
+        alert('Please enter a valid PAN number (e.g. ABCDE1234F).');
         panInput.focus();
         return;
       }
@@ -967,6 +1106,12 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         alert('Please review and check the declaration acknowledgement before submitting.');
         decl.focus();
+        return;
+      }
+      const submitBtn = document.getElementById('submitBtn');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Submitting Application...';
       }
     });
   }
