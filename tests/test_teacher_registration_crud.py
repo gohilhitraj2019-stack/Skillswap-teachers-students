@@ -337,3 +337,84 @@ def test_optional_document_deletion(client, app):
         sarah = User.query.filter_by(email='teacher@test.com').first()
         assert sarah.teacher_profile.kyc.other_doc_path is None
         assert sarah.teacher_profile.education.marksheet_doc_path is None
+
+
+def test_registration_validation_rules(client, app):
+    """Test validation enforcement during registration (underage, invalid PAN/Aadhaar)."""
+    base_data = {
+        'name': 'Underage User',
+        'email': 'underage@test.com',
+        'password': 'Password@123',
+        'confirm_password': 'Password@123',
+        'title': 'Math Tutor',
+        'bio': 'Passionate about numbers and geometry.',
+        'dob': '2015-01-01',  # 11 years old -> Underage!
+        'gender': 'Male',
+        'phone': '9876543210'
+    }
+
+    # 1. Underage registration rejected
+    resp = client.post('/register/teacher', data=base_data, follow_redirects=True)
+    assert resp.status_code == 200
+    assert b'at least 18 years old' in resp.data
+
+    # 2. Invalid PAN format rejected
+    base_data['email'] = 'badpan@test.com'
+    base_data['dob'] = '1995-01-01'
+    base_data['pan_number'] = 'INVALIDPAN123'
+    resp = client.post('/register/teacher', data=base_data, follow_redirects=True)
+    assert resp.status_code == 200
+    assert b'PAN number must be in standard' in resp.data
+
+    # 3. Invalid Aadhaar format rejected
+    base_data['pan_number'] = 'ABCDE1234F'
+    base_data['aadhaar_number'] = '123'
+    resp = client.post('/register/teacher', data=base_data, follow_redirects=True)
+    assert resp.status_code == 200
+    assert b'Aadhaar number must be exactly 12' in resp.data
+
+def test_rates_crud_validation_rules(client, app):
+    """Test validation boundaries on teaching rates (min/max price, duration, category)."""
+    client.post('/login', data={'email': 'teacher@test.com', 'password': 'Teacher@123'}, follow_redirects=True)
+
+    # 1. Negative / below min rate rejected
+    payload = {
+        'subject': 'Physics',
+        'category': 'School',
+        'rate_amount': '5',  # Below ₹10
+        'rate_type': 'Hourly',
+        'session_duration': '60'
+    }
+    resp = client.post('/teacher/rates/create', data=payload, follow_redirects=True)
+    assert resp.status_code == 200
+    assert b'at least' in resp.data
+
+    # 2. Exceeding max rate rejected
+    payload['rate_amount'] = '60000'
+    resp = client.post('/teacher/rates/create', data=payload, follow_redirects=True)
+    assert resp.status_code == 200
+    assert b'cannot exceed' in resp.data
+
+    # 3. Invalid session duration rejected
+    payload['rate_amount'] = '500'
+    payload['session_duration'] = '10'  # Below 15 mins
+    resp = client.post('/teacher/rates/create', data=payload, follow_redirects=True)
+    assert resp.status_code == 200
+    assert b'Session duration must be between 15 and 300 minutes' in resp.data
+
+def test_admin_rejection_requires_mandatory_notes(client, app):
+    """Admin cannot reject teacher application without providing rejection feedback."""
+    client.post('/login', data={'email': 'admin@test.com', 'password': 'Admin@123'}, follow_redirects=True)
+
+    with app.app_context():
+        sarah = User.query.filter_by(email='teacher@test.com').first()
+        sarah_profile_id = sarah.teacher_profile.id
+
+    # Reject without admin_notes
+    resp = client.post(f'/control-center-8f7b2a9d/teachers/{sarah_profile_id}/status', data={
+        'status': 'rejected',
+        'admin_notes': ''  # Empty notes!
+    }, follow_redirects=True)
+
+    assert resp.status_code == 200
+    assert b'Please provide a specific reason' in resp.data

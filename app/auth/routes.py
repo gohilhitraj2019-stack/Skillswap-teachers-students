@@ -17,6 +17,11 @@ from app.models.audit_log import AdminAuditLog
 from app.services.credit_service import ensure_wallet, grant_free_trial
 from app.services.notification_service import create_notification
 from app.services.upload_service import save_avatar_image, save_secure_document, save_demo_video
+from app.services.validation_service import (
+    validate_phone, validate_dob, validate_pin_code,
+    validate_aadhaar, validate_pan, validate_bio,
+    validate_url, validate_rate_amount, validate_passing_year
+)
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
@@ -188,11 +193,13 @@ def register_teacher():
             flash('Please fill in all mandatory application fields.', 'danger')
             return render_template('auth/register_teacher.html', categories=categories, all_skills=all_skills)
 
-        bio_words = len(bio.split())
-        if bio_words > 500:
-            flash(f'Introduction & Bio exceeds maximum 500 words (currently {bio_words} words).', 'danger')
+        # 1. Bio validation (minimum 5 words, maximum 500 words)
+        bio_ok, bio_err = validate_bio(bio, min_words=5, max_words=500)
+        if not bio_ok:
+            flash(bio_err, 'danger')
             return render_template('auth/register_teacher.html', categories=categories, all_skills=all_skills)
 
+        # 2. Password matching & length
         if password != confirm_password:
             flash('Passwords do not match.', 'danger')
             return render_template('auth/register_teacher.html', categories=categories, all_skills=all_skills)
@@ -200,6 +207,62 @@ def register_teacher():
         if len(password) < 6:
             flash('Password must be at least 6 characters long.', 'danger')
             return render_template('auth/register_teacher.html', categories=categories, all_skills=all_skills)
+
+        # 3. Mobile phone validation
+        phone_ok, clean_phone, phone_err = validate_phone(phone, required=False)
+        if not phone_ok:
+            flash(phone_err, 'danger')
+            return render_template('auth/register_teacher.html', categories=categories, all_skills=all_skills)
+
+        # 4. Date of Birth validation (minimum 18 years old)
+        dob_raw = request.form.get('dob', '').strip()
+        dob_ok, dob_val, dob_err = validate_dob(dob_raw, min_age=18)
+        if not dob_ok:
+            flash(dob_err, 'danger')
+            return render_template('auth/register_teacher.html', categories=categories, all_skills=all_skills)
+
+        # 5. PIN Code validation
+        pin_code = request.form.get('pin_code', '').strip()
+        pin_ok, clean_pin, pin_err = validate_pin_code(pin_code, required=False)
+        if not pin_ok:
+            flash(pin_err, 'danger')
+            return render_template('auth/register_teacher.html', categories=categories, all_skills=all_skills)
+
+        # 6. KYC: Aadhaar Card validation
+        aadhaar_raw = request.form.get('aadhaar_number', '').strip()
+        aadhaar_ok, clean_aadhaar, aadhaar_err = validate_aadhaar(aadhaar_raw, allow_masked=False, required=False)
+        if not aadhaar_ok:
+            flash(aadhaar_err, 'danger')
+            return render_template('auth/register_teacher.html', categories=categories, all_skills=all_skills)
+
+        # 7. KYC: PAN Card validation
+        pan_raw = request.form.get('pan_number', '').strip().upper()
+        pan_ok, clean_pan, pan_err = validate_pan(pan_raw, allow_masked=False, required=False)
+        if not pan_ok:
+            flash(pan_err, 'danger')
+            return render_template('auth/register_teacher.html', categories=categories, all_skills=all_skills)
+
+        # 8. Education: Passing Year validation
+        passing_year_val = request.form.get('passing_year', type=int)
+        pyear_ok, clean_pyear, pyear_err = validate_passing_year(passing_year_val)
+        if not pyear_ok:
+            flash(pyear_err, 'danger')
+            return render_template('auth/register_teacher.html', categories=categories, all_skills=all_skills)
+
+        # 9. Teaching: Demo Video URL validation
+        demo_url = request.form.get('demo_video_url', '').strip()
+        if demo_url:
+            url_ok, url_err = validate_url(demo_url)
+            if not url_ok:
+                flash(url_err, 'danger')
+                return render_template('auth/register_teacher.html', categories=categories, all_skills=all_skills)
+
+        # 10. Portfolio URL validation
+        if portfolio_url:
+            purl_ok, purl_err = validate_url(portfolio_url)
+            if not purl_ok:
+                flash(f"Portfolio URL: {purl_err}", 'danger')
+                return render_template('auth/register_teacher.html', categories=categories, all_skills=all_skills)
 
         existing_user = User.query.filter_by(email=email).first()
         if existing_user:
@@ -216,7 +279,7 @@ def register_teacher():
         user = User(
             name=name,
             email=email,
-            phone=phone,
+            phone=clean_phone or phone,
             role='teacher',
             is_active=True,
             is_verified_teacher=False
@@ -231,15 +294,6 @@ def register_teacher():
             ok, avatar_res = save_avatar_image(avatar_file, user.id)
             if ok:
                 user.avatar_url = avatar_res
-
-        # Parse Date of Birth if provided
-        dob_val = None
-        dob_raw = request.form.get('dob', '').strip()
-        if dob_raw:
-            try:
-                dob_val = datetime.strptime(dob_raw, '%Y-%m-%d').date()
-            except ValueError:
-                pass
 
         profile = TeacherProfile(
             user_id=user.id,
@@ -256,7 +310,7 @@ def register_teacher():
             address=request.form.get('address', '').strip() or None,
             city=request.form.get('city', '').strip() or None,
             state=request.form.get('state', '').strip() or None,
-            pin_code=request.form.get('pin_code', '').strip() or None,
+            pin_code=clean_pin or request.form.get('pin_code', '').strip() or None,
             country=request.form.get('country', 'India').strip()
         )
         db.session.add(profile)
@@ -288,9 +342,9 @@ def register_teacher():
 
         kyc_record = TeacherKYC(
             teacher_profile_id=profile.id,
-            aadhaar_number=request.form.get('aadhaar_number', '').strip() or None,
+            aadhaar_number=clean_aadhaar or None,
             aadhaar_doc_path=aadhaar_doc_path,
-            pan_number=request.form.get('pan_number', '').strip().upper() or None,
+            pan_number=clean_pan or None,
             pan_doc_path=pan_doc_path,
             other_id_type=request.form.get('other_id_type', '').strip() or None,
             other_id_number=request.form.get('other_id_number', '').strip() or None,

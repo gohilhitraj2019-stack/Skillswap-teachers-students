@@ -145,6 +145,10 @@ def update_teacher_status(profile_id):
     admin_notes = request.form.get('admin_notes', '').strip()
 
     if new_status in ('approved', 'rejected', 'suspended'):
+        if new_status == 'rejected' and (not admin_notes or len(admin_notes) < 5):
+            flash('Please provide a specific reason (at least 5 characters) for rejecting the instructor application.', 'danger')
+            return redirect(url_for('admin.teachers'))
+
         profile.approval_status = new_status
         profile.admin_notes = admin_notes
         if new_status == 'approved':

@@ -130,7 +130,7 @@
               <div class="row g-3 mb-3">
                 <div class="col-md-6">
                   <label for="edit-name" class="form-label small fw-semibold text-secondary">Full Name *</label>
-                  <input type="text" id="edit-name" name="name" class="form-control" value="{{ current_user.name }}" required>
+                  <input type="text" id="edit-name" name="name" class="form-control" value="{{ current_user.name }}" minlength="2" maxlength="100" required>
                 </div>
                 <div class="col-md-6">
                   <label for="edit-email" class="form-label small fw-semibold text-secondary">Email Address</label>
@@ -153,7 +153,7 @@
                 </div>
                 <div class="col-md-4">
                   <label for="edit-phone" class="form-label small fw-semibold text-secondary">Mobile Number *</label>
-                  <input type="tel" id="edit-phone" name="phone" class="form-control" value="{{ current_user.phone or '' }}" placeholder="10-digit mobile number">
+                  <input type="tel" id="edit-phone" name="phone" class="form-control" value="{{ current_user.phone or '' }}" pattern="[0-9]{10}" maxlength="10" placeholder="10-digit mobile number">
                 </div>
                 <div class="col-12">
                   <label for="edit-address" class="form-label small fw-semibold text-secondary">Current Residential Address</label>
@@ -169,7 +169,7 @@
                 </div>
                 <div class="col-md-2">
                   <label for="edit-pin" class="form-label small fw-semibold text-secondary">PIN Code</label>
-                  <input type="text" id="edit-pin" name="pin_code" class="form-control" value="{{ profile.pin_code or '' }}" placeholder="6-digit PIN">
+                  <input type="text" id="edit-pin" name="pin_code" class="form-control" value="{{ profile.pin_code or '' }}" pattern="[0-9]{6}" maxlength="6" placeholder="6-digit PIN">
                 </div>
                 <div class="col-md-2">
                   <label for="edit-country" class="form-label small fw-semibold text-secondary">Country</label>
@@ -712,17 +712,103 @@ document.addEventListener('DOMContentLoaded', function() {
   const form = document.getElementById('profileForm');
   if (form) {
     form.addEventListener('submit', function(e) {
+      // 1. Bio validation
       const bioInput = document.getElementById('edit-bio');
       if (bioInput) {
         const text = bioInput.value.trim();
         const words = text.length > 0 ? text.split(/\s+/).length : 0;
+        if (words < 5) {
+          e.preventDefault();
+          alert('Introduction & Bio must be at least 5 words.');
+          const tab = new bootstrap.Tab(document.getElementById('teaching-tab'));
+          tab.show();
+          bioInput.focus();
+          return;
+        }
         if (words > 500) {
           e.preventDefault();
           alert(`Your Introduction & Bio exceeds the maximum allowed 500 words (currently ${words} words). Please reduce it before saving.`);
-          // Switch to teaching tab
-          const tabTrigger = new bootstrap.Tab(document.getElementById('teaching-tab'));
-          tabTrigger.show();
+          const tab = new bootstrap.Tab(document.getElementById('teaching-tab'));
+          tab.show();
           bioInput.focus();
+          return;
+        }
+      }
+
+      // 2. Mobile Phone validation
+      const phoneInput = document.getElementById('edit-phone');
+      if (phoneInput && phoneInput.value.trim()) {
+        const cleanPhone = phoneInput.value.replace(/\D/g, '');
+        if (cleanPhone.length !== 10) {
+          e.preventDefault();
+          alert('Mobile number must be exactly 10 digits.');
+          const tab = new bootstrap.Tab(document.getElementById('personal-tab'));
+          tab.show();
+          phoneInput.focus();
+          return;
+        }
+      }
+
+      // 3. Date of Birth validation
+      const dobInput = document.getElementById('edit-dob');
+      if (dobInput && dobInput.value) {
+        const birthDate = new Date(dobInput.value);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+        if (age < 18) {
+          e.preventDefault();
+          alert(`Instructors must be at least 18 years old (calculated age: ${age} years).`);
+          const tab = new bootstrap.Tab(document.getElementById('personal-tab'));
+          tab.show();
+          dobInput.focus();
+          return;
+        }
+      }
+
+      // 4. Aadhaar Card validation
+      const aadhInput = document.querySelector('input[name="aadhaar_number"]');
+      if (aadhInput && aadhInput.value.trim() && !aadhInput.value.includes('XXXX')) {
+        const cleanAadh = aadhInput.value.replace(/\D/g, '');
+        if (cleanAadh.length !== 12) {
+          e.preventDefault();
+          alert('Aadhaar number must be exactly 12 numeric digits.');
+          const tab = new bootstrap.Tab(document.getElementById('kyc-tab'));
+          tab.show();
+          aadhInput.focus();
+          return;
+        }
+      }
+
+      // 5. PAN Card validation
+      const panInput = document.querySelector('input[name="pan_number"]');
+      if (panInput && panInput.value.trim() && !panInput.value.includes('XXXX')) {
+        const panVal = panInput.value.trim().toUpperCase();
+        if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(panVal)) {
+          e.preventDefault();
+          alert('PAN number must match standard format (e.g. ABCDE1234F).');
+          const tab = new bootstrap.Tab(document.getElementById('kyc-tab'));
+          tab.show();
+          panInput.focus();
+          return;
+        }
+      }
+
+      // 6. Availability Schedule validation (start_time < end_time)
+      for (let d = 0; d < 7; d++) {
+        const dayActive = document.getElementById(`day_${d}_active`);
+        if (dayActive && dayActive.checked) {
+          const startT = document.getElementById(`day_${d}_start`)?.value;
+          const endT = document.getElementById(`day_${d}_end`)?.value;
+          if (startT && endT && startT >= endT) {
+            e.preventDefault();
+            alert(`For day ${d + 1}, start time (${startT}) must be earlier than end time (${endT}).`);
+            const tab = new bootstrap.Tab(document.getElementById('teaching-tab'));
+            tab.show();
+            document.getElementById(`day_${d}_start`)?.focus();
+            return;
+          }
         }
       }
     });

@@ -109,7 +109,7 @@
                                   <div class="row g-3">
                                     <div class="col-12">
                                       <label for="edit_subject_{{ r.id }}" class="form-label small fw-semibold text-secondary">Subject Name *</label>
-                                      <input type="text" id="edit_subject_{{ r.id }}" name="subject" class="form-control" value="{{ r.subject }}" required>
+                                      <input type="text" id="edit_subject_{{ r.id }}" name="subject" class="form-control" value="{{ r.subject }}" minlength="2" maxlength="100" required>
                                     </div>
                                     <div class="col-md-6">
                                       <label for="edit_category_{{ r.id }}" class="form-label small fw-semibold text-secondary">Category *</label>
@@ -121,11 +121,12 @@
                                     </div>
                                     <div class="col-md-6">
                                       <label for="edit_level_{{ r.id }}" class="form-label small fw-semibold text-secondary">Class / Grade Level</label>
-                                      <input type="text" id="edit_level_{{ r.id }}" name="class_level" class="form-control" value="{{ r.class_level or '' }}" placeholder="e.g. Class 11-12, UG, JEE">
+                                      <input type="text" id="edit_level_{{ r.id }}" name="class_level" class="form-control" value="{{ r.class_level or '' }}" maxlength="100" placeholder="e.g. Class 11-12, UG, JEE">
                                     </div>
                                     <div class="col-md-6">
                                       <label for="edit_amount_{{ r.id }}" class="form-label small fw-semibold text-secondary">Rate Amount (INR ₹) *</label>
-                                      <input type="number" id="edit_amount_{{ r.id }}" name="rate_amount" class="form-control" min="1" step="0.5" value="{{ r.rate_amount }}" required>
+                                      <input type="number" id="edit_amount_{{ r.id }}" name="rate_amount" class="form-control" min="10" max="50000" step="0.5" value="{{ r.rate_amount }}" required>
+                                      <span class="text-muted" style="font-size: 0.72rem;">Min ₹10, Max ₹50,000</span>
                                     </div>
                                     <div class="col-md-6">
                                       <label for="edit_type_{{ r.id }}" class="form-label small fw-semibold text-secondary">Rate Type *</label>
@@ -148,7 +149,7 @@
                                     </div>
                                     <div class="col-12">
                                       <label for="edit_desc_{{ r.id }}" class="form-label small fw-semibold text-secondary">Description / Curriculum Notes</label>
-                                      <textarea id="edit_desc_{{ r.id }}" name="description" rows="2" class="form-control" placeholder="Outline syllabus, key topics covered, or session prerequisites...">{{ r.description or '' }}</textarea>
+                                      <textarea id="edit_desc_{{ r.id }}" name="description" rows="2" class="form-control" maxlength="1000" placeholder="Outline syllabus, key topics covered, or session prerequisites...">{{ r.description or '' }}</textarea>
                                     </div>
                                   </div>
                                 </div>
@@ -222,7 +223,7 @@
           <div class="row g-3">
             <div class="col-12">
               <label for="add_subject" class="form-label small fw-semibold text-secondary">Subject Name *</label>
-              <input type="text" id="add_subject" name="subject" class="form-control" placeholder="e.g. Mathematics, Organic Chemistry, Python" required>
+              <input type="text" id="add_subject" name="subject" class="form-control" placeholder="e.g. Mathematics, Organic Chemistry, Python" minlength="2" maxlength="100" required>
             </div>
             <div class="col-md-6">
               <label for="add_category" class="form-label small fw-semibold text-secondary">Teaching Category *</label>
@@ -234,14 +235,15 @@
             </div>
             <div class="col-md-6">
               <label for="add_class_level" class="form-label small fw-semibold text-secondary">Class / Grade Level</label>
-              <input type="text" id="add_class_level" name="class_level" class="form-control" placeholder="e.g. Class 11-12, B.Tech, JEE">
+              <input type="text" id="add_class_level" name="class_level" class="form-control" placeholder="e.g. Class 11-12, B.Tech, JEE" maxlength="100">
             </div>
             <div class="col-md-6">
               <label for="add_amount" class="form-label small fw-semibold text-secondary">Rate Amount (INR ₹) *</label>
               <div class="input-group">
                 <span class="input-group-text bg-light text-muted">₹</span>
-                <input type="number" id="add_amount" name="rate_amount" class="form-control" min="1" step="0.5" placeholder="500" required>
+                <input type="number" id="add_amount" name="rate_amount" class="form-control" min="10" max="50000" step="0.5" placeholder="500" required>
               </div>
+              <span class="text-muted" style="font-size: 0.72rem;">Min ₹10, Max ₹50,000</span>
             </div>
             <div class="col-md-6">
               <label for="add_type" class="form-label small fw-semibold text-secondary">Rate Type *</label>
@@ -256,7 +258,7 @@
             </div>
             <div class="col-12">
               <label for="add_description" class="form-label small fw-semibold text-secondary">Description / Notes (Optional)</label>
-              <textarea id="add_description" name="description" rows="2" class="form-control" placeholder="Key topics covered, curriculum board, homework support..."></textarea>
+              <textarea id="add_description" name="description" rows="2" class="form-control" maxlength="1000" placeholder="Key topics covered, curriculum board, homework support..."></textarea>
             </div>
           </div>
         </div>

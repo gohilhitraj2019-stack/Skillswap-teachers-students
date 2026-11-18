@@ -19,6 +19,12 @@ from app.services.upload_service import (
     save_avatar_image, save_secure_document, save_demo_video, 
     delete_secure_file, get_secure_documents_base
 )
+from app.services.validation_service import (
+    validate_phone, validate_dob, validate_pin_code,
+    validate_aadhaar, validate_pan, validate_bio,
+    validate_url, validate_rate_amount, validate_passing_year,
+    validate_time_slot
+)
 
 def require_teacher(f):
     """Decorator or check ensuring the user is a teacher."""
@@ -109,7 +115,11 @@ def profile_edit():
         current_user.name = request.form.get('name', '').strip() or current_user.name
         phone = request.form.get('phone', '').strip()
         if phone:
-            current_user.phone = phone
+            phone_ok, clean_phone, phone_err = validate_phone(phone, required=False)
+            if not phone_ok:
+                flash(phone_err, 'danger')
+                return redirect(url_for('teacher.profile_edit'))
+            current_user.phone = clean_phone
 
         # Avatar Upload / URL
         avatar_file = request.files.get('avatar_file')
@@ -123,31 +133,43 @@ def profile_edit():
         else:
             custom_avatar_url = request.form.get('avatar_url', '').strip()
             if custom_avatar_url:
+                url_ok, url_err = validate_url(custom_avatar_url)
+                if not url_ok:
+                    flash(f"Avatar URL: {url_err}", 'danger')
+                    return redirect(url_for('teacher.profile_edit'))
                 current_user.avatar_url = custom_avatar_url
 
         dob_str = request.form.get('dob', '').strip()
         if dob_str:
-            try:
-                profile.dob = datetime.strptime(dob_str, '%Y-%m-%d').date()
-            except ValueError:
-                pass
+            dob_ok, dob_val, dob_err = validate_dob(dob_str, min_age=18)
+            if not dob_ok:
+                flash(dob_err, 'danger')
+                return redirect(url_for('teacher.profile_edit'))
+            profile.dob = dob_val
 
         profile.gender = request.form.get('gender', '').strip() or profile.gender
         profile.address = request.form.get('address', '').strip() or profile.address
         profile.city = request.form.get('city', '').strip() or profile.city
         profile.state = request.form.get('state', '').strip() or profile.state
-        profile.pin_code = request.form.get('pin_code', '').strip() or profile.pin_code
+
+        pin_code = request.form.get('pin_code', '').strip()
+        if pin_code:
+            pin_ok, clean_pin, pin_err = validate_pin_code(pin_code, required=False)
+            if not pin_ok:
+                flash(pin_err, 'danger')
+                return redirect(url_for('teacher.profile_edit'))
+            profile.pin_code = clean_pin
+
         profile.country = request.form.get('country', '').strip() or profile.country or 'India'
 
         # --- Section 2: Identity Verification (KYC) ---
         new_aadhaar = request.form.get('aadhaar_number', '').strip()
         if new_aadhaar and 'XXXX' not in new_aadhaar:
-            clean_aadhaar = "".join(filter(str.isdigit, new_aadhaar))
-            if len(clean_aadhaar) == 12:
-                profile.kyc.aadhaar_number = clean_aadhaar
-            else:
-                flash('Aadhaar number must be exactly 12 digits.', 'danger')
+            aadhaar_ok, clean_aadhaar, aadhaar_err = validate_aadhaar(new_aadhaar, allow_masked=False, required=False)
+            if not aadhaar_ok:
+                flash(aadhaar_err, 'danger')
                 return redirect(url_for('teacher.profile_edit'))
+            profile.kyc.aadhaar_number = clean_aadhaar
 
         aadhaar_doc = request.files.get('aadhaar_doc')
         if aadhaar_doc and aadhaar_doc.filename:
@@ -162,11 +184,11 @@ def profile_edit():
 
         new_pan = request.form.get('pan_number', '').strip().upper()
         if new_pan and 'XXXX' not in new_pan:
-            if len(new_pan) == 10 and new_pan[:5].isalpha() and new_pan[5:9].isdigit() and new_pan[9].isalpha():
-                profile.kyc.pan_number = new_pan
-            else:
-                flash('Please enter a valid 10-character PAN number (e.g. ABCDE1234F).', 'danger')
+            pan_ok, clean_pan, pan_err = validate_pan(new_pan, allow_masked=False, required=False)
+            if not pan_ok:
+                flash(pan_err, 'danger')
                 return redirect(url_for('teacher.profile_edit'))
+            profile.kyc.pan_number = clean_pan
 
         pan_doc = request.files.get('pan_doc')
         if pan_doc and pan_doc.filename:
@@ -205,10 +227,11 @@ def profile_edit():
 
         passing_year_str = request.form.get('passing_year', '').strip()
         if passing_year_str:
-            try:
-                profile.education.passing_year = int(passing_year_str)
-            except ValueError:
-                pass
+            pyear_ok, clean_pyear, pyear_err = validate_passing_year(passing_year_str)
+            if not pyear_ok:
+                flash(pyear_err, 'danger')
+                return redirect(url_for('teacher.profile_edit'))
+            profile.education.passing_year = clean_pyear
 
         profile.education.percentage_cgpa = request.form.get('percentage_cgpa', '').strip() or profile.education.percentage_cgpa
         profile.education.specialization = request.form.get('specialization', '').strip() or profile.education.specialization
@@ -238,12 +261,12 @@ def profile_edit():
         # --- Section 4: Teaching Details ---
         profile.title = request.form.get('title', '').strip() or profile.title
 
-        # Enforce maximum 500 words for Bio
+        # Enforce 5 to 500 words for Bio
         bio = request.form.get('bio', '').strip()
         if bio:
-            word_count = len(bio.split())
-            if word_count > 500:
-                flash(f'Introduction & Bio exceeds the maximum allowed limit of 500 words (currently {word_count} words). Please shorten your bio.', 'danger')
+            bio_ok, bio_err = validate_bio(bio, min_words=5, max_words=500, required=True)
+            if not bio_ok:
+                flash(bio_err, 'danger')
                 return redirect(url_for('teacher.profile_edit'))
             profile.bio = bio
 
@@ -271,6 +294,10 @@ def profile_edit():
 
         demo_video_url = request.form.get('demo_video_url', '').strip()
         if demo_video_url:
+            durl_ok, durl_err = validate_url(demo_video_url)
+            if not durl_ok:
+                flash(f"Demo Video URL: {durl_err}", 'danger')
+                return redirect(url_for('teacher.profile_edit'))
             profile.teaching_detail.demo_video_url = demo_video_url
 
         demo_video_file = request.files.get('demo_video_file')
@@ -284,7 +311,14 @@ def profile_edit():
                 flash(f"Demo video error: {result}", 'danger')
                 return redirect(url_for('teacher.profile_edit'))
 
-        profile.portfolio_url = request.form.get('portfolio_url', '').strip()
+        portfolio_url = request.form.get('portfolio_url', '').strip()
+        if portfolio_url:
+            purl_ok, purl_err = validate_url(portfolio_url)
+            if not purl_ok:
+                flash(f"Portfolio URL: {purl_err}", 'danger')
+                return redirect(url_for('teacher.profile_edit'))
+            profile.portfolio_url = portfolio_url
+
         profile.skills_proof = request.form.get('skills_proof', '').strip()
 
         try:
@@ -305,21 +339,28 @@ def profile_edit():
                 except ValueError:
                     pass
 
-        # Manage weekly availabilities
-        Availability.query.filter_by(teacher_profile_id=profile.id).delete()
+        # Manage weekly availabilities with start_time < end_time validation
+        avail_to_add = []
         for d in range(7):
             active_day = request.form.get(f'day_{d}_active')
             if active_day:
-                start_t = request.form.get(f'day_{d}_start', '09:00')
-                end_t = request.form.get(f'day_{d}_end', '17:00')
-                av = Availability(
+                start_t = request.form.get(f'day_{d}_start', '09:00').strip()
+                end_t = request.form.get(f'day_{d}_end', '17:00').strip()
+                slot_ok, slot_err = validate_time_slot(start_t, end_t)
+                if not slot_ok:
+                    flash(f"Availability Schedule: {slot_err}", 'danger')
+                    return redirect(url_for('teacher.profile_edit'))
+                avail_to_add.append(Availability(
                     teacher_profile_id=profile.id,
                     day_of_week=d,
                     start_time=start_t,
                     end_time=end_t,
                     is_active=True
-                )
-                db.session.add(av)
+                ))
+
+        Availability.query.filter_by(teacher_profile_id=profile.id).delete()
+        for av in avail_to_add:
+            db.session.add(av)
 
         # Check if teacher requested resubmission or was previously rejected
         resubmit = request.form.get('resubmit_application') == '1'
@@ -442,22 +483,35 @@ def create_rate():
     session_duration_str = request.form.get('session_duration', '60').strip()
     description = request.form.get('description', '').strip()
 
-    if not subject or not category or not rate_amount_str:
-        flash('Subject, Category, and Rate Amount are required.', 'danger')
+    if not subject or len(subject) < 2 or len(subject) > 100:
+        flash('Subject name must be between 2 and 100 characters.', 'danger')
         return redirect(url_for('teacher.rates'))
 
-    try:
-        rate_amount = float(rate_amount_str)
-        if rate_amount < 1:
-            raise ValueError
-    except ValueError:
-        flash('Please enter a valid positive rate amount in INR.', 'danger')
+    if category not in ('School', 'College', 'Competitive Exams'):
+        flash('Please select a valid teaching category (School, College, or Competitive Exams).', 'danger')
+        return redirect(url_for('teacher.rates'))
+
+    if rate_type not in ('Hourly', 'Per Session'):
+        flash('Please select a valid rate type (Hourly or Per Session).', 'danger')
+        return redirect(url_for('teacher.rates'))
+
+    rate_ok, rate_amount, rate_err = validate_rate_amount(rate_amount_str, min_amount=10.0, max_amount=50000.0)
+    if not rate_ok:
+        flash(rate_err, 'danger')
         return redirect(url_for('teacher.rates'))
 
     try:
         session_duration = int(session_duration_str) if session_duration_str else 60
+        if session_duration < 15 or session_duration > 300:
+            flash('Session duration must be between 15 and 300 minutes.', 'danger')
+            return redirect(url_for('teacher.rates'))
     except ValueError:
-        session_duration = 60
+        flash('Session duration must be a valid integer number of minutes.', 'danger')
+        return redirect(url_for('teacher.rates'))
+
+    if len(description) > 1000:
+        flash('Description cannot exceed 1000 characters.', 'danger')
+        return redirect(url_for('teacher.rates'))
 
     new_rate = TeacherRate(
         teacher_profile_id=profile.id,
@@ -497,16 +551,34 @@ def edit_rate(rate_id):
     description = request.form.get('description', '').strip()
     is_active = request.form.get('is_active') == 'on'
 
-    if not subject or not category or not rate_amount_str:
-        flash('Subject, Category, and Rate Amount are required.', 'danger')
+    if not subject or len(subject) < 2 or len(subject) > 100:
+        flash('Subject name must be between 2 and 100 characters.', 'danger')
+        return redirect(url_for('teacher.rates'))
+
+    if category not in ('School', 'College', 'Competitive Exams'):
+        flash('Please select a valid teaching category (School, College, or Competitive Exams).', 'danger')
+        return redirect(url_for('teacher.rates'))
+
+    if rate_type not in ('Hourly', 'Per Session'):
+        flash('Please select a valid rate type (Hourly or Per Session).', 'danger')
+        return redirect(url_for('teacher.rates'))
+
+    rate_ok, rate_amount, rate_err = validate_rate_amount(rate_amount_str, min_amount=10.0, max_amount=50000.0)
+    if not rate_ok:
+        flash(rate_err, 'danger')
         return redirect(url_for('teacher.rates'))
 
     try:
-        rate_amount = float(rate_amount_str)
-        if rate_amount < 1:
-            raise ValueError
+        session_duration = int(session_duration_str) if session_duration_str else 60
+        if session_duration < 15 or session_duration > 300:
+            flash('Session duration must be between 15 and 300 minutes.', 'danger')
+            return redirect(url_for('teacher.rates'))
     except ValueError:
-        flash('Please enter a valid positive rate amount in INR.', 'danger')
+        flash('Session duration must be a valid integer number of minutes.', 'danger')
+        return redirect(url_for('teacher.rates'))
+
+    if len(description) > 1000:
+        flash('Description cannot exceed 1000 characters.', 'danger')
         return redirect(url_for('teacher.rates'))
 
     try:
