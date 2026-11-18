@@ -1,168 +1,629 @@
 {% extends 'base.html' %}
 
-{% block title %}Manage Teaching Profile — SkillSwap{% endblock %}
+{% block title %}Manage Teacher Profile — SkillSwap{% endblock %}
 
 {% block content %}
 <div class="container py-4">
   <div class="row justify-content-center">
-    <div class="col-lg-9">
-      <div class="card border p-4 p-md-5 bg-white">
-        <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
-          <div>
-            <h3 class="fw-bold mb-1">Teaching Profile & Availability</h3>
-            <p class="text-muted small mb-0">Update your public headline, rates, skills, and weekly calendar hours.</p>
+    <div class="col-lg-10">
+
+      <!-- Status Alerts -->
+      {% if profile.approval_status == 'rejected' %}
+        <div class="alert alert-danger border p-4 rounded-3 mb-4 d-flex align-items-center gap-3 bg-white">
+          <i class="bi bi-exclamation-triangle-fill fs-3 text-danger"></i>
+          <div class="flex-grow-1">
+            <h6 class="fw-bold mb-1 text-danger">Instructor Profile Needs Revision</h6>
+            <p class="mb-2 small text-secondary"><strong>Admin Feedback:</strong> {{ profile.admin_notes or 'Your documents or profile details require updates before verification.' }}</p>
+            <p class="mb-0 small text-muted">Please update the necessary information and documents below, then click <strong>"Save & Resubmit for Review"</strong>.</p>
           </div>
-          <a href="{{ url_for('teacher.dashboard') }}" class="btn btn-outline-secondary btn-sm">
-            Studio
-          </a>
+        </div>
+      {% elif profile.approval_status == 'pending' %}
+        <div class="alert alert-warning border p-3 rounded-3 mb-4 d-flex align-items-center gap-3 bg-white">
+          <i class="bi bi-hourglass-split fs-4 text-warning"></i>
+          <div>
+            <h6 class="fw-bold mb-0 text-dark">Profile Under Review</h6>
+            <span class="small text-secondary">Your credentials and verification documents are queued for administrator review.</span>
+          </div>
+        </div>
+      {% elif profile.approval_status == 'approved' %}
+        <div class="alert alert-success border p-3 rounded-3 mb-4 d-flex align-items-center gap-3 bg-white">
+          <i class="bi bi-patch-check-fill fs-4 text-success"></i>
+          <div>
+            <h6 class="fw-bold mb-0 text-success">Verified Instructor</h6>
+            <span class="small text-secondary">Your instructor credentials and identity verification documents have been verified.</span>
+          </div>
+        </div>
+      {% endif %}
+
+      <div class="card border p-4 p-md-5 bg-white">
+        <!-- Header -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center border-bottom pb-3 mb-4 gap-2">
+          <div>
+            <h3 class="fw-bold mb-1 text-dark">Teacher Profile & Verification</h3>
+            <p class="text-muted small mb-0">Manage your personal credentials, identity KYC, educational background, and teaching details.</p>
+          </div>
+          <div class="d-flex gap-2">
+            <a href="{{ url_for('teacher.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+              <i class="bi bi-arrow-left me-1"></i> Studio
+            </a>
+            <a href="{{ url_for('teacher.rates') }}" class="btn btn-outline-secondary btn-sm">
+              <i class="bi bi-tags me-1"></i> Rates
+            </a>
+          </div>
         </div>
 
-        <form method="POST" action="{{ url_for('teacher.profile_edit') }}" enctype="multipart/form-data">
+        <!-- Section Navigation Tabs -->
+        <ul class="nav nav-pills nav-fill mb-4 p-1 bg-light border rounded-3 gap-1" id="profileTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active fw-semibold small py-2" id="personal-tab" data-bs-toggle="pill" data-bs-target="#tab-personal" type="button" role="tab">
+              <i class="bi bi-person me-1"></i> 1. Personal Details
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link fw-semibold small py-2" id="kyc-tab" data-bs-toggle="pill" data-bs-target="#tab-kyc" type="button" role="tab">
+              <i class="bi bi-shield-check me-1"></i> 2. Identity KYC
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link fw-semibold small py-2" id="education-tab" data-bs-toggle="pill" data-bs-target="#tab-education" type="button" role="tab">
+              <i class="bi bi-mortarboard me-1"></i> 3. Education
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link fw-semibold small py-2" id="teaching-tab" data-bs-toggle="pill" data-bs-target="#tab-teaching" type="button" role="tab">
+              <i class="bi bi-easel me-1"></i> 4. Teaching Details
+            </button>
+          </li>
+        </ul>
+
+        <form method="POST" action="{{ url_for('teacher.profile_edit') }}" enctype="multipart/form-data" id="profileForm">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          {% if profile.approval_status == 'rejected' %}
+            <input type="hidden" name="resubmit_application" value="1">
+          {% endif %}
 
-          <!-- 1. Public Profile -->
-          <h6 class="fw-bold mb-3 text-dark small text-uppercase" style="letter-spacing: 0.04em;">1. Public Profile</h6>
-          
-          <!-- Avatar Upload & Visual Alignment Box -->
-          <div class="card bg-light border p-3 p-md-4 mb-4 rounded-3">
-            <div class="row align-items-center g-3">
-              <div class="col-auto">
-                <div class="position-relative">
-                  {% if current_user.avatar_url %}
-                    <img id="avatar-preview-img" src="{{ current_user.avatar_url }}" alt="{{ current_user.name }}" class="rounded-circle border shadow-sm" width="88" height="88" style="object-fit: cover;">
-                  {% else %}
-                    <div id="avatar-preview-fallback" class="bg-dark text-white rounded-circle d-flex align-items-center justify-content-center border shadow-sm" style="width: 88px; height: 88px; font-size: 2rem; font-weight: bold;">
-                      {{ current_user.name[0]|upper if current_user.name else 'T' }}
+          <div class="tab-content" id="profileTabsContent">
+
+            <!-- TAB 1: PERSONAL DETAILS -->
+            <div class="tab-pane fade show active" id="tab-personal" role="tabpanel" aria-labelledby="personal-tab">
+              <h6 class="fw-bold mb-3 text-dark small text-uppercase" style="letter-spacing: 0.04em;">Personal Information</h6>
+
+              <!-- Avatar Section -->
+              <div class="card bg-light border p-3 p-md-4 mb-4 rounded-3">
+                <div class="row align-items-center g-3">
+                  <div class="col-auto">
+                    <div class="position-relative">
+                      {% if current_user.avatar_url %}
+                        <img id="avatar-preview-img" src="{{ current_user.avatar_url }}" alt="{{ current_user.name }}" class="rounded-circle border shadow-sm" width="88" height="88" style="object-fit: cover;">
+                      {% else %}
+                        <div id="avatar-preview-fallback" class="bg-dark text-white rounded-circle d-flex align-items-center justify-content-center border shadow-sm" style="width: 88px; height: 88px; font-size: 2rem; font-weight: bold;">
+                          {{ current_user.name[0]|upper if current_user.name else 'T' }}
+                        </div>
+                        <img id="avatar-preview-img" src="" alt="Avatar Preview" class="rounded-circle border shadow-sm d-none" width="88" height="88" style="object-fit: cover;">
+                      {% endif %}
                     </div>
-                    <img id="avatar-preview-img" src="" alt="Avatar Preview" class="rounded-circle border shadow-sm d-none" width="88" height="88" style="object-fit: cover;">
-                  {% endif %}
+                  </div>
+                  <div class="col">
+                    <label for="avatar_file" class="form-label small fw-bold text-dark mb-1">
+                      <i class="bi bi-camera text-primary me-1"></i> Profile Photo / Avatar
+                    </label>
+                    <div class="input-group input-group-sm mb-2">
+                      <input type="file" id="avatar_file" name="avatar_file" class="form-control" accept="image/png, image/jpeg, image/jpg, image/webp" onchange="previewAvatar(this)">
+                    </div>
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                      <span class="small text-muted" style="font-size: 0.75rem;">Supported: JPG, PNG, WEBP (Max 5MB). Professional photo recommended.</span>
+                      <a class="small text-decoration-none text-secondary" data-bs-toggle="collapse" href="#avatarUrlCollapse" role="button" aria-expanded="false" aria-controls="avatarUrlCollapse" style="font-size: 0.75rem;">
+                        <i class="bi bi-link-45deg me-1"></i> Or paste photo URL
+                      </a>
+                    </div>
+                    <div class="collapse mt-2" id="avatarUrlCollapse">
+                      <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-white small text-muted">URL</span>
+                        <input type="url" id="edit-avatar" name="avatar_url" class="form-control" placeholder="https://..." value="{{ current_user.avatar_url or '' }}" oninput="previewUrlAvatar(this.value)">
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div class="col">
-                <label for="avatar_file" class="form-label small fw-bold text-dark mb-1">
-                  <i class="bi bi-camera text-primary me-1"></i> Profile Photo / Avatar
+
+              <!-- Personal Fields -->
+              <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                  <label for="edit-name" class="form-label small fw-semibold text-secondary">Full Name *</label>
+                  <input type="text" id="edit-name" name="name" class="form-control" value="{{ current_user.name }}" required>
+                </div>
+                <div class="col-md-6">
+                  <label for="edit-email" class="form-label small fw-semibold text-secondary">Email Address</label>
+                  <input type="email" id="edit-email" class="form-control bg-light" value="{{ current_user.email }}" readonly>
+                  <span class="text-muted" style="font-size: 0.75rem;">Email cannot be changed directly for account security.</span>
+                </div>
+                <div class="col-md-4">
+                  <label for="edit-dob" class="form-label small fw-semibold text-secondary">Date of Birth</label>
+                  <input type="date" id="edit-dob" name="dob" class="form-control" value="{{ profile.dob.strftime('%Y-%m-%d') if profile.dob else '' }}">
+                </div>
+                <div class="col-md-4">
+                  <label for="edit-gender" class="form-label small fw-semibold text-secondary">Gender</label>
+                  <select id="edit-gender" name="gender" class="form-select">
+                    <option value="" {% if not profile.gender %}selected{% endif %}>Select Gender</option>
+                    <option value="Male" {% if profile.gender == 'Male' %}selected{% endif %}>Male</option>
+                    <option value="Female" {% if profile.gender == 'Female' %}selected{% endif %}>Female</option>
+                    <option value="Other" {% if profile.gender == 'Other' %}selected{% endif %}>Other</option>
+                    <option value="Prefer not to say" {% if profile.gender == 'Prefer not to say' %}selected{% endif %}>Prefer not to say</option>
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <label for="edit-phone" class="form-label small fw-semibold text-secondary">Mobile Number *</label>
+                  <input type="tel" id="edit-phone" name="phone" class="form-control" value="{{ current_user.phone or '' }}" placeholder="10-digit mobile number">
+                </div>
+                <div class="col-12">
+                  <label for="edit-address" class="form-label small fw-semibold text-secondary">Current Residential Address</label>
+                  <input type="text" id="edit-address" name="address" class="form-control" value="{{ profile.address or '' }}" placeholder="Flat, Street, Area">
+                </div>
+                <div class="col-md-4">
+                  <label for="edit-city" class="form-label small fw-semibold text-secondary">City</label>
+                  <input type="text" id="edit-city" name="city" class="form-control" value="{{ profile.city or '' }}" placeholder="City">
+                </div>
+                <div class="col-md-4">
+                  <label for="edit-state" class="form-label small fw-semibold text-secondary">State</label>
+                  <input type="text" id="edit-state" name="state" class="form-control" value="{{ profile.state or '' }}" placeholder="State">
+                </div>
+                <div class="col-md-2">
+                  <label for="edit-pin" class="form-label small fw-semibold text-secondary">PIN Code</label>
+                  <input type="text" id="edit-pin" name="pin_code" class="form-control" value="{{ profile.pin_code or '' }}" placeholder="6-digit PIN">
+                </div>
+                <div class="col-md-2">
+                  <label for="edit-country" class="form-label small fw-semibold text-secondary">Country</label>
+                  <input type="text" id="edit-country" name="country" class="form-control" value="{{ profile.country or 'India' }}">
+                </div>
+              </div>
+            </div>
+
+            <!-- TAB 2: IDENTITY KYC -->
+            <div class="tab-pane fade" id="tab-kyc" role="tabpanel" aria-labelledby="kyc-tab">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold text-dark small text-uppercase mb-0" style="letter-spacing: 0.04em;">Identity Verification (KYC)</h6>
+                {% if profile.kyc and profile.kyc.is_verified %}
+                  <span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-shield-check me-1"></i> Documents Verified</span>
+                {% else %}
+                  <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle"><i class="bi bi-clock me-1"></i> Verification Pending</span>
+                {% endif %}
+              </div>
+
+              <div class="alert alert-light border small text-secondary mb-4 p-3 rounded-3">
+                <i class="bi bi-shield-lock-fill text-primary me-2"></i>
+                Government identity cards and files are stored securely outside public web roots. Aadhaar and PAN numbers are permanently masked on public records. Only verified administrators can review documents.
+              </div>
+
+              <!-- Aadhaar Section -->
+              <div class="card border bg-light p-3 mb-3 rounded-3">
+                <div class="row g-3 align-items-center">
+                  <div class="col-md-6">
+                    <label class="form-label small fw-bold text-dark mb-1">Aadhaar Card Number</label>
+                    <div class="input-group input-group-sm">
+                      <span class="input-group-text bg-white"><i class="bi bi-person-vcard text-muted"></i></span>
+                      <input type="text" name="aadhaar_number" class="form-control font-monospace" placeholder="Enter 12-digit Aadhaar to update" value="{{ profile.kyc.masked_aadhaar if profile.kyc else 'Not Provided' }}">
+                    </div>
+                    <span class="small text-muted" style="font-size: 0.72rem;">Leave as masked or enter 12 digits to update.</span>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label small fw-bold text-dark mb-1">Aadhaar Document File</label>
+                    {% if profile.kyc and profile.kyc.aadhaar_doc_path %}
+                      <div class="d-flex align-items-center gap-2 mb-1">
+                        <a href="{{ url_for('teacher.view_secure_document', folder='kyc', filename=profile.kyc.aadhaar_doc_path) }}" target="_blank" class="btn btn-sm btn-outline-primary py-1">
+                          <i class="bi bi-file-earmark-lock me-1"></i> View Uploaded Aadhaar
+                        </a>
+                        <span class="badge bg-success-subtle text-success">Uploaded</span>
+                      </div>
+                    {% else %}
+                      <div class="small text-danger mb-1"><i class="bi bi-x-circle me-1"></i> No document uploaded yet.</div>
+                    {% endif %}
+                    <input type="file" name="aadhaar_doc" class="form-control form-control-sm" accept=".pdf, .jpg, .jpeg, .png">
+                    <span class="small text-muted" style="font-size: 0.72rem;">Upload replacement file (PDF/JPG/PNG max 8MB).</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- PAN Section -->
+              <div class="card border bg-light p-3 mb-3 rounded-3">
+                <div class="row g-3 align-items-center">
+                  <div class="col-md-6">
+                    <label class="form-label small fw-bold text-dark mb-1">PAN Card Number</label>
+                    <div class="input-group input-group-sm">
+                      <span class="input-group-text bg-white"><i class="bi bi-credit-card text-muted"></i></span>
+                      <input type="text" name="pan_number" class="form-control font-monospace text-uppercase" placeholder="Enter 10-character PAN to update" value="{{ profile.kyc.masked_pan if profile.kyc else 'Not Provided' }}">
+                    </div>
+                    <span class="small text-muted" style="font-size: 0.72rem;">Leave as masked or enter 10 characters to update.</span>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label small fw-bold text-dark mb-1">PAN Document File</label>
+                    {% if profile.kyc and profile.kyc.pan_doc_path %}
+                      <div class="d-flex align-items-center gap-2 mb-1">
+                        <a href="{{ url_for('teacher.view_secure_document', folder='kyc', filename=profile.kyc.pan_doc_path) }}" target="_blank" class="btn btn-sm btn-outline-primary py-1">
+                          <i class="bi bi-file-earmark-lock me-1"></i> View Uploaded PAN
+                        </a>
+                        <span class="badge bg-success-subtle text-success">Uploaded</span>
+                      </div>
+                    {% else %}
+                      <div class="small text-danger mb-1"><i class="bi bi-x-circle me-1"></i> No document uploaded yet.</div>
+                    {% endif %}
+                    <input type="file" name="pan_doc" class="form-control form-control-sm" accept=".pdf, .jpg, .jpeg, .png">
+                    <span class="small text-muted" style="font-size: 0.72rem;">Upload replacement file (PDF/JPG/PNG max 8MB).</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Other Government ID (Optional with Delete) -->
+              <div class="card border bg-light p-3 mb-3 rounded-3">
+                <div class="row g-3 align-items-center">
+                  <div class="col-md-4">
+                    <label class="form-label small fw-bold text-dark mb-1">Other ID Type (Optional)</label>
+                    <select name="other_id_type" class="form-select form-select-sm">
+                      <option value="" {% if not profile.kyc or not profile.kyc.other_id_type %}selected{% endif %}>None / Not Applicable</option>
+                      <option value="Passport" {% if profile.kyc and profile.kyc.other_id_type == 'Passport' %}selected{% endif %}>Passport</option>
+                      <option value="Voter ID" {% if profile.kyc and profile.kyc.other_id_type == 'Voter ID' %}selected{% endif %}>Voter ID</option>
+                      <option value="Driving License" {% if profile.kyc and profile.kyc.other_id_type == 'Driving License' %}selected{% endif %}>Driving License</option>
+                    </select>
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label small fw-bold text-dark mb-1">ID Number</label>
+                    <input type="text" name="other_id_number" class="form-control form-control-sm" value="{{ profile.kyc.other_id_number or '' if profile.kyc else '' }}" placeholder="Optional ID number">
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label small fw-bold text-dark mb-1">ID Document File</label>
+                    {% if profile.kyc and profile.kyc.other_doc_path %}
+                      <div class="d-flex align-items-center gap-2 mb-1">
+                        <a href="{{ url_for('teacher.view_secure_document', folder='kyc', filename=profile.kyc.other_doc_path) }}" target="_blank" class="btn btn-sm btn-outline-primary py-1">
+                          <i class="bi bi-file-earmark-lock me-1"></i> View Document
+                        </a>
+                      </div>
+                    {% endif %}
+                    <input type="file" name="other_doc" class="form-control form-control-sm" accept=".pdf, .jpg, .jpeg, .png">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Optional Document Deletion Form for other_doc -->
+              {% if profile.kyc and profile.kyc.other_doc_path %}
+                <div class="d-flex justify-content-end mb-3">
+                  <button type="submit" form="deleteOtherDocForm" class="btn btn-sm btn-outline-danger">
+                    <i class="bi bi-trash me-1"></i> Remove Optional Other ID File
+                  </button>
+                </div>
+              {% endif %}
+
+            </div>
+
+            <!-- TAB 3: EDUCATIONAL QUALIFICATION -->
+            <div class="tab-pane fade" id="tab-education" role="tabpanel" aria-labelledby="education-tab">
+              <h6 class="fw-bold mb-3 text-dark small text-uppercase" style="letter-spacing: 0.04em;">Educational Qualifications</h6>
+
+              <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                  <label for="highest_qual" class="form-label small fw-semibold text-secondary">Highest Qualification *</label>
+                  <select id="highest_qual" name="highest_qualification" class="form-select">
+                    {% set cur_qual = profile.education.highest_qualification if profile.education else '' %}
+                    <option value="" {% if not cur_qual %}selected{% endif %}>Select Qualification</option>
+                    <option value="High School" {% if cur_qual == 'High School' %}selected{% endif %}>High School / 12th</option>
+                    <option value="Diploma" {% if cur_qual == 'Diploma' %}selected{% endif %}>Diploma</option>
+                    <option value="Bachelor's Degree" {% if cur_qual == "Bachelor's Degree" %}selected{% endif %}>Bachelor's Degree (B.Tech, B.Sc, B.Com, BA, etc.)</option>
+                    <option value="Master's Degree" {% if cur_qual == "Master's Degree" %}selected{% endif %}>Master's Degree (M.Tech, M.Sc, MBA, MA, etc.)</option>
+                    <option value="Doctorate / Ph.D." {% if cur_qual == 'Doctorate / Ph.D.' %}selected{% endif %}>Doctorate / Ph.D.</option>
+                    <option value="Other" {% if cur_qual == 'Other' %}selected{% endif %}>Other</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label for="degree_name" class="form-label small fw-semibold text-secondary">Degree / Course Name *</label>
+                  <input type="text" id="degree_name" name="degree_name" class="form-control" value="{{ profile.education.degree_name or '' if profile.education else '' }}" placeholder="e.g. B.Tech Computer Engineering">
+                </div>
+                <div class="col-md-6">
+                  <label for="university_name" class="form-label small fw-semibold text-secondary">University Name</label>
+                  <input type="text" id="university_name" name="university_name" class="form-control" value="{{ profile.education.university_name or '' if profile.education else '' }}" placeholder="e.g. Delhi University, Mumbai University">
+                </div>
+                <div class="col-md-6">
+                  <label for="college_name" class="form-label small fw-semibold text-secondary">College / Institute Name</label>
+                  <input type="text" id="college_name" name="college_name" class="form-control" value="{{ profile.education.college_name or '' if profile.education else '' }}" placeholder="e.g. IIT Bombay, St. Stephen's">
+                </div>
+                <div class="col-md-4">
+                  <label for="passing_year" class="form-label small fw-semibold text-secondary">Passing Year</label>
+                  <select id="passing_year" name="passing_year" class="form-select">
+                    <option value="">Select Year</option>
+                    {% for y in range(2027, 1970, -1) %}
+                      <option value="{{ y }}" {% if profile.education and profile.education.passing_year == y %}selected{% endif %}>{{ y }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <label for="percentage_cgpa" class="form-label small fw-semibold text-secondary">Percentage / CGPA</label>
+                  <input type="text" id="percentage_cgpa" name="percentage_cgpa" class="form-control" value="{{ profile.education.percentage_cgpa or '' if profile.education else '' }}" placeholder="e.g. 8.4 CGPA or 82%">
+                </div>
+                <div class="col-md-4">
+                  <label for="specialization" class="form-label small fw-semibold text-secondary">Specialization / Major</label>
+                  <input type="text" id="specialization" name="specialization" class="form-control" value="{{ profile.education.specialization or '' if profile.education else '' }}" placeholder="e.g. Data Science, Organic Chemistry">
+                </div>
+              </div>
+
+              <!-- Certificates Upload Cards -->
+              <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                  <div class="card bg-light border p-3 rounded-3 h-100">
+                    <label class="form-label small fw-bold text-dark mb-1">
+                      <i class="bi bi-award text-primary me-1"></i> Degree / Diploma Certificate *
+                    </label>
+                    {% if profile.education and profile.education.certificate_doc_path %}
+                      <div class="d-flex align-items-center gap-2 mb-2">
+                        <a href="{{ url_for('teacher.view_secure_document', folder='education', filename=profile.education.certificate_doc_path) }}" target="_blank" class="btn btn-sm btn-outline-primary py-1">
+                          <i class="bi bi-file-earmark-lock me-1"></i> View Certificate
+                        </a>
+                        <span class="badge bg-success-subtle text-success">Uploaded</span>
+                      </div>
+                    {% else %}
+                      <div class="small text-danger mb-2"><i class="bi bi-x-circle me-1"></i> No certificate uploaded yet.</div>
+                    {% endif %}
+                    <input type="file" name="certificate_doc" class="form-control form-control-sm" accept=".pdf, .jpg, .jpeg, .png">
+                    <span class="small text-muted mt-1" style="font-size: 0.72rem;">Upload PDF or JPG image (Max 8MB).</span>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="card bg-light border p-3 rounded-3 h-100">
+                    <label class="form-label small fw-bold text-dark mb-1">
+                      <i class="bi bi-journal-text text-primary me-1"></i> Marksheet / Transcripts (Optional)
+                    </label>
+                    {% if profile.education and profile.education.marksheet_doc_path %}
+                      <div class="d-flex align-items-center gap-2 mb-2">
+                        <a href="{{ url_for('teacher.view_secure_document', folder='education', filename=profile.education.marksheet_doc_path) }}" target="_blank" class="btn btn-sm btn-outline-primary py-1">
+                          <i class="bi bi-file-earmark-lock me-1"></i> View Marksheet
+                        </a>
+                        <button type="submit" form="deleteMarksheetForm" class="btn btn-sm btn-outline-danger py-1" title="Delete Marksheet">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </div>
+                    {% else %}
+                      <div class="small text-muted mb-2">Optional supporting marksheet.</div>
+                    {% endif %}
+                    <input type="file" name="marksheet_doc" class="form-control form-control-sm" accept=".pdf, .jpg, .jpeg, .png">
+                    <span class="small text-muted mt-1" style="font-size: 0.72rem;">Upload PDF or JPG image (Max 8MB).</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- TAB 4: TEACHING DETAILS & HOURS -->
+            <div class="tab-pane fade" id="tab-teaching" role="tabpanel" aria-labelledby="teaching-tab">
+              <h6 class="fw-bold mb-3 text-dark small text-uppercase" style="letter-spacing: 0.04em;">Teaching Profile & Expertise</h6>
+
+              <div class="row g-3 mb-3">
+                <div class="col-md-8">
+                  <label for="edit-title" class="form-label small fw-semibold text-secondary">Professional Headline / Title *</label>
+                  <input type="text" id="edit-title" name="title" class="form-control" placeholder="e.g. Senior Full Stack Engineer & Python Mentor" value="{{ profile.title or '' }}" required>
+                </div>
+                <div class="col-md-4">
+                  <label for="edit-exp" class="form-label small fw-semibold text-secondary">Experience (Years)</label>
+                  <input type="number" id="edit-exp" name="experience_years" class="form-control" min="0" max="50" value="{{ profile.experience_years }}">
+                </div>
+              </div>
+
+              <!-- Bio with 500 word limit -->
+              <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <label for="edit-bio" class="form-label small fw-semibold text-secondary mb-0">Introduction & Bio *</label>
+                  <span id="bio-word-counter" class="badge bg-light text-secondary border font-monospace" style="font-size: 0.75rem;">0 / 500 words</span>
+                </div>
+                <textarea id="edit-bio" name="bio" rows="5" class="form-control" placeholder="Describe your technical background, mentoring style, and how you help students succeed..." required oninput="updateBioWordCount()">{{ profile.bio or '' }}</textarea>
+                <div class="d-flex justify-content-between align-items-center mt-1">
+                  <span class="small text-muted" style="font-size: 0.75rem;">Maximum 500 words.</span>
+                  <span id="bio-word-warning" class="small text-danger fw-semibold d-none" style="font-size: 0.75rem;">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i> Exceeds maximum 500 words limit
+                  </span>
+                </div>
+              </div>
+
+              <!-- Teaching Categories & Dynamic Class Levels -->
+              <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                  <label class="form-label small fw-semibold text-secondary mb-2">Teaching Categories *</label>
+                  {% set current_cats = profile.teaching_detail.categories_list if profile.teaching_detail else [] %}
+                  <div class="d-flex flex-wrap gap-3">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" name="teaching_categories" value="School" id="catSchool" {% if 'School' in current_cats %}checked{% endif %} onchange="syncClassLevels()">
+                      <label class="form-check-label small" for="catSchool">School</label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" name="teaching_categories" value="College" id="catCollege" {% if 'College' in current_cats %}checked{% endif %} onchange="syncClassLevels()">
+                      <label class="form-check-label small" for="catCollege">College</label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" name="teaching_categories" value="Competitive Exams" id="catCompetitive" {% if 'Competitive Exams' in current_cats %}checked{% endif %} onchange="syncClassLevels()">
+                      <label class="form-check-label small" for="catCompetitive">Competitive Exams</label>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <label for="edit-board" class="form-label small fw-semibold text-secondary">Education Board (If School)</label>
+                  <select id="edit-board" name="board" class="form-select form-select-sm">
+                    {% set cur_board = profile.teaching_detail.board if profile.teaching_detail else '' %}
+                    <option value="" {% if not cur_board %}selected{% endif %}>Not Applicable / All Boards</option>
+                    <option value="CBSE" {% if cur_board == 'CBSE' %}selected{% endif %}>CBSE</option>
+                    <option value="ICSE" {% if cur_board == 'ICSE' %}selected{% endif %}>ICSE / ISC</option>
+                    <option value="State Board" {% if cur_board == 'State Board' %}selected{% endif %}>State Board</option>
+                    <option value="IB" {% if cur_board == 'IB' %}selected{% endif %}>IB (International Baccalaureate)</option>
+                    <option value="IGCSE" {% if cur_board == 'IGCSE' %}selected{% endif %}>IGCSE / Cambridge</option>
+                  </select>
+                </div>
+
+                <!-- Dynamic Class Levels -->
+                <div class="col-12" id="classLevelsContainer">
+                  <label class="form-label small fw-semibold text-secondary mb-2">Class / Student Levels</label>
+                  {% set current_levels = profile.teaching_detail.class_levels_list if profile.teaching_detail else [] %}
+                  <div class="d-flex flex-wrap gap-2" id="levelsCheckboxGroup">
+                    <!-- School levels -->
+                    <div class="form-check form-check-inline level-opt school-opt">
+                      <input class="form-check-input" type="checkbox" name="class_levels" value="Class 1-5 (Primary)" id="lvl1" {% if 'Class 1-5 (Primary)' in current_levels %}checked{% endif %}>
+                      <label class="form-check-label small" for="lvl1">Class 1-5</label>
+                    </div>
+                    <div class="form-check form-check-inline level-opt school-opt">
+                      <input class="form-check-input" type="checkbox" name="class_levels" value="Class 6-8 (Middle)" id="lvl2" {% if 'Class 6-8 (Middle)' in current_levels %}checked{% endif %}>
+                      <label class="form-check-label small" for="lvl2">Class 6-8</label>
+                    </div>
+                    <div class="form-check form-check-inline level-opt school-opt">
+                      <input class="form-check-input" type="checkbox" name="class_levels" value="Class 9-10 (Secondary)" id="lvl3" {% if 'Class 9-10 (Secondary)' in current_levels %}checked{% endif %}>
+                      <label class="form-check-label small" for="lvl3">Class 9-10</label>
+                    </div>
+                    <div class="form-check form-check-inline level-opt school-opt">
+                      <input class="form-check-input" type="checkbox" name="class_levels" value="Class 11-12 (Higher Secondary)" id="lvl4" {% if 'Class 11-12 (Higher Secondary)' in current_levels %}checked{% endif %}>
+                      <label class="form-check-label small" for="lvl4">Class 11-12</label>
+                    </div>
+                    <!-- College levels -->
+                    <div class="form-check form-check-inline level-opt college-opt">
+                      <input class="form-check-input" type="checkbox" name="class_levels" value="Undergraduate (UG)" id="lvlUG" {% if 'Undergraduate (UG)' in current_levels %}checked{% endif %}>
+                      <label class="form-check-label small" for="lvlUG">Undergraduate (UG)</label>
+                    </div>
+                    <div class="form-check form-check-inline level-opt college-opt">
+                      <input class="form-check-input" type="checkbox" name="class_levels" value="Postgraduate (PG)" id="lvlPG" {% if 'Postgraduate (PG)' in current_levels %}checked{% endif %}>
+                      <label class="form-check-label small" for="lvlPG">Postgraduate (PG)</label>
+                    </div>
+                    <!-- Competitive exams -->
+                    <div class="form-check form-check-inline level-opt comp-opt">
+                      <input class="form-check-input" type="checkbox" name="class_levels" value="JEE Main/Advanced" id="lvlJEE" {% if 'JEE Main/Advanced' in current_levels %}checked{% endif %}>
+                      <label class="form-check-label small" for="lvlJEE">JEE</label>
+                    </div>
+                    <div class="form-check form-check-inline level-opt comp-opt">
+                      <input class="form-check-input" type="checkbox" name="class_levels" value="NEET" id="lvlNEET" {% if 'NEET' in current_levels %}checked{% endif %}>
+                      <label class="form-check-label small" for="lvlNEET">NEET</label>
+                    </div>
+                    <div class="form-check form-check-inline level-opt comp-opt">
+                      <input class="form-check-input" type="checkbox" name="class_levels" value="GATE / Coding Interviews" id="lvlGATE" {% if 'GATE / Coding Interviews' in current_levels %}checked{% endif %}>
+                      <label class="form-check-label small" for="lvlGATE">GATE / Tech Interviews</label>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <label for="edit-subjects" class="form-label small fw-semibold text-secondary">Teaching Subjects</label>
+                  <input type="text" id="edit-subjects" name="subjects" class="form-control" value="{{ profile.teaching_detail.subjects or '' if profile.teaching_detail else '' }}" placeholder="e.g. Mathematics, Physics, Python, Data Structures">
+                  <span class="text-muted" style="font-size: 0.72rem;">Comma-separated subjects you specialize in.</span>
+                </div>
+                <div class="col-md-6">
+                  <label for="edit-lang" class="form-label small fw-semibold text-secondary">Teaching Languages *</label>
+                  <input type="text" id="edit-lang" name="languages" class="form-control" value="{{ profile.languages or 'English' }}" required>
+                </div>
+              </div>
+
+              <!-- Demo Video Section -->
+              <div class="card bg-light border p-3 mb-4 rounded-3">
+                <label class="form-label small fw-bold text-dark mb-2">
+                  <i class="bi bi-camera-video text-primary me-1"></i> Demonstration / Sample Class Video
                 </label>
-                <div class="input-group input-group-sm mb-2">
-                  <input type="file" id="avatar_file" name="avatar_file" class="form-control" accept="image/png, image/jpeg, image/jpg, image/webp" onchange="previewAvatar(this)">
-                </div>
-                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-                  <span class="small text-muted" style="font-size: 0.75rem;">Supported: JPG, PNG, WEBP (Max 5MB). High quality square photo recommended.</span>
-                  <a class="small text-decoration-none text-secondary" data-bs-toggle="collapse" href="#avatarUrlCollapse" role="button" aria-expanded="false" aria-controls="avatarUrlCollapse" style="font-size: 0.75rem;">
-                    <i class="bi bi-link-45deg me-1"></i> Or paste image URL
-                  </a>
-                </div>
-                <div class="collapse mt-2" id="avatarUrlCollapse">
-                  <div class="input-group input-group-sm">
-                    <span class="input-group-text bg-white small text-muted">URL</span>
-                    <input type="url" id="edit-avatar" name="avatar_url" class="form-control" placeholder="https://images.unsplash.com/..." value="{{ current_user.avatar_url or '' }}" oninput="previewUrlAvatar(this.value)">
+                <div class="row g-3 align-items-center">
+                  <div class="col-md-6">
+                    <label class="form-label small fw-semibold text-secondary mb-1">Demo Video Link (YouTube / Drive / Vimeo)</label>
+                    <input type="url" name="demo_video_url" class="form-control form-control-sm" placeholder="https://www.youtube.com/watch?v=..." value="{{ profile.teaching_detail.demo_video_url or '' if profile.teaching_detail else '' }}">
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label small fw-semibold text-secondary mb-1">Or Upload Demo Video File (MP4/WEBM, Max 25MB)</label>
+                    {% if profile.teaching_detail and profile.teaching_detail.demo_video_path %}
+                      <div class="d-flex align-items-center gap-2 mb-1">
+                        <a href="{{ url_for('teacher.view_secure_document', folder='videos', filename=profile.teaching_detail.demo_video_path) }}" target="_blank" class="btn btn-sm btn-outline-primary py-1">
+                          <i class="bi bi-play-circle me-1"></i> Watch Video
+                        </a>
+                        <button type="submit" form="deleteDemoVideoForm" class="btn btn-sm btn-outline-danger py-1" title="Delete Demo Video">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </div>
+                    {% endif %}
+                    <input type="file" name="demo_video_file" class="form-control form-control-sm" accept="video/mp4, video/webm, video/quicktime">
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
 
-          <div class="row g-3 mb-3">
-            <div class="col-md-6">
-              <label for="edit-name" class="form-label small fw-semibold text-secondary">Display Name *</label>
-              <input type="text" id="edit-name" name="name" class="form-control" value="{{ current_user.name }}" required>
-            </div>
-            <div class="col-md-6">
-              <label for="edit-title" class="form-label small fw-semibold text-secondary">Professional Title / Headline *</label>
-              <input type="text" id="edit-title" name="title" class="form-control" placeholder="e.g. Senior Full Stack Engineer" value="{{ profile.title or '' }}" required>
-            </div>
-          </div>
-
-          <div class="mb-4">
-            <div class="d-flex justify-content-between align-items-center mb-1">
-              <label for="edit-bio" class="form-label small fw-semibold text-secondary mb-0">Introduction & Bio *</label>
-              <span id="bio-word-counter" class="badge bg-light text-secondary border font-monospace" style="font-size: 0.75rem;">0 / 500 words</span>
-            </div>
-            <textarea id="edit-bio" name="bio" rows="5" class="form-control" placeholder="Describe your technical expertise, career milestones, and how your 1-on-1 mentorship helps students excel..." required oninput="updateBioWordCount()">{{ profile.bio or '' }}</textarea>
-            <div class="d-flex justify-content-between align-items-center mt-1">
-              <span class="small text-muted" style="font-size: 0.75rem;">Write an engaging introduction for potential students (maximum 500 words).</span>
-              <span id="bio-word-warning" class="small text-danger fw-semibold d-none" style="font-size: 0.75rem;">
-                <i class="bi bi-exclamation-triangle-fill me-1"></i> Exceeds maximum 500 words limit
-              </span>
-            </div>
-          </div>
-
-          <div class="row g-3 mb-4">
-            <div class="col-md-4">
-              <label for="edit-exp" class="form-label small fw-semibold text-secondary">Experience (Years)</label>
-              <input type="number" id="edit-exp" name="experience_years" class="form-control" min="0" max="50" value="{{ profile.experience_years }}" required>
-            </div>
-            <div class="col-md-4">
-              <label for="edit-rate" class="form-label small fw-semibold text-secondary">Hourly Rate (Credits / Hr)</label>
-              <input type="number" id="edit-rate" name="hourly_rate" class="form-control" min="10" max="1000" value="{{ profile.hourly_rate }}" required>
-            </div>
-            <div class="col-md-4">
-              <label for="edit-lang" class="form-label small fw-semibold text-secondary">Languages</label>
-              <input type="text" id="edit-lang" name="languages" class="form-control" value="{{ profile.languages }}" required>
-            </div>
-          </div>
-
-          <div class="row g-3 mb-4">
-            <div class="col-md-6">
-              <label for="edit-portfolio" class="form-label small fw-semibold text-secondary">Portfolio or GitHub URL</label>
-              <input type="url" id="edit-portfolio" name="portfolio_url" class="form-control" value="{{ profile.portfolio_url or '' }}">
-            </div>
-            <div class="col-md-6">
-              <label for="edit-proof" class="form-label small fw-semibold text-secondary">Supporting Credential Proof</label>
-              <input type="text" id="edit-proof" name="skills_proof" class="form-control" value="{{ profile.skills_proof or '' }}">
-            </div>
-          </div>
-
-          <!-- Skills Checklist -->
-          <h6 class="fw-bold mb-3 text-dark small text-uppercase" style="letter-spacing: 0.04em;">2. Teaching Skills</h6>
-          <div class="border rounded p-3 bg-light mb-4" style="max-height: 180px; overflow-y: auto;">
-            <div class="row g-2">
-              {% for skill in all_skills %}
-                <div class="col-md-4 col-sm-6">
-                  <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="skills" value="{{ skill.id }}" id="edit_skill_{{ skill.id }}" {{ 'checked' if skill.id in teacher_skill_ids else '' }}>
-                    <label class="form-check-label small" for="edit_skill_{{ skill.id }}">{{ skill.name }}</label>
-                  </div>
-                </div>
-              {% endfor %}
-            </div>
-          </div>
-
-          <!-- Availability Schedule -->
-          <h6 class="fw-bold mb-2 text-dark small text-uppercase" style="letter-spacing: 0.04em;">3. Weekly Availability Schedule</h6>
-          <p class="text-muted small mb-3">Check the days you conduct sessions and set open working hours.</p>
-
-          <div class="border rounded p-3 mb-4 bg-white">
-            {% set days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] %}
-            {% for d in range(7) %}
-              {% set av = availabilities.get(d) %}
-              <div class="row align-items-center py-2 border-bottom g-2">
-                <div class="col-md-3 col-6">
-                  <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="day_{{ d }}_active" id="day_{{ d }}" {{ 'checked' if av and av.is_active else '' }}>
-                    <label class="form-check-label fw-semibold small text-dark" for="day_{{ d }}">{{ days[d] }}</label>
-                  </div>
-                </div>
-                <div class="col-md-4 col-6">
-                  <div class="input-group input-group-sm">
-                    <label class="input-group-text bg-white" for="day_{{ d }}_start">From</label>
-                    <input type="time" id="day_{{ d }}_start" name="day_{{ d }}_start" class="form-control" value="{{ av.start_time if av else '09:00' }}" aria-label="{{ days[d] }} start time">
-                  </div>
-                </div>
-                <div class="col-md-4 col-6">
-                  <div class="input-group input-group-sm">
-                    <label class="input-group-text bg-white" for="day_{{ d }}_end">To</label>
-                    <input type="time" id="day_{{ d }}_end" name="day_{{ d }}_end" class="form-control" value="{{ av.end_time if av else '17:00' }}" aria-label="{{ days[d] }} end time">
-                  </div>
+              <!-- Skills Checklist -->
+              <h6 class="fw-bold mb-3 text-dark small text-uppercase" style="letter-spacing: 0.04em;">Skills Tags</h6>
+              <div class="border rounded p-3 bg-light mb-4" style="max-height: 180px; overflow-y: auto;">
+                <div class="row g-2">
+                  {% for skill in all_skills %}
+                    <div class="col-md-4 col-sm-6">
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="skills" value="{{ skill.id }}" id="skill_{{ skill.id }}" {% if skill.id in teacher_skill_ids %}checked{% endif %}>
+                        <label class="form-check-label small" for="skill_{{ skill.id }}">{{ skill.name }}</label>
+                      </div>
+                    </div>
+                  {% endfor %}
                 </div>
               </div>
-            {% endfor %}
+
+              <!-- Weekly Availability Hours -->
+              <h6 class="fw-bold mb-3 text-dark small text-uppercase" style="letter-spacing: 0.04em;">Weekly Availability Calendar</h6>
+              <div class="border rounded p-3 mb-4">
+                {% set days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] %}
+                {% for d in range(7) %}
+                  {% set av = availabilities.get(d) %}
+                  <div class="row align-items-center py-2 {% if not loop.last %}border-bottom{% endif %}">
+                    <div class="col-md-4 col-12 mb-2 mb-md-0">
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="day_{{ d }}_active" id="day_{{ d }}_active" {% if av and av.is_active %}checked{% endif %}>
+                        <label class="form-check-label fw-semibold small" for="day_{{ d }}_active">{{ days[d] }}</label>
+                      </div>
+                    </div>
+                    <div class="col-md-4 col-6">
+                      <div class="input-group input-group-sm">
+                        <label class="input-group-text bg-white" for="day_{{ d }}_start">From</label>
+                        <input type="time" id="day_{{ d }}_start" name="day_{{ d }}_start" class="form-control" value="{{ av.start_time if av else '09:00' }}" aria-label="{{ days[d] }} start time">
+                      </div>
+                    </div>
+                    <div class="col-md-4 col-6">
+                      <div class="input-group input-group-sm">
+                        <label class="input-group-text bg-white" for="day_{{ d }}_end">To</label>
+                        <input type="time" id="day_{{ d }}_end" name="day_{{ d }}_end" class="form-control" value="{{ av.end_time if av else '17:00' }}" aria-label="{{ days[d] }} end time">
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+
+            </div>
+
+          </div><!-- tab-content -->
+
+          <!-- Form Action Bar -->
+          <div class="d-flex flex-wrap justify-content-between align-items-center pt-3 border-top mt-4 gap-2">
+            <span class="small text-muted">All changes across all 4 tabs are saved together upon submission.</span>
+            <div class="d-flex gap-2">
+              <a href="{{ url_for('teacher.dashboard') }}" class="btn btn-outline-secondary btn-sm">Cancel</a>
+              {% if profile.approval_status == 'rejected' %}
+                <button type="submit" class="btn btn-danger btn-sm px-4">
+                  <i class="bi bi-send-check me-1"></i> Save & Resubmit for Review
+                </button>
+              {% else %}
+                <button type="submit" class="btn btn-dark btn-sm px-4">
+                  <i class="bi bi-check-lg me-1"></i> Save Profile Changes
+                </button>
+              {% endif %}
+            </div>
           </div>
 
-          <div class="d-flex justify-content-end gap-2">
-            <a href="{{ url_for('teacher.dashboard') }}" class="btn btn-outline-secondary btn-sm">Cancel</a>
-            <button type="submit" class="btn btn-dark btn-sm px-4">Save Profile Changes</button>
-          </div>
         </form>
+
+        <!-- Hidden Delete Forms for Optional Documents -->
+        {% if profile.kyc and profile.kyc.other_doc_path %}
+          <form id="deleteOtherDocForm" method="POST" action="{{ url_for('teacher.delete_optional_document', doc_type='other_doc') }}" class="d-none">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          </form>
+        {% endif %}
+
+        {% if profile.education and profile.education.marksheet_doc_path %}
+          <form id="deleteMarksheetForm" method="POST" action="{{ url_for('teacher.delete_optional_document', doc_type='marksheet_doc') }}" class="d-none">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          </form>
+        {% endif %}
+
+        {% if profile.teaching_detail and profile.teaching_detail.demo_video_path %}
+          <form id="deleteDemoVideoForm" method="POST" action="{{ url_for('teacher.delete_optional_document', doc_type='demo_video') }}" class="d-none">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          </form>
+        {% endif %}
+
       </div>
     </div>
   </div>
@@ -228,9 +689,27 @@ function updateBioWordCount() {
   }
 }
 
+function syncClassLevels() {
+  const schoolChecked = document.getElementById('catSchool')?.checked;
+  const collegeChecked = document.getElementById('catCollege')?.checked;
+  const compChecked = document.getElementById('catCompetitive')?.checked;
+
+  document.querySelectorAll('.school-opt').forEach(el => {
+    el.style.display = schoolChecked ? 'inline-block' : 'none';
+  });
+  document.querySelectorAll('.college-opt').forEach(el => {
+    el.style.display = collegeChecked ? 'inline-block' : 'none';
+  });
+  document.querySelectorAll('.comp-opt').forEach(el => {
+    el.style.display = compChecked ? 'inline-block' : 'none';
+  });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   updateBioWordCount();
-  const form = document.querySelector('form');
+  syncClassLevels();
+
+  const form = document.getElementById('profileForm');
   if (form) {
     form.addEventListener('submit', function(e) {
       const bioInput = document.getElementById('edit-bio');
@@ -240,6 +719,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (words > 500) {
           e.preventDefault();
           alert(`Your Introduction & Bio exceeds the maximum allowed 500 words (currently ${words} words). Please reduce it before saving.`);
+          // Switch to teaching tab
+          const tabTrigger = new bootstrap.Tab(document.getElementById('teaching-tab'));
+          tabTrigger.show();
           bioInput.focus();
         }
       }

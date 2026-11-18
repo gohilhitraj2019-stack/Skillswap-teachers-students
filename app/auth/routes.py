@@ -4,11 +4,19 @@ from flask_login import login_user, logout_user, login_required, current_user
 from app.auth import auth_bp
 from app.extensions import db
 from app.models.user import User
-from app.models.teacher import TeacherProfile, Availability
+from app.models.teacher import (
+    TeacherProfile,
+    Availability,
+    TeacherKYC,
+    TeacherEducation,
+    TeacherTeachingDetail,
+    TeacherRate
+)
 from app.models.skill import Skill, SkillCategory, TeacherSkill
 from app.models.audit_log import AdminAuditLog
 from app.services.credit_service import ensure_wallet, grant_free_trial
 from app.services.notification_service import create_notification
+from app.services.upload_service import save_avatar_image, save_secure_document, save_demo_video
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
@@ -217,6 +225,22 @@ def register_teacher():
         db.session.add(user)
         db.session.flush()
 
+        # Handle Profile Avatar upload if provided
+        avatar_file = request.files.get('avatar_file')
+        if avatar_file and avatar_file.filename:
+            ok, avatar_res = save_avatar_image(avatar_file, user.id)
+            if ok:
+                user.avatar_url = avatar_res
+
+        # Parse Date of Birth if provided
+        dob_val = None
+        dob_raw = request.form.get('dob', '').strip()
+        if dob_raw:
+            try:
+                dob_val = datetime.strptime(dob_raw, '%Y-%m-%d').date()
+            except ValueError:
+                pass
+
         profile = TeacherProfile(
             user_id=user.id,
             title=title,
@@ -226,10 +250,142 @@ def register_teacher():
             languages=languages,
             portfolio_url=portfolio_url,
             skills_proof=skills_proof,
-            approval_status='pending'
+            approval_status='pending',
+            dob=dob_val,
+            gender=request.form.get('gender', '').strip() or None,
+            address=request.form.get('address', '').strip() or None,
+            city=request.form.get('city', '').strip() or None,
+            state=request.form.get('state', '').strip() or None,
+            pin_code=request.form.get('pin_code', '').strip() or None,
+            country=request.form.get('country', 'India').strip()
         )
         db.session.add(profile)
         db.session.flush()
+
+        # -------------------------------------------------------------
+        # 1. Save Identity Verification (KYC)
+        # -------------------------------------------------------------
+        aadhaar_doc_path = None
+        aadhaar_file = request.files.get('aadhaar_doc')
+        if aadhaar_file and aadhaar_file.filename:
+            ok, res = save_secure_document(aadhaar_file, 'kyc', user.id)
+            if ok:
+                aadhaar_doc_path = res
+
+        pan_doc_path = None
+        pan_file = request.files.get('pan_doc')
+        if pan_file and pan_file.filename:
+            ok, res = save_secure_document(pan_file, 'kyc', user.id)
+            if ok:
+                pan_doc_path = res
+
+        other_doc_path = None
+        other_file = request.files.get('other_doc')
+        if other_file and other_file.filename:
+            ok, res = save_secure_document(other_file, 'kyc', user.id)
+            if ok:
+                other_doc_path = res
+
+        kyc_record = TeacherKYC(
+            teacher_profile_id=profile.id,
+            aadhaar_number=request.form.get('aadhaar_number', '').strip() or None,
+            aadhaar_doc_path=aadhaar_doc_path,
+            pan_number=request.form.get('pan_number', '').strip().upper() or None,
+            pan_doc_path=pan_doc_path,
+            other_id_type=request.form.get('other_id_type', '').strip() or None,
+            other_id_number=request.form.get('other_id_number', '').strip() or None,
+            other_doc_path=other_doc_path,
+            is_verified=False
+        )
+        db.session.add(kyc_record)
+
+        # -------------------------------------------------------------
+        # 2. Save Educational Qualification
+        # -------------------------------------------------------------
+        cert_doc_path = None
+        cert_file = request.files.get('certificate_doc')
+        if cert_file and cert_file.filename:
+            ok, res = save_secure_document(cert_file, 'education', user.id)
+            if ok:
+                cert_doc_path = res
+
+        marksheet_doc_path = None
+        marksheet_file = request.files.get('marksheet_doc')
+        if marksheet_file and marksheet_file.filename:
+            ok, res = save_secure_document(marksheet_file, 'education', user.id)
+            if ok:
+                marksheet_doc_path = res
+
+        passing_year_val = request.form.get('passing_year', type=int)
+
+        education_record = TeacherEducation(
+            teacher_profile_id=profile.id,
+            highest_qualification=request.form.get('highest_qualification', '').strip() or 'Bachelor\'s Degree',
+            degree_name=request.form.get('degree_name', '').strip() or None,
+            university_name=request.form.get('university_name', '').strip() or None,
+            college_name=request.form.get('college_name', '').strip() or None,
+            passing_year=passing_year_val,
+            percentage_cgpa=request.form.get('percentage_cgpa', '').strip() or None,
+            specialization=request.form.get('specialization', '').strip() or None,
+            certificate_doc_path=cert_doc_path,
+            marksheet_doc_path=marksheet_doc_path
+        )
+        db.session.add(education_record)
+
+        # -------------------------------------------------------------
+        # 3. Save Teaching Details
+        # -------------------------------------------------------------
+        teaching_cats = request.form.getlist('teaching_categories')
+        class_lvls = request.form.getlist('class_levels')
+        subjects_form = request.form.getlist('subjects')
+        custom_subs = request.form.get('custom_subjects', '').strip()
+        all_subjects_list = list(subjects_form)
+        if custom_subs:
+            all_subjects_list.extend([s.strip() for s in custom_subs.split(',') if s.strip()])
+
+        teaching_languages_list = request.form.getlist('languages')
+        if not teaching_languages_list:
+            teaching_languages_list = [languages] if languages else ['English']
+
+        demo_vid_path = None
+        demo_vid_file = request.files.get('demo_video_file')
+        if demo_vid_file and demo_vid_file.filename:
+            ok, res = save_demo_video(demo_vid_file, user.id)
+            if ok:
+                demo_vid_path = res
+
+        teaching_detail = TeacherTeachingDetail(
+            teacher_profile_id=profile.id,
+            subjects=', '.join(all_subjects_list) if all_subjects_list else 'General Mentoring',
+            teaching_categories=', '.join(teaching_cats) if teaching_cats else 'College',
+            class_levels=', '.join(class_lvls) if class_lvls else 'All Levels',
+            board=request.form.get('board', '').strip() or None,
+            languages=', '.join(teaching_languages_list),
+            demo_video_url=request.form.get('demo_video_url', '').strip() or None,
+            demo_video_path=demo_vid_path
+        )
+        db.session.add(teaching_detail)
+
+        # -------------------------------------------------------------
+        # 4. Save Initial Teacher Rate
+        # -------------------------------------------------------------
+        primary_subject = all_subjects_list[0] if all_subjects_list else (title or "Mentorship")
+        primary_cat = teaching_cats[0] if teaching_cats else "General"
+        primary_level = class_lvls[0] if class_lvls else "All Levels"
+        rate_inr = float(rate) * 10.0  # standard conversion: 1 Credit = ₹10
+
+        initial_rate = TeacherRate(
+            teacher_profile_id=profile.id,
+            subject=primary_subject,
+            category=primary_cat,
+            class_level=primary_level,
+            rate_amount=rate_inr,
+            rate_type='Hourly',
+            session_duration=60,
+            description=f"Standard 1-on-1 {primary_subject} mentoring session",
+            is_active=True
+        )
+        db.session.add(initial_rate)
 
         # Add selected skills
         for skill_id in selected_skills:

@@ -1,5 +1,12 @@
 from app.models.user import User
-from app.models.teacher import TeacherProfile, Availability
+from app.models.teacher import (
+    TeacherProfile,
+    Availability,
+    TeacherKYC,
+    TeacherEducation,
+    TeacherTeachingDetail,
+    TeacherRate
+)
 from app.models.skill import SkillCategory, Skill, TeacherSkill
 from app.models.wallet import Wallet
 from app.models.transaction import CreditTransaction
@@ -15,6 +22,10 @@ __all__ = [
     'User',
     'TeacherProfile',
     'Availability',
+    'TeacherKYC',
+    'TeacherEducation',
+    'TeacherTeachingDetail',
+    'TeacherRate',
     'SkillCategory',
     'Skill',
     'TeacherSkill',

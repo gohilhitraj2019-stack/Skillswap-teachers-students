@@ -90,6 +90,11 @@
                   </td>
                   <td class="text-end">
                     <div class="d-flex justify-content-end gap-1">
+                      <!-- Dossier Button -->
+                      <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#dossierModal{{ t.id }}" title="View Full Application Dossier">
+                        <i class="bi bi-person-lines-fill me-1"></i> Dossier
+                      </button>
+
                       {% if t.approval_status != 'approved' %}
                         <form method="POST" action="{{ url_for('admin.update_teacher_status', profile_id=t.id) }}">
                           <input type="hidden" name="status" value="approved">
@@ -101,34 +106,282 @@
                         <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#rejectTeacherModal{{ t.id }}">
                           Reject
                         </button>
+                      {% endif %}
+                    </div>
 
-                        <!-- Reject Modal -->
-                        <div class="modal fade" id="rejectTeacherModal{{ t.id }}" tabindex="-1" aria-hidden="true">
-                          <div class="modal-dialog modal-dialog-centered text-start">
-                            <div class="modal-content border">
-                              <form method="POST" action="{{ url_for('admin.update_teacher_status', profile_id=t.id) }}">
-                                <input type="hidden" name="status" value="rejected">
-                                <div class="modal-header border-bottom">
-                                  <h6 class="modal-title fw-bold text-dark">Reject Instructor Application</h6>
-                                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <!-- Full Dossier Modal -->
+                    <div class="modal fade" id="dossierModal{{ t.id }}" tabindex="-1" aria-hidden="true">
+                      <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable text-start">
+                        <div class="modal-content border">
+                          <div class="modal-header border-bottom">
+                            <div>
+                              <h6 class="modal-title fw-bold text-dark mb-0">Instructor Application Dossier</h6>
+                              <span class="small text-muted">{{ t.display_name }} ({{ t.user.email }})</span>
+                            </div>
+                            <span class="badge badge-{{ t.approval_status }} me-3">{{ t.approval_status|capitalize }}</span>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                          </div>
+                          <div class="modal-body p-4">
+                            
+                            <!-- 1. Personal Information -->
+                            <div class="d-flex align-items-center gap-3 mb-3 pb-3 border-bottom">
+                              {% if t.user.avatar_url %}
+                                <img src="{{ t.user.avatar_url }}" alt="{{ t.display_name }}" class="rounded-circle border shadow-sm" width="64" height="64" style="object-fit: cover;">
+                              {% else %}
+                                <div class="bg-dark text-white rounded-circle d-flex align-items-center justify-content-center border" style="width: 64px; height: 64px; font-size: 1.5rem; font-weight: bold;">
+                                  {{ t.display_name[0]|upper }}
                                 </div>
-                                <div class="modal-body">
-                                  <p class="small text-muted mb-3">Reject application for <strong class="text-dark">{{ t.display_name }}</strong>? The teacher will receive notice and will not appear in the discovery directory.</p>
-                                  <div class="mb-2">
-                                    <label for="reject_notes_{{ t.id }}" class="form-label small fw-semibold text-secondary">Reason for Rejection *</label>
-                                    <textarea id="reject_notes_{{ t.id }}" name="admin_notes" class="form-control form-control-sm" rows="3" placeholder="e.g. Unverified credentials, broken portfolio link, or incomplete experience history..." required></textarea>
+                              {% endif %}
+                              <div>
+                                <h5 class="fw-bold mb-0 text-dark">{{ t.display_name }}</h5>
+                                <div class="small text-muted">{{ t.title or 'Instructor' }} · {{ t.experience_years }} years experience</div>
+                                <div class="small text-muted"><i class="bi bi-geo-alt me-1"></i>{{ t.city or '' }}{% if t.city and t.state %}, {% endif %}{{ t.state or '' }}{% if t.country %} ({{ t.country }}){% endif %}</div>
+                              </div>
+                            </div>
+
+                            <div class="row g-3 mb-4">
+                              <div class="col-md-4">
+                                <div class="small text-muted">Phone Number</div>
+                                <div class="small fw-semibold text-dark">{{ t.user.phone or 'Not provided' }}</div>
+                              </div>
+                              <div class="col-md-4">
+                                <div class="small text-muted">Date of Birth</div>
+                                <div class="small fw-semibold text-dark">{{ t.dob.strftime('%d %b %Y') if t.dob else 'Not provided' }}</div>
+                              </div>
+                              <div class="col-md-4">
+                                <div class="small text-muted">Gender</div>
+                                <div class="small fw-semibold text-dark">{{ t.gender or 'Not specified' }}</div>
+                              </div>
+                              <div class="col-12">
+                                <div class="small text-muted">Residential Address</div>
+                                <div class="small fw-semibold text-dark">{{ t.address or 'Not provided' }}{% if t.pin_code %} — PIN: {{ t.pin_code }}{% endif %}</div>
+                              </div>
+                            </div>
+
+                            <!-- 2. KYC Verification Documents -->
+                            <h6 class="fw-bold text-dark small text-uppercase mb-2" style="letter-spacing: 0.04em;">
+                              <i class="bi bi-shield-check text-primary me-1"></i> Identity KYC Documents
+                            </h6>
+                            <div class="card bg-light border p-3 mb-4 rounded-3">
+                              <div class="row g-3">
+                                <div class="col-md-6 border-end">
+                                  <div class="small text-muted">Aadhaar Card Number</div>
+                                  <div class="font-monospace fw-bold text-dark mb-2">{{ t.kyc.masked_aadhaar if t.kyc else 'Not provided' }}</div>
+                                  {% if t.kyc and t.kyc.aadhaar_doc_path %}
+                                    <a href="{{ url_for('teacher.view_secure_document', folder='kyc', filename=t.kyc.aadhaar_doc_path) }}" target="_blank" class="btn btn-sm btn-outline-primary py-1">
+                                      <i class="bi bi-file-earmark-lock me-1"></i> View Aadhaar File
+                                    </a>
+                                  {% else %}
+                                    <span class="badge bg-danger-subtle text-danger">No document uploaded</span>
+                                  {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                  <div class="small text-muted">PAN Card Number</div>
+                                  <div class="font-monospace fw-bold text-dark mb-2">{{ t.kyc.masked_pan if t.kyc else 'Not provided' }}</div>
+                                  {% if t.kyc and t.kyc.pan_doc_path %}
+                                    <a href="{{ url_for('teacher.view_secure_document', folder='kyc', filename=t.kyc.pan_doc_path) }}" target="_blank" class="btn btn-sm btn-outline-primary py-1">
+                                      <i class="bi bi-file-earmark-lock me-1"></i> View PAN File
+                                    </a>
+                                  {% else %}
+                                    <span class="badge bg-danger-subtle text-danger">No document uploaded</span>
+                                  {% endif %}
+                                </div>
+                                {% if t.kyc and t.kyc.other_id_type %}
+                                  <div class="col-12 pt-2 border-top">
+                                    <div class="small text-muted">{{ t.kyc.other_id_type }} Number: <strong class="text-dark">{{ t.kyc.other_id_number or 'Provided' }}</strong></div>
+                                    {% if t.kyc.other_doc_path %}
+                                      <a href="{{ url_for('teacher.view_secure_document', folder='kyc', filename=t.kyc.other_doc_path) }}" target="_blank" class="btn btn-sm btn-outline-secondary py-1 mt-1">
+                                        <i class="bi bi-file-earmark-lock me-1"></i> View {{ t.kyc.other_id_type }} Document
+                                      </a>
+                                    {% endif %}
+                                  </div>
+                                {% endif %}
+                              </div>
+                            </div>
+
+                            <!-- 3. Educational Qualifications -->
+                            <h6 class="fw-bold text-dark small text-uppercase mb-2" style="letter-spacing: 0.04em;">
+                              <i class="bi bi-mortarboard text-primary me-1"></i> Educational Qualifications
+                            </h6>
+                            <div class="card bg-light border p-3 mb-4 rounded-3">
+                              {% if t.education %}
+                                <div class="row g-2 mb-3">
+                                  <div class="col-md-4">
+                                    <div class="small text-muted">Highest Qualification</div>
+                                    <div class="small fw-semibold text-dark">{{ t.education.highest_qualification or 'Not specified' }}</div>
+                                  </div>
+                                  <div class="col-md-4">
+                                    <div class="small text-muted">Degree / Course</div>
+                                    <div class="small fw-semibold text-dark">{{ t.education.degree_name or '—' }}</div>
+                                  </div>
+                                  <div class="col-md-4">
+                                    <div class="small text-muted">Specialization</div>
+                                    <div class="small fw-semibold text-dark">{{ t.education.specialization or '—' }}</div>
+                                  </div>
+                                  <div class="col-md-4">
+                                    <div class="small text-muted">University</div>
+                                    <div class="small fw-semibold text-dark">{{ t.education.university_name or '—' }}</div>
+                                  </div>
+                                  <div class="col-md-4">
+                                    <div class="small text-muted">College / Institute</div>
+                                    <div class="small fw-semibold text-dark">{{ t.education.college_name or '—' }}</div>
+                                  </div>
+                                  <div class="col-md-4">
+                                    <div class="small text-muted">Passing Year & Score</div>
+                                    <div class="small fw-semibold text-dark">{{ t.education.passing_year or '—' }} ({{ t.education.percentage_cgpa or '—' }})</div>
                                   </div>
                                 </div>
-                                <div class="modal-footer border-top">
-                                  <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-                                  <button type="submit" class="btn btn-danger btn-sm">Confirm Rejection</button>
+                                <div class="d-flex flex-wrap gap-2 pt-2 border-top">
+                                  {% if t.education.certificate_doc_path %}
+                                    <a href="{{ url_for('teacher.view_secure_document', folder='education', filename=t.education.certificate_doc_path) }}" target="_blank" class="btn btn-sm btn-outline-primary py-1">
+                                      <i class="bi bi-file-earmark-check me-1"></i> View Degree Certificate
+                                    </a>
+                                  {% endif %}
+                                  {% if t.education.marksheet_doc_path %}
+                                    <a href="{{ url_for('teacher.view_secure_document', folder='education', filename=t.education.marksheet_doc_path) }}" target="_blank" class="btn btn-sm btn-outline-secondary py-1">
+                                      <i class="bi bi-file-earmark-text me-1"></i> View Marksheet
+                                    </a>
+                                  {% endif %}
                                 </div>
-                              </form>
+                              {% else %}
+                                <div class="small text-muted">No educational details recorded.</div>
+                              {% endif %}
+                            </div>
+
+                            <!-- 4. Teaching Details & Demo Video -->
+                            <h6 class="fw-bold text-dark small text-uppercase mb-2" style="letter-spacing: 0.04em;">
+                              <i class="bi bi-easel text-primary me-1"></i> Teaching Profile & Demo
+                            </h6>
+                            <div class="card bg-light border p-3 mb-4 rounded-3">
+                              <div class="mb-2">
+                                <div class="small text-muted">Introduction & Bio</div>
+                                <p class="small text-dark mb-0">{{ t.bio or 'No bio provided.' }}</p>
+                              </div>
+                              <div class="row g-2 mt-2 pt-2 border-top">
+                                <div class="col-md-6">
+                                  <div class="small text-muted">Categories & Board</div>
+                                  <div class="small fw-semibold text-dark">
+                                    {{ t.teaching_detail.teaching_categories if t.teaching_detail and t.teaching_detail.teaching_categories else 'General' }}
+                                    {% if t.teaching_detail and t.teaching_detail.board %} (Board: {{ t.teaching_detail.board }}){% endif %}
+                                  </div>
+                                </div>
+                                <div class="col-md-6">
+                                  <div class="small text-muted">Class / Student Levels</div>
+                                  <div class="small fw-semibold text-dark">{{ t.teaching_detail.class_levels if t.teaching_detail and t.teaching_detail.class_levels else 'All Levels' }}</div>
+                                </div>
+                                <div class="col-md-6">
+                                  <div class="small text-muted">Teaching Subjects</div>
+                                  <div class="small fw-semibold text-dark">{{ t.teaching_detail.subjects if t.teaching_detail and t.teaching_detail.subjects else 'Not specified' }}</div>
+                                </div>
+                                <div class="col-md-6">
+                                  <div class="small text-muted">Languages</div>
+                                  <div class="small fw-semibold text-dark">{{ t.languages }}</div>
+                                </div>
+                              </div>
+                              <!-- Demo Video link -->
+                              <div class="pt-2 mt-2 border-top">
+                                <div class="small text-muted mb-1">Demonstration Video</div>
+                                {% if t.teaching_detail and t.teaching_detail.demo_video_path %}
+                                  <a href="{{ url_for('teacher.view_secure_document', folder='videos', filename=t.teaching_detail.demo_video_path) }}" target="_blank" class="btn btn-sm btn-outline-primary py-1">
+                                    <i class="bi bi-play-circle me-1"></i> Play Uploaded Demo Video
+                                  </a>
+                                {% elif t.teaching_detail and t.teaching_detail.demo_video_url %}
+                                  <a href="{{ t.teaching_detail.demo_video_url }}" target="_blank" class="btn btn-sm btn-outline-primary py-1">
+                                    <i class="bi bi-box-arrow-up-right me-1"></i> Open Video Link ({{ t.teaching_detail.demo_video_url }})
+                                  </a>
+                                {% else %}
+                                  <span class="small text-muted">No demo video submitted.</span>
+                                {% endif %}
+                              </div>
+                            </div>
+
+                            <!-- 5. Configured Rates -->
+                            <h6 class="fw-bold text-dark small text-uppercase mb-2" style="letter-spacing: 0.04em;">
+                              <i class="bi bi-tag text-primary me-1"></i> Configured Teaching Rates ({{ t.rates|length }})
+                            </h6>
+                            {% if t.rates %}
+                              <div class="table-responsive border rounded bg-white mb-2">
+                                <table class="table table-sm table-hover mb-0">
+                                  <thead class="table-light small">
+                                    <tr>
+                                      <th>Subject</th>
+                                      <th>Category</th>
+                                      <th>Level</th>
+                                      <th>Rate (INR)</th>
+                                      <th>Type</th>
+                                      <th>Status</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody class="small">
+                                    {% for r in t.rates %}
+                                      <tr>
+                                        <td class="fw-semibold">{{ r.subject }}</td>
+                                        <td>{{ r.category }}</td>
+                                        <td>{{ r.class_level or 'All' }}</td>
+                                        <td class="fw-bold">₹{{ "%.2f"|format(r.rate_amount) }}</td>
+                                        <td>{{ r.rate_type }} ({{ r.session_duration }}m)</td>
+                                        <td>
+                                          {% if r.is_active %}<span class="text-success">Active</span>{% else %}<span class="text-muted">Inactive</span>{% endif %}
+                                        </td>
+                                      </tr>
+                                    {% endfor %}
+                                  </tbody>
+                                </table>
+                              </div>
+                            {% else %}
+                              <div class="small text-muted mb-2">No individual subject rates configured yet. Default hourly rate: {{ t.hourly_rate }} Cr/hr.</div>
+                            {% endif %}
+
+                          </div>
+                          <div class="modal-footer border-top d-flex justify-content-between">
+                            <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                            <div class="d-flex gap-2">
+                              {% if t.approval_status != 'approved' %}
+                                <form method="POST" action="{{ url_for('admin.update_teacher_status', profile_id=t.id) }}" class="d-inline">
+                                  <input type="hidden" name="status" value="approved">
+                                  <button type="submit" class="btn btn-success btn-sm">
+                                    <i class="bi bi-check-circle me-1"></i> Approve Application
+                                  </button>
+                                </form>
+                              {% endif %}
+                              {% if t.approval_status != 'rejected' %}
+                                <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#rejectTeacherModal{{ t.id }}" data-bs-dismiss="modal">
+                                  <i class="bi bi-x-circle me-1"></i> Reject Application
+                                </button>
+                              {% endif %}
                             </div>
                           </div>
                         </div>
-                      {% endif %}
+                      </div>
                     </div>
+
+                    <!-- Reject Modal -->
+                    {% if t.approval_status != 'rejected' %}
+                      <div class="modal fade" id="rejectTeacherModal{{ t.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered text-start">
+                          <div class="modal-content border">
+                            <form method="POST" action="{{ url_for('admin.update_teacher_status', profile_id=t.id) }}">
+                              <input type="hidden" name="status" value="rejected">
+                              <div class="modal-header border-bottom">
+                                <h6 class="modal-title fw-bold text-dark">Reject Instructor Application</h6>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                              </div>
+                              <div class="modal-body">
+                                <p class="small text-muted mb-3">Reject application for <strong class="text-dark">{{ t.display_name }}</strong>? The teacher will receive notice and will see the reason on their dashboard.</p>
+                                <div class="mb-2">
+                                  <label for="reject_notes_{{ t.id }}" class="form-label small fw-semibold text-secondary">Reason for Rejection *</label>
+                                  <textarea id="reject_notes_{{ t.id }}" name="admin_notes" class="form-control form-control-sm" rows="3" placeholder="e.g. Unverified credentials, blur document file, or incomplete experience..." required></textarea>
+                                </div>
+                              </div>
+                              <div class="modal-footer border-top">
+                                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-danger btn-sm">Confirm Rejection</button>
+                              </div>
+                            </form>
+                          </div>
+                        </div>
+                      </div>
+                    {% endif %}
                   </td>
                 </tr>
               {% endfor %}
