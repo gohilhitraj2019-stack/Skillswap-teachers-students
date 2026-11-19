@@ -121,32 +121,6 @@
         <span class="admin-nav-label">Commission & Settings</span>
       </a>
 
-      <!-- Section: SYSTEM -->
-      <div class="admin-sidebar-heading">System & Security</div>
-
-      {% if current_user.is_super_admin %}
-      <a href="{{ url_for('admin.audit_logs') }}" 
-         class="admin-nav-item {{ 'active' if request.endpoint == 'admin.audit_logs' else '' }}"
-         data-nav-title="Security Audit Logs">
-        <span class="admin-nav-icon"><i data-lucide="shield-check" class="bi bi-shield-check"></i></span>
-        <span class="admin-nav-label">Audit Logs</span>
-      </a>
-      {% endif %}
-
-      <a href="{{ url_for('student.dashboard') }}" 
-         class="admin-nav-item"
-         data-nav-title="Switch to Student Workspace">
-        <span class="admin-nav-icon"><i data-lucide="external-link" class="bi bi-box-arrow-up-right"></i></span>
-        <span class="admin-nav-label">Student View</span>
-      </a>
-
-      <a href="{{ url_for('auth.logout') }}" 
-         class="admin-nav-item text-danger"
-         data-nav-title="Sign Out">
-        <span class="admin-nav-icon text-danger"><i data-lucide="log-out" class="bi bi-box-arrow-right"></i></span>
-        <span class="admin-nav-label">Log Out</span>
-      </a>
-
     </nav>
 
     <!-- Sidebar Bottom Collapse Button -->
