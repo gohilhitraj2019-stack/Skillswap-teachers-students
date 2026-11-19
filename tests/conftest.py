@@ -16,12 +16,12 @@ def app():
 
         # Default settings
         settings = PlatformSettings.get_settings()
-        settings.free_trial_credits = 50
+        settings.free_trial_credits = 0
         settings.commission_percent = 20
         settings.credit_to_inr_rate = 10.0
 
         # Sample package
-        pkg = CreditPackage(name="Test Starter Pack", credits=50, price_inr=499)
+        pkg = CreditPackage(name="Test Starter Pack", credits=100, price_inr=999)
         db.session.add(pkg)
 
         # Sample category & skill

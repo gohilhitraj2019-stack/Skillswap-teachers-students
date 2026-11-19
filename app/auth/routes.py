@@ -13,6 +13,7 @@ from app.models.teacher import (
     TeacherRate
 )
 from app.models.skill import Skill, SkillCategory, TeacherSkill
+from app.models.settings import PlatformSettings
 from app.models.audit_log import AdminAuditLog
 from app.services.credit_service import ensure_wallet, grant_free_trial
 from app.services.notification_service import create_notification
@@ -164,12 +165,14 @@ def register_student():
         db.session.add(user)
         db.session.flush()
 
-        # Grant free trial credits and initialize wallet
-        grant_free_trial(user.id)
+        # Initialize student wallet
+        ensure_wallet(user.id)
+        if PlatformSettings.get_settings().welcome_bonus_inr > 0:
+            grant_free_trial(user.id)
         db.session.commit()
 
         login_user(user)
-        flash('Registration successful! Welcome bonus trial credits have been added to your wallet.', 'success')
+        flash('Registration successful! Welcome to SkillSwap.', 'success')
         return redirect(url_for('student.dashboard'))
 
     return render_template('auth/register_student.html', categories=categories)
@@ -646,9 +649,8 @@ def register_teacher():
             )
             db.session.add(av)
 
-        # Initialize wallet & welcome bonus credits
+        # Initialize wallet
         ensure_wallet(user.id)
-        grant_free_trial(user.id)
 
         create_notification(
             user.id,

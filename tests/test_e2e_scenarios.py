@@ -80,13 +80,13 @@ def test_complete_e2e_acceptance_flow(client, app):
         assert david is not None
         david_id = david.id
         s_wallet = Wallet.query.filter_by(user_id=david.id).first()
-        # Received 50 free trial credits
-        assert s_wallet.available_balance == 50
+        # Initial balance starts at 0 (no bonus)
+        assert s_wallet.available_balance == 0
 
     # -------------------------------------------------------------
     # 4. CREDIT PURCHASE WORKFLOW: Buying additional credits
     # -------------------------------------------------------------
-    # Elena charges 100 credits. David has 50. David buys 100 credits.
+    # Elena charges 100 credits. David buys 100 credits.
     with app.app_context():
         pkg = CreditPackage.query.first()
         pkg_id = pkg.id
@@ -108,7 +108,7 @@ def test_complete_e2e_acceptance_flow(client, app):
 
     with app.app_context():
         s_wallet = Wallet.query.filter_by(user_id=david_id).first()
-        # 50 trial + pkg_credits (e.g. 50) = 100 available credits!
+        # 100 top-up purchased
         assert s_wallet.available_balance == 100
 
     # -------------------------------------------------------------
@@ -185,7 +185,7 @@ def test_complete_e2e_acceptance_flow(client, app):
         # Teacher wallet check
         t_wallet = Wallet.query.filter_by(user_id=elena_id).first()
         assert t_wallet.earned_balance == 80            # Exactly 80 earned credits!
-        assert t_wallet.available_balance == 130        # 50 welcome bonus + 80 earned
+        assert t_wallet.available_balance == 80         # 0 welcome bonus + 80 earned
 
     # -------------------------------------------------------------
     # 9. STUDENT REVIEWS TEACHER
@@ -222,7 +222,7 @@ def test_complete_e2e_acceptance_flow(client, app):
 
     with app.app_context():
         t_wallet = Wallet.query.filter_by(user_id=elena_id).first()
-        assert t_wallet.available_balance == 50   # 50 trial credits remaining
+        assert t_wallet.available_balance == 0   # 0 balance remaining
         assert t_wallet.earned_balance == 0      # All 80 earned credits held for payout
 
         wd = Withdrawal.query.filter_by(user_id=elena_id).first()

@@ -30,9 +30,11 @@
           <span class="wallet-held-chip">
             <i class="bi bi-lock me-1"></i> {{ wallet.held_balance | inr }} Held in Escrow
           </span>
-          <span class="wallet-held-chip">
-            <i class="bi bi-gift me-1"></i> {{ free_trial_credits | inr }} Welcome Bonus
-          </span>
+          {% if free_trial_credits and free_trial_credits > 0 %}
+            <span class="wallet-held-chip">
+              <i class="bi bi-gift me-1"></i> {{ free_trial_credits | inr }} Welcome Bonus
+            </span>
+          {% endif %}
           <span class="wallet-held-chip">
             <i class="bi bi-bag-check me-1"></i> {{ wallet.total_purchased | inr }} Total Added
           </span>

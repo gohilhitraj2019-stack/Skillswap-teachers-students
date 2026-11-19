@@ -56,8 +56,8 @@ def grant_free_trial(user_id, amount_inr=None):
         wallet_id=wallet.id,
         user_id=user_id,
         transaction_type='free_trial',
-        amount=val,
-        balance_after=wallet.available_balance,
+        amount=Decimal(str(round(val, 2))),
+        balance_after=Decimal(str(round(wallet.available_balance, 2))),
         description=f"Welcome bonus! {formatted_val} trial balance granted.",
         metadata_json=json.dumps({'source': 'welcome_bonus', 'amount_inr': val})
     )

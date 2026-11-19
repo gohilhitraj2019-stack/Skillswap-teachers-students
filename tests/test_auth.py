@@ -2,8 +2,8 @@ from app.models.user import User
 from app.models.wallet import Wallet
 from app.models.teacher import TeacherProfile
 
-def test_student_registration_grants_free_trial(client, app):
-    """Registering as a student creates account and awards 50 free credits."""
+def test_student_registration_initializes_empty_wallet(client, app):
+    """Registering as a student creates account and initializes wallet with 0 balance (no bonus)."""
     resp = client.post('/register/student', data={
         'name': 'New Student',
         'email': 'newstudent@example.com',
@@ -22,9 +22,8 @@ def test_student_registration_grants_free_trial(client, app):
 
         wallet = Wallet.query.filter_by(user_id=user.id).first()
         assert wallet is not None
-        assert wallet.available_balance == 50  # Free trial credits awarded!
-        assert len(wallet.transactions) == 1
-        assert wallet.transactions[0].transaction_type == 'free_trial'
+        assert wallet.available_balance == 0  # No welcome bonus
+        assert len(wallet.transactions) == 0
 
 def test_teacher_registration_pending_approval(client, app):
     """Registering as teacher creates teacher profile in pending state."""
