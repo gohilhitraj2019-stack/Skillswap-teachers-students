@@ -1,9 +1,10 @@
-{% extends 'base.html' %}
+{% extends 'admin/base_admin.html' %}
 
 {% block title %}User Directory & Management — Admin{% endblock %}
+{% block admin_breadcrumb %}User Management{% endblock %}
 
-{% block content %}
-<div class="container py-4">
+{% block admin_content %}
+<div>
   <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 pb-3 border-bottom">
     <div>
       <h3 class="fw-bold mb-1 text-dark">User Directory & Permissions</h3>

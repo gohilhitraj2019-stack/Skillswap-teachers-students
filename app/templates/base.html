@@ -21,6 +21,8 @@
 </head>
 <body>
 
+{% block navbar %}
+  {% if request.blueprint != 'admin' %}
   <!-- Top Navigation Bar -->
   <nav class="navbar navbar-expand-lg sticky-top">
     <div class="container">
@@ -135,7 +137,10 @@
       </div>
     </div>
   </nav>
+  {% endif %}
+{% endblock %}
 
+  {% if request.blueprint != 'admin' %}
   <!-- Flash Messages Alert -->
   <div class="container mt-3">
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -152,44 +157,49 @@
       {% endif %}
     {% endwith %}
   </div>
+  {% endif %}
 
   <!-- Main View Block -->
   <main>
     {% block content %}{% endblock %}
   </main>
 
-  <!-- Professional Minimal Footer -->
-  <footer>
-    <div class="container">
-      <div class="row align-items-center gy-3">
-        <div class="col-md-6 text-center text-md-start">
-          <div class="d-flex align-items-center justify-content-center justify-content-md-start gap-2 mb-1">
-            <div class="brand-icon-box" style="width: 22px; height: 22px; font-size: 0.7rem; border-radius: 4px;">
-              <i class="bi bi-arrow-left-right"></i>
+  {% block footer %}
+    {% if request.blueprint != 'admin' %}
+    <!-- Professional Minimal Footer -->
+    <footer>
+      <div class="container">
+        <div class="row align-items-center gy-3">
+          <div class="col-md-6 text-center text-md-start">
+            <div class="d-flex align-items-center justify-content-center justify-content-md-start gap-2 mb-1">
+              <div class="brand-icon-box" style="width: 22px; height: 22px; font-size: 0.7rem; border-radius: 4px;">
+                <i class="bi bi-arrow-left-right"></i>
+              </div>
+              <span class="fw-bold text-dark">SkillSwap</span>
+              <span class="text-muted" style="font-size: 0.75rem;">— 1-on-1 Live Skill Exchange</span>
             </div>
-            <span class="fw-bold text-dark">SkillSwap</span>
-            <span class="text-muted" style="font-size: 0.75rem;">— 1-on-1 Live Skill Exchange</span>
+            <p class="text-muted small mb-0">Learn directly from verified practitioners with peer escrow security.</p>
           </div>
-          <p class="text-muted small mb-0">Learn directly from verified practitioners with peer escrow security.</p>
-        </div>
-        <div class="col-md-6 text-center text-md-end">
-          {% if current_user.is_authenticated and current_user.is_admin %}
-            <span class="small text-muted">Admin Control Center · SkillSwap Management</span>
-          {% else %}
-            <ul class="list-inline mb-0 small text-muted">
-              <li class="list-inline-item"><a href="{{ url_for('student.explore') }}">Browse Instructors</a></li>
-              <li class="list-inline-item">·</li>
-              <li class="list-inline-item"><a href="{{ url_for('auth.register_teacher') }}">Apply to Teach</a></li>
-              <li class="list-inline-item">·</li>
-              <li class="list-inline-item"><a href="{{ url_for('wallet.purchase') }}">Wallet Top-Up</a></li>
-              <li class="list-inline-item">·</li>
-              <li class="list-inline-item"><a href="{{ url_for('main.index') }}#how-it-works">Escrow Security</a></li>
-            </ul>
-          {% endif %}
+          <div class="col-md-6 text-center text-md-end">
+            {% if current_user.is_authenticated and current_user.is_admin %}
+              <span class="small text-muted">Admin Control Center · SkillSwap Management</span>
+            {% else %}
+              <ul class="list-inline mb-0 small text-muted">
+                <li class="list-inline-item"><a href="{{ url_for('student.explore') }}">Browse Instructors</a></li>
+                <li class="list-inline-item">·</li>
+                <li class="list-inline-item"><a href="{{ url_for('auth.register_teacher') }}">Apply to Teach</a></li>
+                <li class="list-inline-item">·</li>
+                <li class="list-inline-item"><a href="{{ url_for('wallet.purchase') }}">Wallet Top-Up</a></li>
+                <li class="list-inline-item">·</li>
+                <li class="list-inline-item"><a href="{{ url_for('main.index') }}#how-it-works">Escrow Security</a></li>
+              </ul>
+            {% endif %}
+          </div>
         </div>
       </div>
-    </div>
-  </footer>
+    </footer>
+    {% endif %}
+  {% endblock %}
 
   <!-- Bootstrap 5 JS Bundle -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>

@@ -88,9 +88,24 @@ def create_app(config_name=None):
         from flask_login import current_user
         wallet = None
         unread_notifs = 0
+        admin_pending_teachers = 0
+        admin_pending_withdrawals = 0
+
         if current_user.is_authenticated:
             wallet = Wallet.query.filter_by(user_id=current_user.id).first()
             unread_notifs = Notification.query.filter_by(user_id=current_user.id, is_read=False).count()
-        return dict(current_wallet=wallet, unread_notifications_count=unread_notifs)
+
+            if current_user.is_admin:
+                from app.models.teacher import TeacherProfile
+                from app.models.withdrawal import Withdrawal
+                admin_pending_teachers = TeacherProfile.query.filter_by(approval_status='pending').count()
+                admin_pending_withdrawals = Withdrawal.query.filter_by(status='pending').count()
+
+        return dict(
+            current_wallet=wallet,
+            unread_notifications_count=unread_notifs,
+            admin_pending_teachers=admin_pending_teachers,
+            admin_pending_withdrawals=admin_pending_withdrawals
+        )
 
     return app
