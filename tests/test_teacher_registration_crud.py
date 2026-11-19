@@ -431,3 +431,185 @@ def test_admin_rejection_requires_mandatory_notes(client, app):
 
     assert resp.status_code == 200
     assert b'Please provide a specific reason' in resp.data
+
+def test_multi_step_validation_endpoint(client, app):
+    """Test step-by-step validation API for multi-step teacher registration."""
+    # 1. Step 1: Underage student rejected
+    step1_bad = {
+        'step': '1',
+        'name': 'Underage Student',
+        'dob': '2016-01-01',  # 10 years old
+        'gender': 'Male',
+        'email': 'youngster@test.com',
+        'phone': '9876543210',
+        'address': '123 School Road, Sector 5',
+        'city': 'Bengaluru',
+        'state': 'Karnataka',
+        'pin_code': '560001',
+        'country': 'India',
+        'password': 'Password@123',
+        'confirm_password': 'Password@123'
+    }
+    resp = client.post('/register/teacher/validate-step', data=step1_bad)
+    assert resp.status_code == 400
+    res_json = resp.get_json()
+    assert res_json['success'] is False
+    assert 'dob' in res_json['errors']
+
+    # 2. Step 1: Valid data passes
+    step1_good = dict(step1_bad)
+    step1_good['dob'] = '1995-04-12'
+    resp = client.post('/register/teacher/validate-step', data=step1_good)
+    assert resp.status_code == 200
+    res_json = resp.get_json()
+    assert res_json['success'] is True
+    assert res_json['next_step'] == 2
+
+    # 3. Step 2: Invalid Aadhaar rejected
+    step2_bad = {
+        'step': '2',
+        'aadhaar_number': '111111111111',  # Repetitive digits
+        'pan_number': 'ABCDE1234F',
+        'has_existing_aadhaar_doc': '1',
+        'has_existing_pan_doc': '1'
+    }
+    resp = client.post('/register/teacher/validate-step', data=step2_bad)
+    assert resp.status_code == 400
+    res_json = resp.get_json()
+    assert 'aadhaar_number' in res_json['errors']
+
+    # 4. Step 2: Valid KYC passes (123456789010 has valid Verhoeff checksum)
+    step2_good = {
+        'step': '2',
+        'aadhaar_number': '123456789010',
+        'pan_number': 'ABCDE1234F',
+        'has_existing_aadhaar_doc': '1',
+        'has_existing_pan_doc': '1'
+    }
+    resp = client.post('/register/teacher/validate-step', data=step2_good)
+    assert resp.status_code == 200
+    assert resp.get_json()['next_step'] == 3
+
+    # 5. Step 3: Valid Educational Qualifications
+    step3_good = {
+        'step': '3',
+        'highest_qualification': "Master's Degree (M.Tech / M.Sc / M.A / MCA / MBA)",
+        'degree_name': 'M.Tech Computer Science',
+        'university_name': 'IIT Bombay',
+        'college_name': 'Department of CSE',
+        'passing_year': '2020',
+        'percentage_cgpa': '9.2 CGPA',
+        'specialization': 'Distributed Systems',
+        'has_existing_certificate_doc': '1'
+    }
+    resp = client.post('/register/teacher/validate-step', data=step3_good)
+    assert resp.status_code == 200
+    assert resp.get_json()['next_step'] == 4
+
+    # 6. Step 4: Bio too short rejected
+    step4_bad = {
+        'step': '4',
+        'title': 'Senior Python Tutor',
+        'teaching_categories': ['College'],
+        'class_levels': ['Undergraduate (UG)'],
+        'subjects': ['Python'],
+        'languages': ['English', 'Hindi'],
+        'free_sessions_offered': '3',
+        'hourly_rate': '800',
+        'experience_years': '4',
+        'bio': 'Hi'  # Less than 5 words!
+    }
+    resp = client.post('/register/teacher/validate-step', data=step4_bad)
+    assert resp.status_code == 400
+    assert 'bio' in resp.get_json()['errors']
+
+    # 7. Step 4: Valid teaching details passes to step 5 (review)
+    step4_good = dict(step4_bad)
+    step4_good['bio'] = 'Experienced educator passionate about teaching data structures and clean architecture.'
+    resp = client.post('/register/teacher/validate-step', data=step4_good)
+    assert resp.status_code == 200
+    assert resp.get_json()['next_step'] == 5
+
+
+def test_registration_draft_lifecycle_and_resume(client, app):
+    """Test saving draft progress for logged in user and resuming incomplete registration."""
+    # 1. Login as student
+    client.post('/login', data={'email': 'student@test.com', 'password': 'Student@123'}, follow_redirects=True)
+
+    # 2. Save Step 1 draft via validate-step
+    step1_data = {
+        'step': '1',
+        'name': 'Alex Student',
+        'dob': '1996-08-20',
+        'gender': 'Male',
+        'email': 'student@test.com',
+        'phone': '9876543210',
+        'address': '789 Academy Road, Block C',
+        'city': 'Bengaluru',
+        'state': 'Karnataka',
+        'pin_code': '560001',
+        'country': 'India'
+    }
+    resp = client.post('/register/teacher/validate-step', data=step1_data)
+    assert resp.status_code == 200
+
+    with app.app_context():
+        from app.models.teacher import TeacherRegistrationDraft
+        student = User.query.filter_by(email='student@test.com').first()
+        draft = TeacherRegistrationDraft.query.filter_by(user_id=student.id).first()
+        assert draft is not None
+        assert draft.step_reached == 2
+        assert draft.step1_data['city'] == 'Bengaluru'
+
+    # 3. GET /register/teacher pre-populates draft
+    resp = client.get('/register/teacher')
+    assert resp.status_code == 200
+    assert b'789 Academy Road' in resp.data
+
+    # 4. Final submission deletes draft and registers teacher
+    final_payload = {
+        'name': 'Alex Student',
+        'dob': '1996-08-20',
+        'gender': 'Male',
+        'email': 'student@test.com',
+        'phone': '9876543210',
+        'address': '789 Academy Road, Block C',
+        'city': 'Bengaluru',
+        'state': 'Karnataka',
+        'pin_code': '560001',
+        'country': 'India',
+        'aadhaar_number': '123456789010',
+        'pan_number': 'ABCDE1234F',
+        'highest_qualification': "Bachelor's Degree",
+        'degree_name': 'B.Sc Physics',
+        'university_name': 'Bangalore University',
+        'college_name': 'St. Joseph College',
+        'passing_year': '2018',
+        'percentage_cgpa': '8.5 CGPA',
+        'specialization': 'Optics',
+        'title': 'Physics & Optics Mentor',
+        'bio': 'Passionate physics teacher with 4 years mentoring high school and college students in mechanics.',
+        'teaching_categories': ['College'],
+        'class_levels': ['Undergraduate (UG)'],
+        'subjects': ['Physics'],
+        'languages': ['English'],
+        'free_sessions_offered': '4',
+        'hourly_rate': '600',
+        'experience_years': '4'
+    }
+    resp = client.post('/register/teacher', data=final_payload, follow_redirects=True)
+    assert resp.status_code == 200
+    assert b'pending admin verification' in resp.data
+
+    with app.app_context():
+        from app.models.teacher import TeacherRegistrationDraft
+        student = User.query.filter_by(email='student@test.com').first()
+        # Role upgraded to teacher with pending profile
+        assert student.role == 'teacher'
+        assert student.teacher_profile is not None
+        assert student.teacher_profile.approval_status == 'pending'
+        assert student.teacher_profile.free_sessions_offered == 4
+        # Draft should be cleaned up
+        draft = TeacherRegistrationDraft.query.filter_by(user_id=student.id).first()
+        assert draft is None
+

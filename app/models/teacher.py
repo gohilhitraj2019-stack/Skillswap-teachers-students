@@ -230,3 +230,51 @@ class TeacherRate(db.Model):
 
     def __repr__(self):
         return f'<TeacherRate {self.subject} ({self.category}) - ₹{self.rate_amount} {self.rate_type}>'
+
+
+class TeacherRegistrationDraft(db.Model):
+    __tablename__ = 'teacher_registration_drafts'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), unique=True, nullable=False)
+    step_reached = db.Column(db.Integer, default=1, nullable=False)
+    step1_data = db.Column(db.JSON, nullable=True)
+    step2_data = db.Column(db.JSON, nullable=True)
+    step3_data = db.Column(db.JSON, nullable=True)
+    step4_data = db.Column(db.JSON, nullable=True)
+
+    # Saved document paths
+    avatar_path = db.Column(db.String(255), nullable=True)
+    aadhaar_doc_path = db.Column(db.String(255), nullable=True)
+    pan_doc_path = db.Column(db.String(255), nullable=True)
+    other_doc_path = db.Column(db.String(255), nullable=True)
+    certificate_doc_path = db.Column(db.String(255), nullable=True)
+    marksheet_doc_path = db.Column(db.String(255), nullable=True)
+    demo_video_path = db.Column(db.String(255), nullable=True)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    user = db.relationship('User', backref=db.backref('registration_draft', uselist=False, cascade='all, delete-orphan'))
+
+    def to_dict(self):
+        return {
+            'step_reached': self.step_reached,
+            'step1': self.step1_data or {},
+            'step2': self.step2_data or {},
+            'step3': self.step3_data or {},
+            'step4': self.step4_data or {},
+            'documents': {
+                'avatar': self.avatar_path,
+                'aadhaar': self.aadhaar_doc_path,
+                'pan': self.pan_doc_path,
+                'other': self.other_doc_path,
+                'certificate': self.certificate_doc_path,
+                'marksheet': self.marksheet_doc_path,
+                'demo_video': self.demo_video_path,
+            }
+        }
+
+    def __repr__(self):
+        return f'<TeacherRegistrationDraft user_id={self.user_id} step={self.step_reached}>'
+

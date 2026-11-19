@@ -1,40 +1,75 @@
 {% extends 'base.html' %}
 
-{% block title %}Become an Instructor — SkillSwap{% endblock %}
+{% block title %}Instructor Registration & Vetting — SkillSwap{% endblock %}
 
 {% block extra_css %}
 <style>
+  :root {
+    --ss-primary: #2563eb;
+    --ss-primary-hover: #1d4ed8;
+    --ss-success: #10b981;
+    --ss-border: #e2e8f0;
+    --ss-bg-muted: #f8fafc;
+    --ss-text-main: #0f172a;
+    --ss-text-muted: #64748b;
+  }
+
+  .registration-card {
+    border-radius: 14px;
+    border: 1px solid var(--ss-border);
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05);
+  }
+
+  /* Multi-Step Progress Tracker */
   .step-progress-wrapper {
     position: relative;
-    margin-bottom: 2rem;
+    padding: 0.5rem 0 1.5rem 0;
   }
-  .step-progress-bar {
-    position: absolute;
-    top: 24px;
-    left: 10%;
-    right: 10%;
-    height: 3px;
+  .progress-info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+  .step-progress-track {
+    position: relative;
+    height: 4px;
     background-color: #e2e8f0;
-    z-index: 1;
+    border-radius: 999px;
+    margin: 0 2rem 2rem 2rem;
   }
-  .step-progress-active {
+  .step-progress-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
     height: 100%;
-    background-color: #0f172a;
-    transition: width 0.3s ease;
+    background-color: var(--ss-primary);
+    border-radius: 999px;
+    transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   }
   .step-nodes {
     display: flex;
     justify-content: space-between;
     position: relative;
+    margin-top: -24px;
     z-index: 2;
   }
   .step-node {
-    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: default;
+    user-select: none;
+    transition: all 0.2s ease;
+    width: 25%;
+  }
+  .step-node.completed,
+  .step-node.can-navigate {
     cursor: pointer;
   }
   .step-circle {
-    width: 48px;
-    height: 48px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     background: #ffffff;
     border: 2px solid #cbd5e1;
@@ -44,115 +79,203 @@
     justify-content: center;
     font-weight: 700;
     font-size: 0.95rem;
-    margin: 0 auto 0.5rem auto;
     transition: all 0.25s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
   }
   .step-node.active .step-circle {
-    border-color: #0f172a;
-    background: #0f172a;
+    border-color: var(--ss-primary);
+    background: var(--ss-primary);
     color: #ffffff;
-    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.15);
+    box-shadow: 0 0 0 5px rgba(37, 99, 235, 0.18);
   }
   .step-node.completed .step-circle {
-    border-color: #10b981;
-    background: #10b981;
+    border-color: var(--ss-success);
+    background: var(--ss-success);
     color: #ffffff;
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.2);
   }
   .step-title {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     font-weight: 600;
     color: #64748b;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+    margin-top: 0.5rem;
+    text-align: center;
+    transition: color 0.2s ease;
   }
   .step-node.active .step-title {
-    color: #0f172a;
+    color: var(--ss-primary);
     font-weight: 700;
   }
+  .step-node.completed .step-title {
+    color: #0f172a;
+    font-weight: 600;
+  }
+
+  /* Form Panes */
   .step-pane {
     display: none;
   }
   .step-pane.active {
     display: block;
-    animation: fadeIn 0.25s ease-in-out;
+    animation: fadeInPane 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(6px); }
+  @keyframes fadeInPane {
+    from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
   }
+
+  /* Summary Cards */
   .review-section-card {
     background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
+    border: 1px solid var(--ss-border);
+    border-radius: 10px;
     padding: 1.25rem;
-    margin-bottom: 1.25rem;
+    margin-bottom: 1rem;
+    transition: box-shadow 0.2s ease;
+  }
+  .review-section-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+  .review-field-label {
+    color: #64748b;
+    font-weight: 500;
+    font-size: 0.825rem;
+  }
+  .review-field-val {
+    color: #0f172a;
+    font-weight: 600;
+    font-size: 0.875rem;
+  }
+
+  /* Existing Document Badge */
+  .doc-stored-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.65rem;
+    border-radius: 6px;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+    font-size: 0.775rem;
+    font-weight: 600;
   }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container py-5">
+<div class="container py-4 py-md-5">
   <div class="row justify-content-center">
-    <div class="col-lg-10">
-      <div class="card border p-4 p-md-5 rounded-3 bg-white shadow-sm">
+    <div class="col-lg-10 col-xl-9">
+      
+      <!-- Main Application Card -->
+      <div class="card registration-card bg-white p-4 p-md-5">
         
         <!-- Header -->
         <div class="text-center mb-4">
-          <div class="brand-icon-box mx-auto mb-2" style="width: 40px; height: 40px;">
-            <i class="bi bi-briefcase fs-5"></i>
+          <div class="brand-icon-box mx-auto mb-2" style="width: 44px; height: 44px; background: #eff6ff; color: var(--ss-primary); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+            <i class="bi bi-mortarboard fs-4"></i>
           </div>
           <h3 class="fw-bold mb-1 text-dark">Instructor Registration & Vetting</h3>
-          <p class="text-muted small">Complete the 4-step verified practitioner application to teach and earn verified income in INR (₹).</p>
+          <p class="text-muted small mb-0">Follow our sequential 4-step verified practitioner application to teach and earn in Indian Rupees (₹).</p>
         </div>
 
         <!-- Multi-Step Progress Tracker -->
-        <div class="step-progress-wrapper mb-5">
-          <div class="step-progress-bar">
-            <div class="step-progress-active" id="progressLine" style="width: 0%;"></div>
+        <div class="step-progress-wrapper mb-4">
+          <div class="progress-info-row">
+            <div>
+              <span class="text-uppercase fw-bold text-muted small" style="letter-spacing: 0.05em; font-size: 0.75rem;">Registration Flow</span>
+              <h6 class="fw-bold text-dark mb-0" id="currentStepHeaderTitle">Step 1: Personal Details</h6>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 fw-bold" id="progressPercentageBadge">25% Completed</span>
+              <span class="small text-muted d-none d-sm-inline" id="stepCounterBadge">Step 1 of 4</span>
+            </div>
           </div>
+
+          <div class="step-progress-track">
+            <div class="step-progress-fill" id="progressLine" style="width: 25%;"></div>
+          </div>
+
           <div class="step-nodes">
-            <div class="step-node active" id="node-1" onclick="navigateToStep(1)">
-              <div class="step-circle"><i class="bi bi-person"></i></div>
-              <div class="step-title d-none d-sm-block">1. Personal</div>
+            <!-- Node 1: Personal Details -->
+            <div class="step-node active" id="node-1" onclick="handleNodeClick(1)" title="Step 1: Personal Details">
+              <div class="step-circle" id="circle-1">
+                <i class="bi bi-person"></i>
+              </div>
+              <div class="step-title">
+                <span class="d-none d-md-inline">Step 1: </span>Personal
+              </div>
             </div>
-            <div class="step-node" id="node-2" onclick="navigateToStep(2)">
-              <div class="step-circle"><i class="bi bi-shield-check"></i></div>
-              <div class="step-title d-none d-sm-block">2. Identity KYC</div>
+
+            <!-- Node 2: Identity KYC -->
+            <div class="step-node" id="node-2" onclick="handleNodeClick(2)" title="Step 2: Identity KYC">
+              <div class="step-circle" id="circle-2">
+                <i class="bi bi-shield-check"></i>
+              </div>
+              <div class="step-title">
+                <span class="d-none d-md-inline">Step 2: </span>Identity KYC
+              </div>
             </div>
-            <div class="step-node" id="node-3" onclick="navigateToStep(3)">
-              <div class="step-circle"><i class="bi bi-mortarboard"></i></div>
-              <div class="step-title d-none d-sm-block">3. Education</div>
+
+            <!-- Node 3: Educational Qualification -->
+            <div class="step-node" id="node-3" onclick="handleNodeClick(3)" title="Step 3: Educational Qualification">
+              <div class="step-circle" id="circle-3">
+                <i class="bi bi-mortarboard"></i>
+              </div>
+              <div class="step-title">
+                <span class="d-none d-md-inline">Step 3: </span>Education
+              </div>
             </div>
-            <div class="step-node" id="node-4" onclick="navigateToStep(4)">
-              <div class="step-circle"><i class="bi bi-easel2"></i></div>
-              <div class="step-title d-none d-sm-block">4. Teaching</div>
-            </div>
-            <div class="step-node" id="node-5" onclick="navigateToStep(5)">
-              <div class="step-circle"><i class="bi bi-check2-circle"></i></div>
-              <div class="step-title d-none d-sm-block">5. Review</div>
+
+            <!-- Node 4: Teaching Details -->
+            <div class="step-node" id="node-4" onclick="handleNodeClick(4)" title="Step 4: Teaching Details">
+              <div class="step-circle" id="circle-4">
+                <i class="bi bi-easel2"></i>
+              </div>
+              <div class="step-title">
+                <span class="d-none d-md-inline">Step 4: </span>Teaching
+              </div>
             </div>
           </div>
         </div>
 
-        <form method="POST" action="{{ url_for('auth.register_teacher') }}" enctype="multipart/form-data" id="teacherRegisterForm">
+        <!-- Step Validation Alert Banner -->
+        <div id="stepErrorAlert" class="alert alert-danger border d-none align-items-center gap-2 py-2 px-3 small mb-4" role="alert">
+          <i class="bi bi-exclamation-triangle-fill fs-5 flex-shrink-0"></i>
+          <div id="stepErrorAlertText">Please correct the highlighted fields before proceeding to the next step.</div>
+        </div>
+
+        <!-- Main Form -->
+        <form method="POST" action="{{ url_for('auth.register_teacher') }}" enctype="multipart/form-data" id="teacherRegisterForm" novalidate>
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
+          <!-- Hidden markers for documents already stored in draft -->
+          <input type="hidden" name="has_existing_aadhaar_doc" id="has_existing_aadhaar_doc" value="{{ '1' if draft and draft.aadhaar_doc_path else '0' }}">
+          <input type="hidden" name="has_existing_pan_doc" id="has_existing_pan_doc" value="{{ '1' if draft and draft.pan_doc_path else '0' }}">
+          <input type="hidden" name="has_existing_certificate_doc" id="has_existing_certificate_doc" value="{{ '1' if draft and draft.certificate_doc_path else '0' }}">
+          <input type="hidden" name="has_existing_avatar" id="has_existing_avatar" value="{{ '1' if (draft and draft.avatar_path) or (current_user.is_authenticated and current_user.avatar_url) else '0' }}">
+
           <!-- ============================================================== -->
-          <!-- STEP 1: PERSONAL INFORMATION -->
+          <!-- STEP 1: PERSONAL DETAILS -->
           <!-- ============================================================== -->
           <div class="step-pane active" id="step-1">
             <div class="d-flex align-items-center justify-content-between border-bottom pb-2 mb-4">
-              <h5 class="fw-bold text-dark mb-0"><i class="bi bi-person-lines-fill text-primary me-2"></i>Personal Details</h5>
-              <span class="badge bg-light text-dark border">Step 1 of 4</span>
+              <div>
+                <h5 class="fw-bold text-dark mb-0"><i class="bi bi-person-lines-fill text-primary me-2"></i>Personal Details</h5>
+                <span class="small text-muted">Legal identity and residential contact information</span>
+              </div>
+              <span class="badge bg-light text-secondary border">Step 1 of 4</span>
             </div>
 
-            <!-- Profile Photo Upload Section with Live Preview -->
-            <div class="card bg-light border p-3 p-md-4 mb-4 rounded-3">
+            <!-- Profile Photo Upload with Live Preview -->
+            <div class="card bg-light border p-3 mb-4 rounded-3">
               <div class="row align-items-center g-3">
                 <div class="col-auto">
                   <div class="position-relative">
-                    <img id="avatar-preview-img" src="" alt="Profile Photo Preview" class="rounded-circle border shadow-sm d-none" width="88" height="88" style="object-fit: cover;">
-                    <div id="avatar-preview-fallback" class="bg-dark text-white rounded-circle d-flex align-items-center justify-content-center border shadow-sm" style="width: 88px; height: 88px; font-size: 2rem; font-weight: bold;">
+                    {% set avatar_src = draft.avatar_path if (draft and draft.avatar_path) else (current_user.avatar_url if (current_user.is_authenticated and current_user.avatar_url) else '') %}
+                    <img id="avatar-preview-img" src="{{ avatar_src }}" alt="Profile Photo Preview" class="rounded-circle border shadow-sm {{ 'd-none' if not avatar_src else '' }}" width="80" height="80" style="object-fit: cover;">
+                    <div id="avatar-preview-fallback" class="bg-white text-secondary rounded-circle d-flex align-items-center justify-content-center border shadow-sm {{ 'd-none' if avatar_src else '' }}" style="width: 80px; height: 80px; font-size: 1.75rem;">
                       <i class="bi bi-camera"></i>
                     </div>
                   </div>
@@ -162,63 +285,74 @@
                     Profile Photo *
                   </label>
                   <input type="file" id="avatar_file" name="avatar_file" class="form-control form-control-sm mb-1" accept="image/png, image/jpeg, image/jpg, image/webp" onchange="previewAvatar(this)">
-                  <span class="small text-muted" style="font-size: 0.75rem;">Supported: JPG, PNG, WEBP (Max 5MB). Professional, clear portrait recommended.</span>
+                  <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <span class="small text-muted" style="font-size: 0.75rem;">JPG, PNG, or WEBP (Max 5MB). Professional portrait recommended.</span>
+                    {% if draft and draft.avatar_path %}
+                      <span class="doc-stored-badge"><i class="bi bi-check-circle-fill"></i> Photo Saved</span>
+                    {% endif %}
+                  </div>
+                  <div class="invalid-feedback small" id="err-avatar_file"></div>
                 </div>
               </div>
             </div>
 
+            <!-- Full Legal Name, DOB, Gender -->
             <div class="row g-3 mb-3">
               <div class="col-md-6">
                 <label for="name" class="form-label small fw-semibold text-secondary">Full Legal Name *</label>
-                <input type="text" id="name" name="name" class="form-control" placeholder="Sarah Jenkins" value="{{ current_user.name if current_user.is_authenticated else '' }}" minlength="3" maxlength="100" pattern="^[A-Za-z\s'\-\.]+$" title="Please enter a valid full name." required>
-                <div class="invalid-feedback small">Please enter a valid full name (3-100 characters, alphabets only).</div>
+                <input type="text" id="name" name="name" class="form-control" placeholder="e.g. Sarah Jenkins" value="{{ draft.step1_data.name if (draft and draft.step1_data and draft.step1_data.name) else (current_user.name if current_user.is_authenticated else '') }}" required minlength="3" maxlength="100">
+                <div class="invalid-feedback small" id="err-name">Please enter a valid full name (3-100 characters, alphabets only).</div>
               </div>
               <div class="col-md-3">
                 <label for="dob" class="form-label small fw-semibold text-secondary">Date of Birth *</label>
-                <input type="date" id="dob" name="dob" class="form-control" required max="2008-01-01" title="You must be at least 18 years old to register as an instructor.">
-                <div class="invalid-feedback small">You must be at least 18 years old to register as an instructor.</div>
+                <input type="date" id="dob" name="dob" class="form-control" value="{{ draft.step1_data.dob if (draft and draft.step1_data and draft.step1_data.dob) else '' }}" required max="2008-01-01">
+                <div class="invalid-feedback small" id="err-dob">You must be at least 18 years old to register as an instructor.</div>
               </div>
               <div class="col-md-3">
                 <label for="gender" class="form-label small fw-semibold text-secondary">Gender *</label>
+                {% set cur_gender = draft.step1_data.gender if (draft and draft.step1_data and draft.step1_data.gender) else '' %}
                 <select id="gender" name="gender" class="form-select" required>
-                  <option value="" selected disabled>Select Gender</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Other">Other</option>
-                  <option value="Prefer not to say">Prefer not to say</option>
+                  <option value="" disabled {{ 'selected' if not cur_gender else '' }}>Select Gender</option>
+                  <option value="Male" {{ 'selected' if cur_gender == 'Male' else '' }}>Male</option>
+                  <option value="Female" {{ 'selected' if cur_gender == 'Female' else '' }}>Female</option>
+                  <option value="Other" {{ 'selected' if cur_gender == 'Other' else '' }}>Other</option>
+                  <option value="Prefer not to say" {{ 'selected' if cur_gender == 'Prefer not to say' else '' }}>Prefer not to say</option>
                 </select>
-                <div class="invalid-feedback small">Please select your gender.</div>
+                <div class="invalid-feedback small" id="err-gender">Please select your gender.</div>
               </div>
             </div>
 
+            <!-- Email & Mobile -->
             <div class="row g-3 mb-3">
               <div class="col-md-6">
                 <label for="email" class="form-label small fw-semibold text-secondary">Email Address *</label>
-                <input type="email" id="email" name="email" class="form-control" placeholder="sarah@example.com" value="{{ current_user.email if current_user.is_authenticated else '' }}" required>
-                <div class="invalid-feedback small">Please enter a valid email address.</div>
+                <input type="email" id="email" name="email" class="form-control" placeholder="sarah@example.com" value="{{ draft.step1_data.email if (draft and draft.step1_data and draft.step1_data.email) else (current_user.email if current_user.is_authenticated else '') }}" required>
+                <div class="invalid-feedback small" id="err-email">Please enter a valid email address.</div>
               </div>
               <div class="col-md-6">
                 <label for="phone" class="form-label small fw-semibold text-secondary">Mobile Number (WhatsApp Enabled) *</label>
-                <input type="tel" id="phone" name="phone" class="form-control" placeholder="10-digit mobile number" value="{{ current_user.phone if current_user.is_authenticated else '' }}" pattern="[6-9][0-9]{9}" maxlength="10" title="Please enter a valid 10-digit Indian mobile number." required>
-                <div class="invalid-feedback small">Please enter a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9.</div>
+                <input type="tel" id="phone" name="phone" class="form-control" placeholder="10-digit mobile number" value="{{ draft.step1_data.phone if (draft and draft.step1_data and draft.step1_data.phone) else (current_user.phone if current_user.is_authenticated else '') }}" maxlength="10" required>
+                <div class="invalid-feedback small" id="err-phone">Please enter a valid 10-digit Indian mobile number.</div>
               </div>
             </div>
 
+            <!-- Address -->
             <div class="mb-3">
               <label for="address" class="form-label small fw-semibold text-secondary">Current Residential Address *</label>
-              <input type="text" id="address" name="address" class="form-control" placeholder="House/Flat No., Street, Locality (min 10 characters)" minlength="10" maxlength="250" required>
-              <div class="invalid-feedback small">Please enter a valid current address (10 to 250 characters).</div>
+              <input type="text" id="address" name="address" class="form-control" placeholder="House/Flat No., Street, Locality (min 10 characters)" value="{{ draft.step1_data.address if (draft and draft.step1_data and draft.step1_data.address) else '' }}" minlength="10" maxlength="250" required>
+              <div class="invalid-feedback small" id="err-address">Please enter a valid current address (10 to 250 characters).</div>
             </div>
 
+            <!-- City, State, PIN, Country -->
             <div class="row g-3 mb-3">
               <div class="col-md-4">
                 <label for="city" class="form-label small fw-semibold text-secondary">City *</label>
-                <input type="text" id="city" name="city" class="form-control" placeholder="e.g. Mumbai, Bengaluru" minlength="2" maxlength="100" pattern="^[A-Za-z\s\-]+$" title="Please enter a valid city." required>
-                <div class="invalid-feedback small">Please enter a valid city.</div>
+                <input type="text" id="city" name="city" class="form-control" placeholder="e.g. Mumbai, Bengaluru" value="{{ draft.step1_data.city if (draft and draft.step1_data and draft.step1_data.city) else '' }}" required>
+                <div class="invalid-feedback small" id="err-city">Please enter a valid city.</div>
               </div>
               <div class="col-md-4">
                 <label for="state" class="form-label small fw-semibold text-secondary">State / Province *</label>
-                <input type="text" id="state" name="state" class="form-control" list="stateOptions" placeholder="Select or type State" required>
+                <input type="text" id="state" name="state" class="form-control" list="stateOptions" placeholder="Select or type State" value="{{ draft.step1_data.state if (draft and draft.step1_data and draft.step1_data.state) else '' }}" required>
                 <datalist id="stateOptions">
                   <option value="Andhra Pradesh">
                   <option value="Arunachal Pradesh">
@@ -257,60 +391,68 @@
                   <option value="Dadra and Nagar Haveli and Daman and Diu">
                   <option value="Lakshadweep">
                 </datalist>
-                <div class="invalid-feedback small">Please select your state.</div>
+                <div class="invalid-feedback small" id="err-state">Please select your state.</div>
               </div>
               <div class="col-md-2">
                 <label for="pin_code" class="form-label small fw-semibold text-secondary">PIN Code *</label>
-                <input type="text" id="pin_code" name="pin_code" class="form-control" placeholder="400001" pattern="[1-9][0-9]{5}" maxlength="6" title="Please enter a valid 6-digit PIN code." required>
-                <div class="invalid-feedback small">Please enter a valid 6-digit PIN code (first digit cannot be 0).</div>
+                <input type="text" id="pin_code" name="pin_code" class="form-control" placeholder="560001" maxlength="6" value="{{ draft.step1_data.pin_code if (draft and draft.step1_data and draft.step1_data.pin_code) else '' }}" required>
+                <div class="invalid-feedback small" id="err-pin_code">Please enter a valid 6-digit PIN code.</div>
               </div>
               <div class="col-md-2">
                 <label for="country" class="form-label small fw-semibold text-secondary">Country *</label>
+                {% set cur_country = draft.step1_data.country if (draft and draft.step1_data and draft.step1_data.country) else 'India' %}
                 <select id="country" name="country" class="form-select" required>
-                  <option value="India" selected>India</option>
-                  <option value="United States">United States</option>
-                  <option value="United Kingdom">United Kingdom</option>
-                  <option value="Canada">Canada</option>
-                  <option value="Australia">Australia</option>
-                  <option value="Other">Other</option>
+                  <option value="India" {{ 'selected' if cur_country == 'India' else '' }}>India</option>
+                  <option value="United States" {{ 'selected' if cur_country == 'United States' else '' }}>United States</option>
+                  <option value="United Kingdom" {{ 'selected' if cur_country == 'United Kingdom' else '' }}>United Kingdom</option>
+                  <option value="Canada" {{ 'selected' if cur_country == 'Canada' else '' }}>Canada</option>
+                  <option value="Australia" {{ 'selected' if cur_country == 'Australia' else '' }}>Australia</option>
+                  <option value="Other" {{ 'selected' if cur_country == 'Other' else '' }}>Other</option>
                 </select>
-                <div class="invalid-feedback small">Please select your country.</div>
+                <div class="invalid-feedback small" id="err-country">Please select your country.</div>
               </div>
             </div>
 
+            <!-- Password section for guest registrations -->
             {% if not current_user.is_authenticated %}
             <div class="row g-3 mb-3 border-top pt-3 mt-3">
               <div class="col-md-6">
                 <label for="password" class="form-label small fw-semibold text-secondary">Account Password *</label>
-                <input type="password" id="password" name="password" class="form-control" placeholder="Minimum 6 characters" required minlength="6">
+                <input type="password" id="password" name="password" class="form-control" placeholder="Minimum 6 characters" minlength="6" required>
+                <div class="invalid-feedback small" id="err-password">Password must be at least 6 characters long.</div>
               </div>
               <div class="col-md-6">
                 <label for="confirm_password" class="form-label small fw-semibold text-secondary">Confirm Password *</label>
-                <input type="password" id="confirm_password" name="confirm_password" class="form-control" placeholder="Repeat password" required minlength="6">
+                <input type="password" id="confirm_password" name="confirm_password" class="form-control" placeholder="Repeat password" minlength="6" required>
+                <div class="invalid-feedback small" id="err-confirm_password">Passwords do not match.</div>
               </div>
             </div>
             {% endif %}
 
-            <div class="d-flex justify-content-end mt-4">
-              <button type="button" class="btn btn-dark px-4" onclick="validateAndGo(1, 2)">
-                Continue to Identity KYC <i class="bi bi-arrow-right ms-1"></i>
+            <!-- Step 1 Navigation -->
+            <div class="d-flex justify-content-end mt-4 pt-3 border-top">
+              <button type="button" class="btn btn-primary px-4 py-2 fw-semibold" id="btn-step-1" onclick="handleStepContinue(1)">
+                Save & Continue <i class="bi bi-arrow-right ms-1"></i>
               </button>
             </div>
           </div>
 
           <!-- ============================================================== -->
-          <!-- STEP 2: IDENTITY VERIFICATION (KYC) -->
+          <!-- STEP 2: IDENTITY KYC -->
           <!-- ============================================================== -->
           <div class="step-pane" id="step-2">
             <div class="d-flex align-items-center justify-content-between border-bottom pb-2 mb-4">
-              <h5 class="fw-bold text-dark mb-0"><i class="bi bi-shield-lock text-success me-2"></i>Identity Verification (KYC Details)</h5>
-              <span class="badge bg-light text-dark border">Step 2 of 4</span>
+              <div>
+                <h5 class="fw-bold text-dark mb-0"><i class="bi bi-shield-lock text-success me-2"></i>Identity Verification (KYC)</h5>
+                <span class="small text-muted">Government-issued identity cards and encrypted document records</span>
+              </div>
+              <span class="badge bg-light text-secondary border">Step 2 of 4</span>
             </div>
 
             <div class="alert alert-info border d-flex align-items-center gap-2 py-2 px-3 small mb-4">
-              <i class="bi bi-info-circle-fill fs-5"></i>
+              <i class="bi bi-shield-check fs-5 text-primary flex-shrink-0"></i>
               <div>
-                <strong>Privacy & Escrow Security:</strong> Identity documents are strictly used for verified mentor authentication, payouts, and compliance. Numbers are masked and documents are stored with private access control.
+                <strong>Privacy & Compliance Protection:</strong> Identity documents are strictly used for verified mentor authentication, payout disbursements, and safety compliance. Identification numbers are masked on public views, and documents are stored with private access control.
               </div>
             </div>
 
@@ -319,13 +461,22 @@
               <div class="row g-3">
                 <div class="col-md-6">
                   <label for="aadhaar_number" class="form-label small fw-semibold text-secondary">Aadhaar Card Number *</label>
-                  <input type="text" id="aadhaar_number" name="aadhaar_number" class="form-control" placeholder="12-digit number (e.g. 123456789012)" pattern="[0-9]{12}" maxlength="12" required>
-                  <span class="small text-muted" style="font-size: 0.75rem;">Exactly 12 numeric digits</span>
+                  <input type="text" id="aadhaar_number" name="aadhaar_number" class="form-control font-monospace" placeholder="12-digit number (e.g. 123456789012)" value="{{ draft.step2_data.aadhaar_number if (draft and draft.step2_data and draft.step2_data.aadhaar_number) else '' }}" maxlength="12" required>
+                  <span class="small text-muted" style="font-size: 0.75rem;">12 numeric digits (Verhoeff checksum verified)</span>
+                  <div class="invalid-feedback small" id="err-aadhaar_number">Please enter a valid 12-digit Aadhaar number.</div>
                 </div>
                 <div class="col-md-6">
-                  <label for="aadhaar_doc" class="form-label small fw-semibold text-secondary">Aadhaar Card Document Upload *</label>
-                  <input type="file" id="aadhaar_doc" name="aadhaar_doc" class="form-control form-control-sm" accept=".pdf, image/png, image/jpeg" required>
-                  <span class="small text-muted" style="font-size: 0.75rem;">PDF, JPG, or PNG (Max 8MB)</span>
+                  <label for="aadhaar_doc" class="form-label small fw-semibold text-secondary">
+                    Aadhaar Card Document Upload *
+                  </label>
+                  <input type="file" id="aadhaar_doc" name="aadhaar_doc" class="form-control form-control-sm" accept=".pdf, image/png, image/jpeg" {{ 'required' if not (draft and draft.aadhaar_doc_path) else '' }}>
+                  <div class="d-flex align-items-center gap-2 flex-wrap mt-1">
+                    <span class="small text-muted" style="font-size: 0.75rem;">PDF, JPG, or PNG (Max 8MB)</span>
+                    {% if draft and draft.aadhaar_doc_path %}
+                      <span class="doc-stored-badge"><i class="bi bi-file-earmark-check"></i> Document Saved on Record</span>
+                    {% endif %}
+                  </div>
+                  <div class="invalid-feedback small" id="err-aadhaar_doc">Please upload your Aadhaar card document.</div>
                 </div>
               </div>
             </div>
@@ -335,47 +486,61 @@
               <div class="row g-3">
                 <div class="col-md-6">
                   <label for="pan_number" class="form-label small fw-semibold text-secondary">PAN Card Number *</label>
-                  <input type="text" id="pan_number" name="pan_number" class="form-control text-uppercase" placeholder="10-character PAN (e.g. ABCDE1234F)" pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}" maxlength="10" required>
+                  <input type="text" id="pan_number" name="pan_number" class="form-control font-monospace text-uppercase" placeholder="10-character PAN (e.g. ABCDE1234F)" value="{{ draft.step2_data.pan_number if (draft and draft.step2_data and draft.step2_data.pan_number) else '' }}" maxlength="10" required>
                   <span class="small text-muted" style="font-size: 0.75rem;">10 characters alphanumeric (e.g. ABCDE1234F)</span>
+                  <div class="invalid-feedback small" id="err-pan_number">Please enter a valid PAN number.</div>
                 </div>
                 <div class="col-md-6">
-                  <label for="pan_doc" class="form-label small fw-semibold text-secondary">PAN Card Document Upload *</label>
-                  <input type="file" id="pan_doc" name="pan_doc" class="form-control form-control-sm" accept=".pdf, image/png, image/jpeg" required>
-                  <span class="small text-muted" style="font-size: 0.75rem;">PDF, JPG, or PNG (Max 8MB)</span>
+                  <label for="pan_doc" class="form-label small fw-semibold text-secondary">
+                    PAN Card Document Upload *
+                  </label>
+                  <input type="file" id="pan_doc" name="pan_doc" class="form-control form-control-sm" accept=".pdf, image/png, image/jpeg" {{ 'required' if not (draft and draft.pan_doc_path) else '' }}>
+                  <div class="d-flex align-items-center gap-2 flex-wrap mt-1">
+                    <span class="small text-muted" style="font-size: 0.75rem;">PDF, JPG, or PNG (Max 8MB)</span>
+                    {% if draft and draft.pan_doc_path %}
+                      <span class="doc-stored-badge"><i class="bi bi-file-earmark-check"></i> Document Saved on Record</span>
+                    {% endif %}
+                  </div>
+                  <div class="invalid-feedback small" id="err-pan_doc">Please upload your PAN card document.</div>
                 </div>
               </div>
             </div>
 
             <!-- Other Government ID (Optional) -->
             <div class="card p-3 border mb-4 bg-light">
-              <h6 class="fw-bold small text-dark mb-2">Additional Government ID (Optional)</h6>
+              <h6 class="fw-bold small text-dark mb-2">Other Government ID (Optional)</h6>
               <div class="row g-3">
                 <div class="col-md-4">
                   <label for="other_id_type" class="form-label small fw-semibold text-secondary">Document Type</label>
+                  {% set cur_other_type = draft.step2_data.other_id_type if (draft and draft.step2_data and draft.step2_data.other_id_type) else '' %}
                   <select id="other_id_type" name="other_id_type" class="form-select form-select-sm">
-                    <option value="">None / Not Applicable</option>
-                    <option value="Passport">Passport</option>
-                    <option value="Voter ID">Voter ID</option>
-                    <option value="Driving License">Driving License</option>
+                    <option value="" {{ 'selected' if not cur_other_type else '' }}>None / Not Applicable</option>
+                    <option value="Passport" {{ 'selected' if cur_other_type == 'Passport' else '' }}>Passport</option>
+                    <option value="Voter ID" {{ 'selected' if cur_other_type == 'Voter ID' else '' }}>Voter ID</option>
+                    <option value="Driving License" {{ 'selected' if cur_other_type == 'Driving License' else '' }}>Driving License</option>
                   </select>
                 </div>
                 <div class="col-md-4">
                   <label for="other_id_number" class="form-label small fw-semibold text-secondary">ID Number</label>
-                  <input type="text" id="other_id_number" name="other_id_number" class="form-control form-control-sm" placeholder="e.g. Passport or License number">
+                  <input type="text" id="other_id_number" name="other_id_number" class="form-control form-control-sm" placeholder="e.g. Passport or License number" value="{{ draft.step2_data.other_id_number if (draft and draft.step2_data and draft.step2_data.other_id_number) else '' }}">
                 </div>
                 <div class="col-md-4">
-                  <label for="other_doc" class="form-label small fw-semibold text-secondary">Upload Document</label>
+                  <label for="other_doc" class="form-label small fw-semibold text-secondary">Upload Document (Optional)</label>
                   <input type="file" id="other_doc" name="other_doc" class="form-control form-control-sm" accept=".pdf, image/png, image/jpeg">
+                  {% if draft and draft.other_doc_path %}
+                    <span class="doc-stored-badge mt-1"><i class="bi bi-file-earmark-check"></i> Document Saved on Record</span>
+                  {% endif %}
                 </div>
               </div>
             </div>
 
-            <div class="d-flex justify-content-between mt-4">
-              <button type="button" class="btn btn-outline-secondary px-4" onclick="navigateToStep(1)">
+            <!-- Step 2 Navigation -->
+            <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+              <button type="button" class="btn btn-outline-secondary px-4 py-2" onclick="navigateToStep(1)">
                 <i class="bi bi-arrow-left me-1"></i> Previous
               </button>
-              <button type="button" class="btn btn-dark px-4" onclick="validateAndGo(2, 3)">
-                Continue to Education <i class="bi bi-arrow-right ms-1"></i>
+              <button type="button" class="btn btn-primary px-4 py-2 fw-semibold" id="btn-step-2" onclick="handleStepContinue(2)">
+                Save & Continue <i class="bi bi-arrow-right ms-1"></i>
               </button>
             </div>
           </div>
@@ -385,157 +550,199 @@
           <!-- ============================================================== -->
           <div class="step-pane" id="step-3">
             <div class="d-flex align-items-center justify-content-between border-bottom pb-2 mb-4">
-              <h5 class="fw-bold text-dark mb-0"><i class="bi bi-mortarboard-fill text-warning me-2"></i>Educational Qualifications</h5>
-              <span class="badge bg-light text-dark border">Step 3 of 4</span>
+              <div>
+                <h5 class="fw-bold text-dark mb-0"><i class="bi bi-mortarboard-fill text-warning me-2"></i>Educational Qualifications</h5>
+                <span class="small text-muted">Academic credentials, college institutions, and certified degrees</span>
+              </div>
+              <span class="badge bg-light text-secondary border">Step 3 of 4</span>
             </div>
 
+            <!-- Highest Qualification & Degree Name -->
             <div class="row g-3 mb-3">
               <div class="col-md-6">
                 <label for="highest_qualification" class="form-label small fw-semibold text-secondary">Highest Qualification *</label>
+                {% set cur_qual = draft.step3_data.highest_qualification if (draft and draft.step3_data and draft.step3_data.highest_qualification) else '' %}
                 <select id="highest_qualification" name="highest_qualification" class="form-select" required>
-                  <option value="" selected disabled>Select Highest Qualification</option>
-                  <option value="Doctorate / Ph.D.">Doctorate / Ph.D.</option>
-                  <option value="Master's Degree (M.Tech / M.Sc / M.A / MCA / MBA)">Master's Degree (M.Tech / M.Sc / M.A / MCA / MBA)</option>
-                  <option value="Bachelor's Degree (B.Tech / B.E / B.Sc / B.A / BCA / B.Com)">Bachelor's Degree (B.Tech / B.E / B.Sc / B.A / BCA / B.Com)</option>
-                  <option value="Diploma / Polytechnic">Diploma / Polytechnic</option>
-                  <option value="12th Standard / Higher Secondary">12th Standard / Higher Secondary</option>
-                  <option value="Other Professional Degree">Other Professional Degree</option>
+                  <option value="" disabled {{ 'selected' if not cur_qual else '' }}>Select Highest Qualification</option>
+                  <option value="Doctorate / Ph.D." {{ 'selected' if cur_qual == 'Doctorate / Ph.D.' else '' }}>Doctorate / Ph.D.</option>
+                  <option value="Master's Degree (M.Tech / M.Sc / M.A / MCA / MBA)" {{ 'selected' if 'Master' in cur_qual else '' }}>Master's Degree (M.Tech / M.Sc / M.A / MCA / MBA)</option>
+                  <option value="Bachelor's Degree (B.Tech / B.E / B.Sc / B.A / BCA / B.Com)" {{ 'selected' if 'Bachelor' in cur_qual else '' }}>Bachelor's Degree (B.Tech / B.E / B.Sc / B.A / BCA / B.Com)</option>
+                  <option value="Diploma / Polytechnic" {{ 'selected' if 'Diploma' in cur_qual else '' }}>Diploma / Polytechnic</option>
+                  <option value="12th Standard / Higher Secondary" {{ 'selected' if '12th' in cur_qual else '' }}>12th Standard / Higher Secondary</option>
+                  <option value="Other Professional Degree" {{ 'selected' if 'Other' in cur_qual else '' }}>Other Professional Degree</option>
                 </select>
+                <div class="invalid-feedback small" id="err-highest_qualification">Please select your highest qualification.</div>
               </div>
               <div class="col-md-6">
                 <label for="degree_name" class="form-label small fw-semibold text-secondary">Degree Name *</label>
-                <input type="text" id="degree_name" name="degree_name" class="form-control" placeholder="e.g. B.Tech in Computer Science & Engineering" required>
+                <input type="text" id="degree_name" name="degree_name" class="form-control" placeholder="e.g. B.Tech in Computer Science" value="{{ draft.step3_data.degree_name if (draft and draft.step3_data and draft.step3_data.degree_name) else '' }}" required>
+                <div class="invalid-feedback small" id="err-degree_name">Please enter your degree name.</div>
               </div>
             </div>
 
+            <!-- University & College Name -->
             <div class="row g-3 mb-3">
               <div class="col-md-6">
                 <label for="university_name" class="form-label small fw-semibold text-secondary">University / Board Name *</label>
-                <input type="text" id="university_name" name="university_name" class="form-control" placeholder="e.g. Delhi Technological University / Mumbai University" required>
+                <input type="text" id="university_name" name="university_name" class="form-control" placeholder="e.g. Delhi Technological University / Mumbai University" value="{{ draft.step3_data.university_name if (draft and draft.step3_data and draft.step3_data.university_name) else '' }}" required>
+                <div class="invalid-feedback small" id="err-university_name">Please enter your university name.</div>
               </div>
               <div class="col-md-6">
                 <label for="college_name" class="form-label small fw-semibold text-secondary">College / Institution Name *</label>
-                <input type="text" id="college_name" name="college_name" class="form-control" placeholder="e.g. Department of Computer Science" required>
+                <input type="text" id="college_name" name="college_name" class="form-control" placeholder="e.g. Department of Computer Science" value="{{ draft.step3_data.college_name if (draft and draft.step3_data and draft.step3_data.college_name) else '' }}" required>
+                <div class="invalid-feedback small" id="err-college_name">Please enter your college name.</div>
               </div>
             </div>
 
+            <!-- Passing Year, Percentage / CGPA, Specialization -->
             <div class="row g-3 mb-4">
               <div class="col-md-4">
                 <label for="passing_year" class="form-label small fw-semibold text-secondary">Passing Year *</label>
+                {% set cur_year = draft.step3_data.passing_year if (draft and draft.step3_data and draft.step3_data.passing_year) else '' %}
                 <select id="passing_year" name="passing_year" class="form-select" required>
-                  <option value="" selected disabled>Select Year</option>
+                  <option value="" disabled {{ 'selected' if not cur_year else '' }}>Select Year</option>
                   {% for y in range(2026, 1970, -1) %}
-                    <option value="{{ y }}">{{ y }}</option>
+                    <option value="{{ y }}" {{ 'selected' if cur_year == y else '' }}>{{ y }}</option>
                   {% endfor %}
                 </select>
+                <div class="invalid-feedback small" id="err-passing_year">Please select a valid passing year.</div>
               </div>
               <div class="col-md-4">
                 <label for="percentage_cgpa" class="form-label small fw-semibold text-secondary">Percentage / CGPA *</label>
-                <input type="text" id="percentage_cgpa" name="percentage_cgpa" class="form-control" placeholder="e.g. 8.6 CGPA or 84%" required>
+                <input type="text" id="percentage_cgpa" name="percentage_cgpa" class="form-control" placeholder="e.g. 8.6 CGPA or 84%" value="{{ draft.step3_data.percentage_cgpa if (draft and draft.step3_data and draft.step3_data.percentage_cgpa) else '' }}" required>
+                <div class="invalid-feedback small" id="err-percentage_cgpa">Please enter a valid percentage or CGPA.</div>
               </div>
               <div class="col-md-4">
                 <label for="specialization" class="form-label small fw-semibold text-secondary">Specialization / Major *</label>
-                <input type="text" id="specialization" name="specialization" class="form-control" placeholder="e.g. Software Systems, Physics" required>
+                <input type="text" id="specialization" name="specialization" class="form-control" placeholder="e.g. Software Systems, Physics" value="{{ draft.step3_data.specialization if (draft and draft.step3_data and draft.step3_data.specialization) else '' }}" required>
+                <div class="invalid-feedback small" id="err-specialization">Please enter your specialization.</div>
               </div>
             </div>
 
+            <!-- Academic Proof & Documents Upload -->
             <div class="card p-3 border mb-4 bg-light">
               <h6 class="fw-bold small text-dark mb-2">Academic Proof & Documents</h6>
               <div class="row g-3">
                 <div class="col-md-6">
-                  <label for="certificate_doc" class="form-label small fw-semibold text-secondary">Degree Certificate Upload *</label>
-                  <input type="file" id="certificate_doc" name="certificate_doc" class="form-control form-control-sm" accept=".pdf, image/png, image/jpeg" required>
-                  <span class="small text-muted" style="font-size: 0.75rem;">PDF, JPG, or PNG (Max 8MB)</span>
+                  <label for="certificate_doc" class="form-label small fw-semibold text-secondary">
+                    Degree Certificate Upload *
+                  </label>
+                  <input type="file" id="certificate_doc" name="certificate_doc" class="form-control form-control-sm" accept=".pdf, image/png, image/jpeg" {{ 'required' if not (draft and draft.certificate_doc_path) else '' }}>
+                  <div class="d-flex align-items-center gap-2 flex-wrap mt-1">
+                    <span class="small text-muted" style="font-size: 0.75rem;">PDF, JPG, or PNG (Max 8MB)</span>
+                    {% if draft and draft.certificate_doc_path %}
+                      <span class="doc-stored-badge"><i class="bi bi-file-earmark-check"></i> Certificate Saved on Record</span>
+                    {% endif %}
+                  </div>
+                  <div class="invalid-feedback small" id="err-certificate_doc">Please upload your degree certificate.</div>
                 </div>
                 <div class="col-md-6">
-                  <label for="marksheet_doc" class="form-label small fw-semibold text-secondary">Final Marksheet / Transcript (Optional)</label>
+                  <label for="marksheet_doc" class="form-label small fw-semibold text-secondary">
+                    Final Marksheet / Transcript (Optional)
+                  </label>
                   <input type="file" id="marksheet_doc" name="marksheet_doc" class="form-control form-control-sm" accept=".pdf, image/png, image/jpeg">
-                  <span class="small text-muted" style="font-size: 0.75rem;">PDF, JPG, or PNG (Max 8MB)</span>
+                  <div class="d-flex align-items-center gap-2 flex-wrap mt-1">
+                    <span class="small text-muted" style="font-size: 0.75rem;">PDF, JPG, or PNG (Max 8MB)</span>
+                    {% if draft and draft.marksheet_doc_path %}
+                      <span class="doc-stored-badge"><i class="bi bi-file-earmark-check"></i> Marksheet Saved on Record</span>
+                    {% endif %}
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div class="d-flex justify-content-between mt-4">
-              <button type="button" class="btn btn-outline-secondary px-4" onclick="navigateToStep(2)">
+            <!-- Step 3 Navigation -->
+            <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+              <button type="button" class="btn btn-outline-secondary px-4 py-2" onclick="navigateToStep(2)">
                 <i class="bi bi-arrow-left me-1"></i> Previous
               </button>
-              <button type="button" class="btn btn-dark px-4" onclick="validateAndGo(3, 4)">
-                Continue to Teaching Details <i class="bi bi-arrow-right ms-1"></i>
+              <button type="button" class="btn btn-primary px-4 py-2 fw-semibold" id="btn-step-3" onclick="handleStepContinue(3)">
+                Save & Continue <i class="bi bi-arrow-right ms-1"></i>
               </button>
             </div>
           </div>
 
           <!-- ============================================================== -->
-          <!-- STEP 4: TEACHING INFORMATION -->
+          <!-- STEP 4: TEACHING DETAILS -->
           <!-- ============================================================== -->
           <div class="step-pane" id="step-4">
             <div class="d-flex align-items-center justify-content-between border-bottom pb-2 mb-4">
-              <h5 class="fw-bold text-dark mb-0"><i class="bi bi-easel2-fill text-danger me-2"></i>Teaching Information & Rates</h5>
-              <span class="badge bg-light text-dark border">Step 4 of 4</span>
+              <div>
+                <h5 class="fw-bold text-dark mb-0"><i class="bi bi-easel2-fill text-danger me-2"></i>Teaching Details & Rates</h5>
+                <span class="small text-muted">Subject specialties, pedagogy levels, free trial sessions, and rates in INR</span>
+              </div>
+              <span class="badge bg-light text-secondary border">Step 4 of 4</span>
             </div>
 
+            <!-- Professional Title / Headline -->
             <div class="mb-3">
               <label for="title" class="form-label small fw-semibold text-secondary">Professional Title / Headline *</label>
-              <input type="text" id="title" name="title" class="form-control" placeholder="e.g. Senior Machine Learning Engineer & Python Specialist" required>
+              <input type="text" id="title" name="title" class="form-control" placeholder="e.g. Senior Machine Learning Specialist & Mathematics Mentor" value="{{ draft.step4_data.title if (draft and draft.step4_data and draft.step4_data.title) else '' }}" required>
+              <div class="invalid-feedback small" id="err-title">Professional Title / Headline is required.</div>
             </div>
 
             <!-- Teaching Categories -->
             <div class="mb-3">
               <label class="form-label small fw-semibold text-secondary d-block">Teaching Category * <span class="text-muted fw-normal">(Select all that apply)</span></label>
+              {% set cur_cats = draft.step4_data.teaching_categories if (draft and draft.step4_data and draft.step4_data.teaching_categories) else [] %}
               <div class="d-flex flex-wrap gap-3 p-3 border rounded bg-white">
                 <div class="form-check">
-                  <input class="form-check-input" type="checkbox" name="teaching_categories" value="School" id="cat_school" onchange="updateDynamicLevels()">
+                  <input class="form-check-input" type="checkbox" name="teaching_categories" value="School" id="cat_school" onchange="updateDynamicLevels()" {{ 'checked' if 'School' in cur_cats else '' }}>
                   <label class="form-check-label fw-semibold text-dark small" for="cat_school">
                     <i class="bi bi-backpack text-primary me-1"></i> School
                   </label>
                 </div>
                 <div class="form-check">
-                  <input class="form-check-input" type="checkbox" name="teaching_categories" value="College" id="cat_college" onchange="updateDynamicLevels()">
+                  <input class="form-check-input" type="checkbox" name="teaching_categories" value="College" id="cat_college" onchange="updateDynamicLevels()" {{ 'checked' if 'College' in cur_cats or not cur_cats else '' }}>
                   <label class="form-check-label fw-semibold text-dark small" for="cat_college">
                     <i class="bi bi-mortarboard text-success me-1"></i> College / University
                   </label>
                 </div>
                 <div class="form-check">
-                  <input class="form-check-input" type="checkbox" name="teaching_categories" value="Competitive Exams" id="cat_competitive" onchange="updateDynamicLevels()">
+                  <input class="form-check-input" type="checkbox" name="teaching_categories" value="Competitive Exams" id="cat_competitive" onchange="updateDynamicLevels()" {{ 'checked' if 'Competitive Exams' in cur_cats else '' }}>
                   <label class="form-check-label fw-semibold text-dark small" for="cat_competitive">
                     <i class="bi bi-trophy text-warning me-1"></i> Competitive Exams
                   </label>
                 </div>
               </div>
+              <div class="invalid-feedback small" id="err-teaching_categories">Please select at least one teaching category.</div>
             </div>
 
-            <!-- Dynamic Class Level Selection -->
+            <!-- Target Class Level(s) -->
             <div class="mb-3" id="classLevelsContainer">
               <label class="form-label small fw-semibold text-secondary d-block">Target Class Level(s) *</label>
               <div class="border rounded p-3 bg-light" id="classLevelsOptions">
-                <!-- Populated dynamically via JS -->
-                <p class="small text-muted mb-0" id="noCatSelectedMsg">Please select at least one teaching category above to view corresponding class levels.</p>
+                <p class="small text-muted mb-0" id="noCatSelectedMsg">Please select at least one teaching category above.</p>
               </div>
+              <div class="invalid-feedback small" id="err-class_levels">Please select your target class level(s).</div>
             </div>
 
-            <!-- Board Selection (School relevant) -->
+            <!-- Board Selection (conditional for School) -->
             <div class="mb-3" id="boardSelectionRow" style="display: none;">
               <label for="board" class="form-label small fw-semibold text-secondary">School Affiliation / Board</label>
+              {% set cur_board = draft.step4_data.board if (draft and draft.step4_data and draft.step4_data.board) else '' %}
               <select id="board" name="board" class="form-select">
-                <option value="">Select Board (if applicable)</option>
-                <option value="CBSE">CBSE</option>
-                <option value="ICSE / ISC">ICSE / ISC</option>
-                <option value="State Board">State Board</option>
-                <option value="IB (International Baccalaureate)">IB (International Baccalaureate)</option>
-                <option value="Cambridge / IGCSE">Cambridge / IGCSE</option>
-                <option value="Other">Other</option>
+                <option value="" {{ 'selected' if not cur_board else '' }}>Select Board (if applicable)</option>
+                <option value="CBSE" {{ 'selected' if cur_board == 'CBSE' else '' }}>CBSE</option>
+                <option value="ICSE / ISC" {{ 'selected' if cur_board == 'ICSE / ISC' else '' }}>ICSE / ISC</option>
+                <option value="State Board" {{ 'selected' if cur_board == 'State Board' else '' }}>State Board</option>
+                <option value="IB (International Baccalaureate)" {{ 'selected' if 'IB' in cur_board else '' }}>IB (International Baccalaureate)</option>
+                <option value="Cambridge / IGCSE" {{ 'selected' if 'Cambridge' in cur_board else '' }}>Cambridge / IGCSE</option>
+                <option value="Other" {{ 'selected' if cur_board == 'Other' else '' }}>Other</option>
               </select>
+              <div class="invalid-feedback small" id="err-board">Please select your teaching board.</div>
             </div>
 
-            <!-- Teaching Subjects Checklist & Custom Input -->
+            <!-- Primary Teaching Subjects -->
             <div class="mb-3">
               <label class="form-label small fw-semibold text-secondary d-block">Primary Teaching Subjects *</label>
+              {% set cur_subs = draft.step4_data.subjects if (draft and draft.step4_data and draft.step4_data.subjects) else [] %}
               <div class="border rounded p-3 bg-light mb-2" style="max-height: 160px; overflow-y: auto;">
                 <div class="row g-2">
                   {% for s in all_skills %}
                     <div class="col-6 col-md-4">
                       <div class="form-check">
-                        <input class="form-check-input subject-checkbox" type="checkbox" name="subjects" value="{{ s.name }}" id="sub_{{ s.id }}">
+                        <input class="form-check-input subject-checkbox" type="checkbox" name="subjects" value="{{ s.name }}" id="sub_{{ s.id }}" {{ 'checked' if s.name in cur_subs else '' }}>
                         <label class="form-check-label small" for="sub_{{ s.id }}">{{ s.name }}</label>
                       </div>
                     </div>
@@ -543,19 +750,22 @@
                 </div>
               </div>
               <input type="text" id="custom_subjects" name="custom_subjects" class="form-control form-control-sm" placeholder="Additional subjects (comma-separated, e.g. Differential Equations, Data Structures)">
+              <div class="invalid-feedback small" id="err-subjects">Please select at least one teaching subject.</div>
             </div>
 
             <!-- Teaching Languages -->
             <div class="mb-3">
               <label class="form-label small fw-semibold text-secondary d-block">Teaching Languages *</label>
+              {% set cur_langs = draft.step4_data.languages if (draft and draft.step4_data and draft.step4_data.languages) else ['English'] %}
               <div class="d-flex flex-wrap gap-2 p-2 border rounded bg-white">
                 {% for lang in ['English', 'Hindi', 'Spanish', 'French', 'German', 'Bengali', 'Marathi', 'Tamil', 'Telugu', 'Gujarati'] %}
                   <div class="form-check me-2">
-                    <input class="form-check-input lang-checkbox" type="checkbox" name="languages" value="{{ lang }}" id="lang_{{ loop.index }}" {{ 'checked' if lang in ['English'] else '' }}>
+                    <input class="form-check-input lang-checkbox" type="checkbox" name="languages" value="{{ lang }}" id="lang_{{ loop.index }}" {{ 'checked' if lang in cur_langs else '' }}>
                     <label class="form-check-label small" for="lang_{{ loop.index }}">{{ lang }}</label>
                   </div>
                 {% endfor %}
               </div>
+              <div class="invalid-feedback small" id="err-languages">Please select at least one teaching language.</div>
             </div>
 
             <!-- Free Sessions Offer (1 to 10) -->
@@ -563,22 +773,17 @@
               <label for="free_sessions_offered" class="form-label small fw-semibold text-secondary">
                 How many free sessions are you willing to offer to students? *
               </label>
+              {% set cur_fs = draft.step4_data.free_sessions_offered if (draft and draft.step4_data and draft.step4_data.free_sessions_offered) else 3 %}
               <select class="form-select" id="free_sessions_offered" name="free_sessions_offered" required>
                 <option value="" disabled>-- Select Free Sessions Offer (1 to 10) --</option>
-                <option value="1">1 Free Session</option>
-                <option value="2">2 Free Sessions</option>
-                <option value="3" selected>3 Free Sessions</option>
-                <option value="4">4 Free Sessions</option>
-                <option value="5">5 Free Sessions</option>
-                <option value="6">6 Free Sessions</option>
-                <option value="7">7 Free Sessions</option>
-                <option value="8">8 Free Sessions</option>
-                <option value="9">9 Free Sessions</option>
-                <option value="10">10 Free Sessions</option>
+                {% for count in range(1, 11) %}
+                  <option value="{{ count }}" {{ 'selected' if cur_fs == count else '' }}>{{ count }} Free Session{{ 's' if count > 1 else '' }}</option>
+                {% endfor %}
               </select>
               <div class="form-text small text-muted">
-                Offer 1–10 free sessions so students can experience your teaching before booking paid sessions.
+                Students can book up to this number of trial sessions with you for free before engaging in paid classes.
               </div>
+              <div class="invalid-feedback small" id="err-free_sessions_offered">Please select how many free sessions you can offer (1 to 10).</div>
             </div>
 
             <!-- Rates & Experience -->
@@ -587,16 +792,19 @@
                 <label for="hourly_rate" class="form-label small fw-semibold text-secondary">Default Hourly Rate (₹ INR) *</label>
                 <div class="input-group">
                   <span class="input-group-text bg-white">₹</span>
-                  <input type="number" id="hourly_rate" name="hourly_rate" class="form-control" min="10" max="50000" value="500" required>
+                  <input type="number" id="hourly_rate" name="hourly_rate" class="form-control" min="10" max="50000" value="{{ draft.step4_data.hourly_rate if (draft and draft.step4_data and draft.step4_data.hourly_rate) else '500' }}" required>
                 </div>
+                <div class="invalid-feedback small" id="err-hourly_rate">Please enter a valid rate (₹10 to ₹50,000).</div>
               </div>
               <div class="col-md-4">
                 <label for="experience_years" class="form-label small fw-semibold text-secondary">Teaching Experience (Years) *</label>
-                <input type="number" id="experience_years" name="experience_years" class="form-control" min="0" max="50" value="3" required>
+                <input type="number" id="experience_years" name="experience_years" class="form-control" min="0" max="50" value="{{ draft.step4_data.experience_years if (draft and draft.step4_data and draft.step4_data.experience_years) else '3' }}" required>
+                <div class="invalid-feedback small" id="err-experience_years">Please enter valid experience years.</div>
               </div>
               <div class="col-md-4">
                 <label for="portfolio_url" class="form-label small fw-semibold text-secondary">Portfolio / GitHub / Profile URL</label>
-                <input type="url" id="portfolio_url" name="portfolio_url" class="form-control" placeholder="https://github.com/yourhandle">
+                <input type="url" id="portfolio_url" name="portfolio_url" class="form-control" placeholder="https://github.com/yourhandle" value="{{ draft.step4_data.portfolio_url if (draft and draft.step4_data and draft.step4_data.portfolio_url) else '' }}">
+                <div class="invalid-feedback small" id="err-portfolio_url">Please enter a valid URL starting with http:// or https://</div>
               </div>
             </div>
 
@@ -606,134 +814,148 @@
                 <label for="bio" class="form-label small fw-semibold text-secondary mb-0">Professional Introduction & Bio *</label>
                 <span id="register-bio-counter" class="badge bg-light text-secondary border font-monospace" style="font-size: 0.75rem;">0 / 500 words</span>
               </div>
-              <textarea id="bio" name="bio" rows="4" class="form-control" placeholder="Describe your educational philosophy, mentoring achievements, and how your live sessions empower learners (maximum 500 words)..." required oninput="updateRegisterBioCount()"></textarea>
+              <textarea id="bio" name="bio" rows="4" class="form-control" placeholder="Describe your educational philosophy, mentoring achievements, and how your live sessions empower learners (maximum 500 words)..." required oninput="updateRegisterBioCount()">{{ draft.step4_data.bio if (draft and draft.step4_data and draft.step4_data.bio) else '' }}</textarea>
               <div class="d-flex justify-content-between align-items-center mt-1">
-                <span class="small text-muted" style="font-size: 0.75rem;">Highlight your expertise, achievements, and teaching style (maximum 500 words).</span>
+                <span class="small text-muted" style="font-size: 0.75rem;">Highlight your expertise, achievements, and teaching style (minimum 5 words, maximum 500 words).</span>
                 <span id="register-bio-warning" class="small text-danger fw-semibold d-none" style="font-size: 0.75rem;">
                   <i class="bi bi-exclamation-triangle-fill me-1"></i> Exceeds maximum 500 words limit
                 </span>
               </div>
+              <div class="invalid-feedback small" id="err-bio">Please enter an introduction between 5 and 500 words.</div>
             </div>
 
             <!-- Demo Video Link or File Upload -->
             <div class="card p-3 border mb-4 bg-light">
               <h6 class="fw-bold small text-dark mb-1"><i class="bi bi-camera-video me-1 text-primary"></i>Demo Teaching Video (Optional)</h6>
-              <p class="small text-muted mb-3">Provide a sample explanation or introduction video to help students gauge your teaching style.</p>
+              <p class="small text-muted mb-2">Provide a short introduction or sample concept explanation video.</p>
               <div class="row g-3">
                 <div class="col-md-6">
                   <label for="demo_video_url" class="form-label small fw-semibold text-secondary">Demo Video URL</label>
-                  <input type="url" id="demo_video_url" name="demo_video_url" class="form-control form-control-sm" placeholder="https://youtube.com/watch?v=... or Loom URL">
+                  <input type="url" id="demo_video_url" name="demo_video_url" class="form-control form-control-sm" placeholder="https://youtube.com/watch?v=... or Loom URL" value="{{ draft.step4_data.demo_video_url if (draft and draft.step4_data and draft.step4_data.demo_video_url) else '' }}">
+                  <div class="invalid-feedback small" id="err-demo_video_url">Please enter a valid video URL.</div>
                 </div>
                 <div class="col-md-6">
                   <label for="demo_video_file" class="form-label small fw-semibold text-secondary">Or Upload Video Clip</label>
                   <input type="file" id="demo_video_file" name="demo_video_file" class="form-control form-control-sm" accept="video/mp4, video/webm">
-                  <span class="small text-muted" style="font-size: 0.75rem;">MP4, WEBM (Max 25MB)</span>
+                  <div class="d-flex align-items-center gap-2 flex-wrap mt-1">
+                    <span class="small text-muted" style="font-size: 0.75rem;">MP4, WEBM (Max 25MB)</span>
+                    {% if draft and draft.demo_video_path %}
+                      <span class="doc-stored-badge"><i class="bi bi-file-earmark-check"></i> Video Saved on Record</span>
+                    {% endif %}
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div class="d-flex justify-content-between mt-4">
-              <button type="button" class="btn btn-outline-secondary px-4" onclick="navigateToStep(3)">
+            <!-- Step 4 Navigation -->
+            <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+              <button type="button" class="btn btn-outline-secondary px-4 py-2" onclick="navigateToStep(3)">
                 <i class="bi bi-arrow-left me-1"></i> Previous
               </button>
-              <button type="button" class="btn btn-dark px-4" onclick="validateAndGo(4, 5)">
-                Review Application <i class="bi bi-arrow-right ms-1"></i>
+              <button type="button" class="btn btn-primary px-4 py-2 fw-semibold" id="btn-step-4" onclick="handleStepContinue(4)">
+                Save & Review Application <i class="bi bi-arrow-right ms-1"></i>
               </button>
             </div>
           </div>
 
           <!-- ============================================================== -->
-          <!-- STEP 5: REVIEW ALL INFORMATION & SUBMIT -->
+          <!-- STEP 5: FINAL APPLICATION REVIEW & SUBMIT -->
           <!-- ============================================================== -->
           <div class="step-pane" id="step-5">
             <div class="d-flex align-items-center justify-content-between border-bottom pb-2 mb-4">
-              <h5 class="fw-bold text-dark mb-0"><i class="bi bi-clipboard-check text-primary me-2"></i>Review Application Summary</h5>
-              <span class="badge bg-success text-white">Final Review</span>
+              <div>
+                <h5 class="fw-bold text-dark mb-0"><i class="bi bi-clipboard-check text-success me-2"></i>Review Application Summary</h5>
+                <span class="small text-muted">Verify your application details across all 4 steps before final submission</span>
+              </div>
+              <span class="badge bg-success text-white px-3 py-1">Ready to Submit</span>
             </div>
 
             <!-- Review Summary Cards -->
             <div class="row g-3">
-              <!-- Personal Summary -->
+              <!-- 1. Personal Details Summary -->
               <div class="col-md-6">
                 <div class="review-section-card h-100">
                   <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span class="fw-bold text-dark small text-uppercase">1. Personal Information</span>
-                    <button type="button" class="btn btn-link btn-sm p-0 small text-decoration-none" onclick="navigateToStep(1)">Edit</button>
+                    <span class="fw-bold text-dark small text-uppercase"><i class="bi bi-person me-1 text-primary"></i>1. Personal Details</span>
+                    <button type="button" class="btn btn-link btn-sm p-0 small text-decoration-none fw-semibold" onclick="navigateToStep(1)">Edit</button>
                   </div>
                   <div class="small">
-                    <div><strong>Name:</strong> <span id="rev-name">—</span></div>
-                    <div><strong>DOB & Gender:</strong> <span id="rev-dob">—</span> · <span id="rev-gender">—</span></div>
-                    <div><strong>Contact:</strong> <span id="rev-email">—</span> · <span id="rev-phone">—</span></div>
-                    <div><strong>Address:</strong> <span id="rev-address">—</span>, <span id="rev-city">—</span>, <span id="rev-state">—</span> - <span id="rev-pin">—</span></div>
+                    <div class="mb-1"><span class="review-field-label">Name:</span> <span class="review-field-val" id="rev-name">—</span></div>
+                    <div class="mb-1"><span class="review-field-label">DOB & Gender:</span> <span class="review-field-val" id="rev-dob">—</span> · <span id="rev-gender">—</span></div>
+                    <div class="mb-1"><span class="review-field-label">Email:</span> <span class="review-field-val" id="rev-email">—</span></div>
+                    <div class="mb-1"><span class="review-field-label">Mobile:</span> <span class="review-field-val" id="rev-phone">—</span></div>
+                    <div><span class="review-field-label">Address:</span> <span class="review-field-val" id="rev-address">—</span>, <span id="rev-city">—</span>, <span id="rev-state">—</span> (<span id="rev-pin">—</span>)</div>
                   </div>
                 </div>
               </div>
 
-              <!-- KYC Summary -->
+              <!-- 2. Identity KYC Summary -->
               <div class="col-md-6">
                 <div class="review-section-card h-100">
                   <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span class="fw-bold text-dark small text-uppercase">2. Identity KYC Details</span>
-                    <button type="button" class="btn btn-link btn-sm p-0 small text-decoration-none" onclick="navigateToStep(2)">Edit</button>
+                    <span class="fw-bold text-dark small text-uppercase"><i class="bi bi-shield-check me-1 text-success"></i>2. Identity KYC</span>
+                    <button type="button" class="btn btn-link btn-sm p-0 small text-decoration-none fw-semibold" onclick="navigateToStep(2)">Edit</button>
                   </div>
                   <div class="small">
-                    <div><strong>Aadhaar Card:</strong> <span id="rev-aadhaar" class="font-monospace text-muted">—</span></div>
-                    <div><strong>PAN Card:</strong> <span id="rev-pan" class="font-monospace text-muted">—</span></div>
-                    <div><strong>Attached Documents:</strong> <span id="rev-kyc-docs" class="text-success"><i class="bi bi-file-earmark-check"></i> Files Attached</span></div>
+                    <div class="mb-1"><span class="review-field-label">Aadhaar Card:</span> <span class="review-field-val font-monospace" id="rev-aadhaar">—</span></div>
+                    <div class="mb-1"><span class="review-field-label">PAN Card:</span> <span class="review-field-val font-monospace" id="rev-pan">—</span></div>
+                    <div class="mb-1"><span class="review-field-label">Documents Attached:</span> <span class="text-success fw-semibold"><i class="bi bi-file-earmark-check me-1"></i>Verified Identity Proofs</span></div>
+                    <div><span class="review-field-label">Compliance Status:</span> <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">Pending Admin Review</span></div>
                   </div>
                 </div>
               </div>
 
-              <!-- Education Summary -->
+              <!-- 3. Educational Qualification Summary -->
               <div class="col-md-6">
                 <div class="review-section-card h-100">
                   <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span class="fw-bold text-dark small text-uppercase">3. Educational Background</span>
-                    <button type="button" class="btn btn-link btn-sm p-0 small text-decoration-none" onclick="navigateToStep(3)">Edit</button>
+                    <span class="fw-bold text-dark small text-uppercase"><i class="bi bi-mortarboard me-1 text-warning"></i>3. Education</span>
+                    <button type="button" class="btn btn-link btn-sm p-0 small text-decoration-none fw-semibold" onclick="navigateToStep(3)">Edit</button>
                   </div>
                   <div class="small">
-                    <div><strong>Qualification:</strong> <span id="rev-qual">—</span></div>
-                    <div><strong>Degree:</strong> <span id="rev-degree">—</span> (<span id="rev-spec">—</span>)</div>
-                    <div><strong>Institution:</strong> <span id="rev-college">—</span> · <span id="rev-year">—</span></div>
-                    <div><strong>Score / CGPA:</strong> <span id="rev-cgpa">—</span></div>
+                    <div class="mb-1"><span class="review-field-label">Qualification:</span> <span class="review-field-val" id="rev-qual">—</span></div>
+                    <div class="mb-1"><span class="review-field-label">Degree:</span> <span class="review-field-val" id="rev-degree">—</span> (<span id="rev-spec">—</span>)</div>
+                    <div class="mb-1"><span class="review-field-label">Institution:</span> <span class="review-field-val" id="rev-college">—</span> · <span id="rev-year">—</span></div>
+                    <div><span class="review-field-label">Score / CGPA:</span> <span class="review-field-val" id="rev-cgpa">—</span></div>
                   </div>
                 </div>
               </div>
 
-              <!-- Teaching Summary -->
+              <!-- 4. Teaching Details Summary -->
               <div class="col-md-6">
                 <div class="review-section-card h-100">
                   <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span class="fw-bold text-dark small text-uppercase">4. Teaching Disciplines & Rates</span>
-                    <button type="button" class="btn btn-link btn-sm p-0 small text-decoration-none" onclick="navigateToStep(4)">Edit</button>
+                    <span class="fw-bold text-dark small text-uppercase"><i class="bi bi-easel2 me-1 text-danger"></i>4. Teaching & Rates</span>
+                    <button type="button" class="btn btn-link btn-sm p-0 small text-decoration-none fw-semibold" onclick="navigateToStep(4)">Edit</button>
                   </div>
                   <div class="small">
-                    <div><strong>Title:</strong> <span id="rev-title">—</span></div>
-                    <div><strong>Categories:</strong> <span id="rev-cats">—</span></div>
-                    <div><strong>Subjects:</strong> <span id="rev-subs">—</span></div>
-                    <div><strong>Languages:</strong> <span id="rev-langs">—</span></div>
-                    <div><strong>Free Trial:</strong> <span id="rev-free-sessions" class="badge bg-success-subtle text-success border border-success-subtle">3 Free Sessions</span></div>
-                    <div><strong>Rate & Exp:</strong> <span id="rev-rate" class="fw-bold text-dark">—</span> · <span id="rev-exp">—</span> yrs exp</div>
+                    <div class="mb-1"><span class="review-field-label">Headline:</span> <span class="review-field-val" id="rev-title">—</span></div>
+                    <div class="mb-1"><span class="review-field-label">Categories:</span> <span class="review-field-val" id="rev-cats">—</span></div>
+                    <div class="mb-1"><span class="review-field-label">Subjects:</span> <span class="review-field-val" id="rev-subs">—</span></div>
+                    <div class="mb-1"><span class="review-field-label">Free Sessions Offer:</span> <span class="badge bg-success text-white" id="rev-free-sessions">3 Free Sessions</span></div>
+                    <div><span class="review-field-label">Hourly Rate:</span> <span class="review-field-val text-primary" id="rev-rate">₹500 / Hr</span> · <span id="rev-exp">—</span> yrs exp</div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- Declaration Checkbox -->
+            <!-- Solemn Declaration Checkbox -->
             <div class="border rounded p-3 bg-light my-4">
               <div class="form-check">
                 <input class="form-check-input" type="checkbox" id="declaration" name="declaration" required>
                 <label class="form-check-label small text-secondary" for="declaration">
                   I solemnly declare that all personal details, identity KYC information, educational qualifications, and teaching credentials provided are authentic and true to the best of my knowledge. I understand that my profile will be placed in the <strong>Administrator Vetting Queue</strong> and will only appear publicly once approved.
                 </label>
+                <div class="invalid-feedback small" id="err-declaration">You must acknowledge the declaration before submitting.</div>
               </div>
             </div>
 
-            <div class="d-flex justify-content-between mt-4">
-              <button type="button" class="btn btn-outline-secondary px-4" onclick="navigateToStep(4)">
+            <!-- Final Submission Buttons -->
+            <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+              <button type="button" class="btn btn-outline-secondary px-4 py-2" onclick="navigateToStep(4)">
                 <i class="bi bi-arrow-left me-1"></i> Previous
               </button>
-              <button type="submit" class="btn btn-dark px-5 py-2 fw-semibold" id="submitBtn">
+              <button type="submit" class="btn btn-success px-5 py-2 fw-semibold" id="submitBtn">
                 <i class="bi bi-send-check me-2"></i> Submit Application for Review
               </button>
             </div>
@@ -749,43 +971,16 @@
 
 {% block extra_js %}
 <script>
+// State Management
 let currentStep = 1;
-
-function navigateToStep(step) {
-  if (step < 1 || step > 5) return;
-  // If moving forward, make sure previous steps were visited
-  currentStep = step;
-  
-  // Show active step pane
-  document.querySelectorAll('.step-pane').forEach((el, idx) => {
-    el.classList.toggle('active', idx + 1 === step);
-  });
-
-  // Update nodes
-  for (let i = 1; i <= 5; i++) {
-    const node = document.getElementById('node-' + i);
-    if (!node) continue;
-    node.classList.remove('active', 'completed');
-    if (i === step) {
-      node.classList.add('active');
-    } else if (i < step) {
-      node.classList.add('completed');
-    }
-  }
-
-  // Update progress bar percentage
-  const line = document.getElementById('progressLine');
-  if (line) {
-    line.style.width = ((step - 1) / 4 * 100) + '%';
-  }
-
-  // If entering review step, populate review fields
-  if (step === 5) {
-    populateReviewSummary();
-  }
-
-  window.scrollTo({ top: 100, behavior: 'smooth' });
-}
+let maxStepCompleted = {{ (draft.step_reached - 1) if draft else 0 }};
+const STEP_TITLES = {
+  1: 'Step 1: Personal Details',
+  2: 'Step 2: Identity KYC',
+  3: 'Step 3: Educational Qualification',
+  4: 'Step 4: Teaching Details',
+  5: 'Review Application Summary'
+};
 
 const VERHOEFF_D = [
   [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
@@ -820,161 +1015,454 @@ function validateVerhoeff(str) {
   return c === 0;
 }
 
-function validateAndGo(fromStep, toStep) {
-  const currentPane = document.getElementById('step-' + fromStep);
-  if (!currentPane) return;
+// Node click rule: cannot jump ahead to incomplete steps
+function handleNodeClick(step) {
+  if (step > maxStepCompleted + 1) {
+    showErrorAlert(`Please complete Step ${maxStepCompleted + 1} before proceeding to Step ${step}.`);
+    return;
+  }
+  navigateToStep(step);
+}
 
-  const inputs = currentPane.querySelectorAll('input[required], select[required], textarea[required]');
+function navigateToStep(step) {
+  if (step < 1 || step > 5) return;
+  hideErrorAlert();
+  currentStep = step;
+
+  // Toggle step panes
+  for (let i = 1; i <= 5; i++) {
+    const pane = document.getElementById('step-' + i);
+    if (pane) {
+      pane.classList.toggle('active', i === step);
+    }
+  }
+
+  // Update header text
+  const headerTitle = document.getElementById('currentStepHeaderTitle');
+  if (headerTitle) headerTitle.textContent = STEP_TITLES[step] || `Step ${step}`;
+
+  const counterBadge = document.getElementById('stepCounterBadge');
+  if (counterBadge) counterBadge.textContent = step <= 4 ? `Step ${step} of 4` : 'Review Step';
+
+  // Update progress percentage: 25%, 50%, 75%, 100%
+  const percentageBadge = document.getElementById('progressPercentageBadge');
+  const progressLine = document.getElementById('progressLine');
+  const pct = step === 1 ? 25 : (step === 2 ? 50 : (step === 3 ? 75 : 100));
+  if (percentageBadge) percentageBadge.textContent = pct + '% Completed';
+  if (progressLine) progressLine.style.width = pct + '%';
+
+  // Update step nodes
+  for (let i = 1; i <= 4; i++) {
+    const node = document.getElementById('node-' + i);
+    const circle = document.getElementById('circle-' + i);
+    if (!node || !circle) continue;
+
+    node.classList.remove('active', 'completed', 'can-navigate');
+
+    if (i < step || i <= maxStepCompleted) {
+      node.classList.add('completed');
+      circle.innerHTML = '<i class="bi bi-check-lg"></i>';
+    } else if (i === step) {
+      node.classList.add('active');
+      const icons = ['person', 'shield-check', 'mortarboard', 'easel2'];
+      circle.innerHTML = `<i class="bi bi-${icons[i - 1]}"></i>`;
+    } else {
+      const icons = ['person', 'shield-check', 'mortarboard', 'easel2'];
+      circle.innerHTML = `<i class="bi bi-${icons[i - 1]}"></i>`;
+    }
+
+    if (i <= maxStepCompleted + 1) {
+      node.classList.add('can-navigate');
+    }
+  }
+
+  if (step === 5) {
+    populateReviewSummary();
+  }
+
+  window.scrollTo({ top: 120, behavior: 'smooth' });
+}
+
+function showErrorAlert(msg) {
+  const alertEl = document.getElementById('stepErrorAlert');
+  const textEl = document.getElementById('stepErrorAlertText');
+  if (alertEl && textEl) {
+    textEl.textContent = msg;
+    alertEl.classList.remove('d-none');
+    alertEl.classList.add('d-flex');
+    alertEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+function hideErrorAlert() {
+  const alertEl = document.getElementById('stepErrorAlert');
+  if (alertEl) {
+    alertEl.classList.add('d-none');
+    alertEl.classList.remove('d-flex');
+  }
+}
+
+function setFieldError(fieldId, errorMsg) {
+  const el = document.getElementById(fieldId);
+  const errEl = document.getElementById('err-' + fieldId);
+  if (el) el.classList.add('is-invalid');
+  if (errEl) {
+    errEl.textContent = errorMsg;
+    errEl.style.display = 'block';
+  }
+}
+
+function clearFieldErrors(container) {
+  const inputs = container.querySelectorAll('.is-invalid');
+  inputs.forEach(i => i.classList.remove('is-invalid'));
+  const errs = container.querySelectorAll('.invalid-feedback');
+  errs.forEach(e => { e.style.display = 'none'; });
+}
+
+// Client-Side Validation on Current Step
+function validateClientStep(step) {
+  const pane = document.getElementById('step-' + step);
+  if (!pane) return false;
+
+  clearFieldErrors(pane);
   let isValid = true;
   let firstInvalid = null;
 
-  inputs.forEach(input => {
-    if (!input.checkValidity()) {
-      isValid = false;
-      input.classList.add('is-invalid');
-      if (!firstInvalid) firstInvalid = input;
+  function markInvalid(id, msg) {
+    isValid = false;
+    setFieldError(id, msg);
+    const el = document.getElementById(id);
+    if (!firstInvalid && el) firstInvalid = el;
+  }
+
+  if (step === 1) {
+    const nameEl = document.getElementById('name');
+    const nameVal = nameEl ? nameEl.value.trim() : '';
+    if (!nameVal || nameVal.length < 3 || nameVal.length > 100 || !/^[A-Za-z\s'\-\.]+$/.test(nameVal)) {
+      markInvalid('name', 'Please enter a valid full name (3-100 characters, alphabets only).');
+    }
+
+    const dobEl = document.getElementById('dob');
+    if (!dobEl || !dobEl.value) {
+      markInvalid('dob', 'Date of birth is required.');
     } else {
-      input.classList.remove('is-invalid');
-    }
-  });
-
-  // Step-specific validations
-  if (fromStep === 1) {
-    const nameInput = document.getElementById('name');
-    if (nameInput) {
-      const nameVal = nameInput.value.trim();
-      const nameRegex = /^[A-Za-z\s'\-\.]+$/;
-      if (nameVal.length < 3 || nameVal.length > 100 || !nameRegex.test(nameVal)) {
-        alert('Please enter a valid full name (3-100 characters, letters, spaces, hyphens, and apostrophes only).');
-        nameInput.focus();
-        return;
-      }
-    }
-
-    const dobInput = document.getElementById('dob');
-    if (dobInput && dobInput.value) {
-      const birthDate = new Date(dobInput.value);
+      const birth = new Date(dobEl.value);
       const today = new Date();
-      let age = today.getFullYear() - birthDate.getFullYear();
-      const m = today.getMonth() - birthDate.getMonth();
-      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-        age--;
-      }
-      if (age < 18) {
-        alert(`You must be at least 18 years old to register as an instructor (calculated age: ${age} years).`);
-        dobInput.focus();
-        return;
+      let age = today.getFullYear() - birth.getFullYear();
+      const m = today.getMonth() - birth.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+      if (age < 18 || isNaN(age)) {
+        markInvalid('dob', `You must be at least 18 years old to register as an instructor (current age: ${age} years).`);
       }
     }
 
-    const phoneInput = document.getElementById('phone');
-    if (phoneInput) {
-      const phoneDigits = phoneInput.value.replace(/\D/g, '');
-      const phoneRegex = /^[6-9]\d{9}$/;
-      if (!phoneRegex.test(phoneDigits)) {
-        alert('Please enter a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9.');
-        phoneInput.focus();
-        return;
-      }
+    const genderEl = document.getElementById('gender');
+    if (!genderEl || !genderEl.value) {
+      markInvalid('gender', 'Please select your gender.');
     }
 
-    const addrInput = document.getElementById('address');
-    if (addrInput && addrInput.value.trim().length < 10) {
-      alert('Please enter a valid current address (minimum 10 characters).');
-      addrInput.focus();
-      return;
+    const emailEl = document.getElementById('email');
+    const emailVal = emailEl ? emailEl.value.trim() : '';
+    if (!emailVal || !/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/.test(emailVal)) {
+      markInvalid('email', 'Please enter a valid email address.');
     }
 
-    const pinInput = document.getElementById('pin_code');
-    if (pinInput) {
-      const pinDigits = pinInput.value.replace(/\D/g, '');
-      const pinRegex = /^[1-9]\d{5}$/;
-      if (!pinRegex.test(pinDigits)) {
-        alert('Please enter a valid 6-digit PIN code (first digit cannot be 0).');
-        pinInput.focus();
-        return;
-      }
-    }
-  }
-
-  if (fromStep === 2) {
-    const aadhInput = document.getElementById('aadhaar_number');
-    if (aadhInput) {
-      const aadhDigits = aadhInput.value.replace(/\D/g, '');
-      if (aadhDigits.length !== 12) {
-        alert('Aadhaar number must be exactly 12 numeric digits.');
-        aadhInput.focus();
-        return;
-      }
-      if (/^(\d)\1{11}$/.test(aadhDigits)) {
-        alert('Please enter a valid Aadhaar number (repetitive digits not permitted).');
-        aadhInput.focus();
-        return;
-      }
-      if (!validateVerhoeff(aadhDigits)) {
-        alert('Please enter a valid Aadhaar number (Verhoeff checksum verification failed).');
-        aadhInput.focus();
-        return;
-      }
+    const phoneEl = document.getElementById('phone');
+    const phoneVal = phoneEl ? phoneEl.value.replace(/\D/g, '') : '';
+    if (!phoneVal || !/^[6-9]\d{9}$/.test(phoneVal)) {
+      markInvalid('phone', 'Please enter a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9.');
     }
 
-    const panInput = document.getElementById('pan_number');
-    if (panInput) {
-      const panVal = panInput.value.trim().toUpperCase();
-      const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
-      if (!panRegex.test(panVal)) {
-        alert('Please enter a valid PAN number (e.g. ABCDE1234F).');
-        panInput.focus();
-        return;
+    const addrEl = document.getElementById('address');
+    if (!addrEl || addrEl.value.trim().length < 10) {
+      markInvalid('address', 'Please enter a valid current address (minimum 10 characters).');
+    }
+
+    const cityEl = document.getElementById('city');
+    if (!cityEl || cityEl.value.trim().length < 2) {
+      markInvalid('city', 'Please enter a valid city name.');
+    }
+
+    const stateEl = document.getElementById('state');
+    if (!stateEl || !stateEl.value.trim()) {
+      markInvalid('state', 'Please select or enter your state.');
+    }
+
+    const pinEl = document.getElementById('pin_code');
+    const pinVal = pinEl ? pinEl.value.replace(/\D/g, '') : '';
+    if (!pinVal || !/^[1-9]\d{5}$/.test(pinVal)) {
+      markInvalid('pin_code', 'Please enter a valid 6-digit PIN code (first digit cannot be 0).');
+    }
+
+    const countryEl = document.getElementById('country');
+    if (!countryEl || !countryEl.value) {
+      markInvalid('country', 'Please select your country.');
+    }
+
+    const passEl = document.getElementById('password');
+    const confirmEl = document.getElementById('confirm_password');
+    if (passEl) {
+      if (passEl.value.length < 6) {
+        markInvalid('password', 'Password must be at least 6 characters long.');
+      }
+      if (confirmEl && passEl.value !== confirmEl.value) {
+        markInvalid('confirm_password', 'Passwords do not match.');
       }
     }
   }
 
-  // Check bio word count and subjects in step 4
-  if (fromStep === 4) {
-    const bioText = document.getElementById('bio').value.trim();
+  if (step === 2) {
+    const aadhEl = document.getElementById('aadhaar_number');
+    const aadhVal = aadhEl ? aadhEl.value.replace(/\D/g, '') : '';
+    if (aadhVal.length !== 12) {
+      markInvalid('aadhaar_number', 'Aadhaar number must be exactly 12 numeric digits.');
+    } else if (/^(\d)\1{11}$/.test(aadhVal)) {
+      markInvalid('aadhaar_number', 'Please enter a valid Aadhaar number (repetitive digits not permitted).');
+    } else if (!validateVerhoeff(aadhVal)) {
+      markInvalid('aadhaar_number', 'Please enter a valid Aadhaar number (Verhoeff checksum failed).');
+    }
+
+    const panEl = document.getElementById('pan_number');
+    const panVal = panEl ? panEl.value.trim().toUpperCase() : '';
+    if (!panVal || !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(panVal)) {
+      markInvalid('pan_number', 'Please enter a valid PAN number (e.g. ABCDE1234F).');
+    }
+
+    const hasAadhaarDoc = document.getElementById('has_existing_aadhaar_doc')?.value === '1';
+    const aadhFileEl = document.getElementById('aadhaar_doc');
+    if (!hasAadhaarDoc && (!aadhFileEl || !aadhFileEl.files || aadhFileEl.files.length === 0)) {
+      markInvalid('aadhaar_doc', 'Aadhaar document upload is required.');
+    }
+
+    const hasPanDoc = document.getElementById('has_existing_pan_doc')?.value === '1';
+    const panFileEl = document.getElementById('pan_doc');
+    if (!hasPanDoc && (!panFileEl || !panFileEl.files || panFileEl.files.length === 0)) {
+      markInvalid('pan_doc', 'PAN card document upload is required.');
+    }
+  }
+
+  if (step === 3) {
+    const qualEl = document.getElementById('highest_qualification');
+    if (!qualEl || !qualEl.value) {
+      markInvalid('highest_qualification', 'Please select your highest qualification.');
+    }
+
+    const degEl = document.getElementById('degree_name');
+    if (!degEl || degEl.value.trim().length < 2) {
+      markInvalid('degree_name', 'Please enter your degree name.');
+    }
+
+    const uniEl = document.getElementById('university_name');
+    if (!uniEl || uniEl.value.trim().length < 2) {
+      markInvalid('university_name', 'Please enter your university name.');
+    }
+
+    const colEl = document.getElementById('college_name');
+    if (!colEl || colEl.value.trim().length < 2) {
+      markInvalid('college_name', 'Please enter your college name.');
+    }
+
+    const pyearEl = document.getElementById('passing_year');
+    if (!pyearEl || !pyearEl.value) {
+      markInvalid('passing_year', 'Please select a valid passing year.');
+    }
+
+    const scoreEl = document.getElementById('percentage_cgpa');
+    if (!scoreEl || !scoreEl.value.trim()) {
+      markInvalid('percentage_cgpa', 'Please enter a valid percentage or CGPA.');
+    }
+
+    const specEl = document.getElementById('specialization');
+    if (!specEl || specEl.value.trim().length < 2) {
+      markInvalid('specialization', 'Please enter your specialization.');
+    }
+
+    const hasCertDoc = document.getElementById('has_existing_certificate_doc')?.value === '1';
+    const certFileEl = document.getElementById('certificate_doc');
+    if (!hasCertDoc && (!certFileEl || !certFileEl.files || certFileEl.files.length === 0)) {
+      markInvalid('certificate_doc', 'Degree certificate upload is required.');
+    }
+  }
+
+  if (step === 4) {
+    const titleEl = document.getElementById('title');
+    if (!titleEl || titleEl.value.trim().length < 3) {
+      markInvalid('title', 'Professional Title / Headline is required.');
+    }
+
+    const checkedCats = document.querySelectorAll('input[name="teaching_categories"]:checked');
+    if (checkedCats.length === 0) {
+      markInvalid('teaching_categories', 'Please select at least one teaching category.');
+    }
+
+    const schoolChecked = document.getElementById('cat_school')?.checked;
+    if (schoolChecked) {
+      const schoolLevels = document.querySelectorAll('input[name="class_levels"]:checked');
+      if (schoolLevels.length === 0) {
+        markInvalid('class_levels', 'Please select your target class level(s).');
+      }
+    }
+
+    const checkedSubs = document.querySelectorAll('.subject-checkbox:checked');
+    const customSub = document.getElementById('custom_subjects')?.value.trim();
+    if (checkedSubs.length === 0 && !customSub) {
+      markInvalid('subjects', 'Please select at least one teaching subject.');
+    }
+
+    const checkedLangs = document.querySelectorAll('.lang-checkbox:checked');
+    if (checkedLangs.length === 0) {
+      markInvalid('languages', 'Please select at least one teaching language.');
+    }
+
+    const fsEl = document.getElementById('free_sessions_offered');
+    if (!fsEl || !fsEl.value) {
+      markInvalid('free_sessions_offered', 'Please select how many free sessions you can offer (1 to 10).');
+    }
+
+    const rateEl = document.getElementById('hourly_rate');
+    const rateVal = rateEl ? parseFloat(rateEl.value) : 0;
+    if (isNaN(rateVal) || rateVal < 10 || rateVal > 50000) {
+      markInvalid('hourly_rate', 'Please enter a valid hourly rate (₹10 to ₹50,000).');
+    }
+
+    const bioEl = document.getElementById('bio');
+    const bioText = bioEl ? bioEl.value.trim() : '';
     const words = bioText.length > 0 ? bioText.split(/\s+/).length : 0;
     if (words < 5) {
-      alert('Please write an introduction & bio of at least 5 words.');
-      document.getElementById('bio').focus();
-      return;
-    }
-    if (words > 500) {
-      alert(`Your bio exceeds the maximum 500 words limit (currently ${words} words). Please shorten your bio.`);
-      document.getElementById('bio').focus();
-      return;
-    }
-    const demoUrl = document.getElementById('demo_video_url').value.trim();
-    if (demoUrl && !demoUrl.startsWith('http://') && !demoUrl.startsWith('https://')) {
-      alert('Demo video link must start with http:// or https://');
-      document.getElementById('demo_video_url').focus();
-      return;
-    }
-    // Check at least one subject
-    const selectedSubs = document.querySelectorAll('.subject-checkbox:checked');
-    const customSub = document.getElementById('custom_subjects').value.trim();
-    if (selectedSubs.length === 0 && !customSub) {
-      alert('Please select at least one teaching subject.');
-      return;
+      markInvalid('bio', `Introduction is too short (minimum 5 words, currently ${words} words).`);
+    } else if (words > 500) {
+      markInvalid('bio', `Introduction exceeds maximum 500 words limit (currently ${words} words).`);
     }
   }
 
-  if (!isValid) {
-    if (firstInvalid) {
-      firstInvalid.focus();
-      firstInvalid.reportValidity();
-    }
-    return;
+  if (!isValid && firstInvalid) {
+    firstInvalid.focus();
+    firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    showErrorAlert('Please complete all required fields and correct the highlighted errors before continuing.');
   }
 
-  navigateToStep(toStep);
+  return isValid;
+}
+
+// Step Continue Handler with Backend Step Validation & Draft Saving
+async function handleStepContinue(fromStep) {
+  hideErrorAlert();
+  if (!validateClientStep(fromStep)) return;
+
+  const btn = document.getElementById('btn-step-' + fromStep);
+  const origBtnHtml = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Saving Progress...';
+  }
+
+  try {
+    const form = document.getElementById('teacherRegisterForm');
+    const formData = new FormData(form);
+    formData.set('step', fromStep);
+
+    // Call backend step validation & draft save endpoint
+    const response = await fetch("{{ url_for('auth.validate_teacher_step') }}", {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    });
+
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      if (result.errors) {
+        Object.entries(result.errors).forEach(([field, msg]) => {
+          setFieldError(field, msg);
+        });
+        showErrorAlert(result.message || 'Please correct the highlighted errors.');
+      } else {
+        showErrorAlert(result.message || 'An error occurred during step validation.');
+      }
+      return;
+    }
+
+    // Step validated successfully
+    maxStepCompleted = Math.max(maxStepCompleted, fromStep);
+    saveLocalDraft();
+
+    const nextStep = fromStep + 1;
+    navigateToStep(nextStep);
+
+  } catch (err) {
+    console.error('Step validation request failed:', err);
+    // If AJAX call encounters network issue, allow forward navigation on valid client-side check
+    maxStepCompleted = Math.max(maxStepCompleted, fromStep);
+    navigateToStep(fromStep + 1);
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = origBtnHtml;
+    }
+  }
+}
+
+// Local Storage Draft Storage
+function saveLocalDraft() {
+  try {
+    const data = {
+      name: document.getElementById('name')?.value || '',
+      dob: document.getElementById('dob')?.value || '',
+      gender: document.getElementById('gender')?.value || '',
+      email: document.getElementById('email')?.value || '',
+      phone: document.getElementById('phone')?.value || '',
+      address: document.getElementById('address')?.value || '',
+      city: document.getElementById('city')?.value || '',
+      state: document.getElementById('state')?.value || '',
+      pin_code: document.getElementById('pin_code')?.value || '',
+      country: document.getElementById('country')?.value || 'India',
+      aadhaar_number: document.getElementById('aadhaar_number')?.value || '',
+      pan_number: document.getElementById('pan_number')?.value || '',
+      highest_qualification: document.getElementById('highest_qualification')?.value || '',
+      degree_name: document.getElementById('degree_name')?.value || '',
+      university_name: document.getElementById('university_name')?.value || '',
+      college_name: document.getElementById('college_name')?.value || '',
+      passing_year: document.getElementById('passing_year')?.value || '',
+      percentage_cgpa: document.getElementById('percentage_cgpa')?.value || '',
+      specialization: document.getElementById('specialization')?.value || '',
+      title: document.getElementById('title')?.value || '',
+      hourly_rate: document.getElementById('hourly_rate')?.value || '500',
+      experience_years: document.getElementById('experience_years')?.value || '3',
+      free_sessions_offered: document.getElementById('free_sessions_offered')?.value || '3',
+      bio: document.getElementById('bio')?.value || '',
+      maxStepCompleted: maxStepCompleted
+    };
+    localStorage.setItem('skillswap_teacher_registration_draft', JSON.stringify(data));
+  } catch (e) {
+    // LocalStorage quota or disabled
+  }
+}
+
+function restoreLocalDraft() {
+  try {
+    const raw = localStorage.getItem('skillswap_teacher_registration_draft');
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    for (const [key, val] of Object.entries(data)) {
+      if (key === 'maxStepCompleted') {
+        maxStepCompleted = Math.max(maxStepCompleted, parseInt(val, 10) || 0);
+        continue;
+      }
+      const el = document.getElementById(key);
+      if (el && !el.value && val) {
+        el.value = val;
+      }
+    }
+  } catch (e) {}
 }
 
 function previewAvatar(input) {
   if (input.files && input.files[0]) {
     const file = input.files[0];
     if (file.size > 5 * 1024 * 1024) {
-      alert('Image exceeds maximum 5MB size limit.');
+      alert('Profile photo exceeds 5MB size limit.');
       input.value = '';
       return;
     }
@@ -1012,9 +1500,9 @@ function updateRegisterBioCount() {
 }
 
 function updateDynamicLevels() {
-  const schoolChecked = document.getElementById('cat_school').checked;
-  const collegeChecked = document.getElementById('cat_college').checked;
-  const compChecked = document.getElementById('cat_competitive').checked;
+  const schoolChecked = document.getElementById('cat_school')?.checked;
+  const collegeChecked = document.getElementById('cat_college')?.checked;
+  const compChecked = document.getElementById('cat_competitive')?.checked;
 
   const boardRow = document.getElementById('boardSelectionRow');
   if (boardRow) {
@@ -1063,85 +1551,84 @@ function updateDynamicLevels() {
   }
 
   if (!schoolChecked && !collegeChecked && !compChecked) {
-    html = '<p class="small text-muted mb-0">Please select at least one teaching category above to view corresponding class levels.</p>';
+    html = '<p class="small text-muted mb-0">Please select at least one teaching category above.</p>';
   }
 
   container.innerHTML = html;
 }
 
-function maskNumber(val, keepLast) {
-  if (!val) return '—';
-  const clean = val.replace(/\s+/g, '');
-  if (clean.length <= keepLast) return clean;
-  return 'X'.repeat(clean.length - keepLast) + clean.slice(-keepLast);
-}
-
 function populateReviewSummary() {
-  document.getElementById('rev-name').textContent = document.getElementById('name').value || '—';
-  document.getElementById('rev-dob').textContent = document.getElementById('dob').value || '—';
-  document.getElementById('rev-gender').textContent = document.getElementById('gender').value || '—';
-  document.getElementById('rev-email').textContent = document.getElementById('email').value || '—';
-  document.getElementById('rev-phone').textContent = document.getElementById('phone').value || '—';
-  document.getElementById('rev-address').textContent = document.getElementById('address').value || '—';
-  document.getElementById('rev-city').textContent = document.getElementById('city').value || '—';
-  document.getElementById('rev-state').textContent = document.getElementById('state').value || '—';
-  document.getElementById('rev-pin').textContent = document.getElementById('pin_code').value || '—';
+  document.getElementById('rev-name').textContent = document.getElementById('name')?.value || '—';
+  document.getElementById('rev-dob').textContent = document.getElementById('dob')?.value || '—';
+  document.getElementById('rev-gender').textContent = document.getElementById('gender')?.value || '—';
+  document.getElementById('rev-email').textContent = document.getElementById('email')?.value || '—';
+  document.getElementById('rev-phone').textContent = document.getElementById('phone')?.value || '—';
+  document.getElementById('rev-address').textContent = document.getElementById('address')?.value || '—';
+  document.getElementById('rev-city').textContent = document.getElementById('city')?.value || '—';
+  document.getElementById('rev-state').textContent = document.getElementById('state')?.value || '—';
+  document.getElementById('rev-pin').textContent = document.getElementById('pin_code')?.value || '—';
 
   // KYC Masking
-  const aadh = document.getElementById('aadhaar_number').value;
+  const aadh = document.getElementById('aadhaar_number')?.value || '';
   document.getElementById('rev-aadhaar').textContent = aadh ? 'XXXX-XXXX-' + aadh.replace(/\D/g, '').slice(-4) : '—';
-  const pan = document.getElementById('pan_number').value;
+  const pan = document.getElementById('pan_number')?.value || '';
   document.getElementById('rev-pan').textContent = pan ? 'XXXXX' + pan.slice(5, 9) + 'X' : '—';
 
   // Education
-  document.getElementById('rev-qual').textContent = document.getElementById('highest_qualification').value || '—';
-  document.getElementById('rev-degree').textContent = document.getElementById('degree_name').value || '—';
-  document.getElementById('rev-spec').textContent = document.getElementById('specialization').value || '—';
-  document.getElementById('rev-college').textContent = document.getElementById('college_name').value || '—';
-  document.getElementById('rev-year').textContent = document.getElementById('passing_year').value || '—';
-  document.getElementById('rev-cgpa').textContent = document.getElementById('percentage_cgpa').value || '—';
+  document.getElementById('rev-qual').textContent = document.getElementById('highest_qualification')?.value || '—';
+  document.getElementById('rev-degree').textContent = document.getElementById('degree_name')?.value || '—';
+  document.getElementById('rev-spec').textContent = document.getElementById('specialization')?.value || '—';
+  document.getElementById('rev-college').textContent = document.getElementById('college_name')?.value || '—';
+  document.getElementById('rev-year').textContent = document.getElementById('passing_year')?.value || '—';
+  document.getElementById('rev-cgpa').textContent = document.getElementById('percentage_cgpa')?.value || '—';
 
   // Teaching
-  document.getElementById('rev-title').textContent = document.getElementById('title').value || '—';
+  document.getElementById('rev-title').textContent = document.getElementById('title')?.value || '—';
   const cats = Array.from(document.querySelectorAll('input[name="teaching_categories"]:checked')).map(c => c.value);
   document.getElementById('rev-cats').textContent = cats.join(', ') || '—';
 
   const subs = Array.from(document.querySelectorAll('.subject-checkbox:checked')).map(s => s.value);
-  const custSub = document.getElementById('custom_subjects').value.trim();
+  const custSub = document.getElementById('custom_subjects')?.value.trim();
   if (custSub) subs.push(custSub);
   document.getElementById('rev-subs').textContent = subs.join(', ') || '—';
 
-  const langs = Array.from(document.querySelectorAll('.lang-checkbox:checked')).map(l => l.value);
-  document.getElementById('rev-langs').textContent = langs.join(', ') || '—';
-
   const fsSelect = document.getElementById('free_sessions_offered');
   const fsText = fsSelect ? (fsSelect.options[fsSelect.selectedIndex]?.text || '3 Free Sessions') : '3 Free Sessions';
-  const revFs = document.getElementById('rev-free-sessions');
-  if (revFs) revFs.textContent = fsText;
+  document.getElementById('rev-free-sessions').textContent = fsText;
 
-  document.getElementById('rev-rate').textContent = '₹' + (document.getElementById('hourly_rate').value || '500') + ' / Hr';
-  document.getElementById('rev-exp').textContent = document.getElementById('experience_years').value || '0';
+  document.getElementById('rev-rate').textContent = '₹' + (document.getElementById('hourly_rate')?.value || '500') + ' / Hr';
+  document.getElementById('rev-exp').textContent = document.getElementById('experience_years')?.value || '0';
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+  restoreLocalDraft();
   updateDynamicLevels();
   updateRegisterBioCount();
+  navigateToStep(1);
 
+  // Form final submit listener: disable button and show spinner to prevent duplicate submissions
   const form = document.getElementById('teacherRegisterForm');
   if (form) {
     form.addEventListener('submit', function(e) {
       const decl = document.getElementById('declaration');
       if (decl && !decl.checked) {
         e.preventDefault();
-        alert('Please review and check the declaration acknowledgement before submitting.');
+        decl.classList.add('is-invalid');
+        showErrorAlert('Please acknowledge the solemn declaration before submitting your application.');
         decl.focus();
         return;
       }
+
       const submitBtn = document.getElementById('submitBtn');
       if (submitBtn) {
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Submitting Application...';
       }
+
+      // Clear local storage draft upon final submission
+      try {
+        localStorage.removeItem('skillswap_teacher_registration_draft');
+      } catch (err) {}
     });
   }
 });

@@ -5,7 +5,8 @@ from app.models.teacher import (
     TeacherKYC,
     TeacherEducation,
     TeacherTeachingDetail,
-    TeacherRate
+    TeacherRate,
+    TeacherRegistrationDraft
 )
 from app.models.skill import SkillCategory, Skill, TeacherSkill
 from app.models.wallet import Wallet
@@ -26,6 +27,7 @@ __all__ = [
     'TeacherEducation',
     'TeacherTeachingDetail',
     'TeacherRate',
+    'TeacherRegistrationDraft',
     'SkillCategory',
     'Skill',
     'TeacherSkill',
