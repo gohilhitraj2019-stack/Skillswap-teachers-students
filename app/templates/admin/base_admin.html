@@ -30,14 +30,10 @@
     
     <!-- Brand Header -->
     <div class="admin-sidebar-brand">
-      <a href="{{ url_for('admin.dashboard') }}" class="brand-link">
-        <div class="brand-logo-box">
-          <i data-lucide="arrow-left-right" class="bi bi-arrow-left-right"></i>
-        </div>
-        <div class="brand-info">
-          <div class="brand-name">Skill<span>Swap</span></div>
-          <div class="brand-badge">Control Center</div>
-        </div>
+      <a href="{{ url_for('admin.dashboard') }}" class="brand-link" title="SkillSwap Control Center">
+        <img src="{{ url_for('static', filename='img/logo_dark.png') }}" alt="SkillSwap" class="admin-brand-logo-full">
+        <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="SkillSwap" class="admin-brand-logo-icon">
+        <span class="brand-admin-badge">Admin</span>
       </a>
       <button type="button" class="sidebar-mobile-close" id="mobileSidebarClose" aria-label="Close sidebar">
         <i data-lucide="x" class="bi bi-x-lg"></i>
