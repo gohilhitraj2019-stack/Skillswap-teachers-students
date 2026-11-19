@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
     amount: "{{ order.amount_paise }}",
     currency: "INR",
     name: "SkillSwap",
-    description: "{{ order.credits }} Credits Package Top-Up",
+    description: "SkillSwap Wallet Top-Up (₹{{ order.credits }})",
     order_id: "{{ order.order_id }}",
     handler: function (response) {
       document.getElementById('rzp_order_id').value = response.razorpay_order_id;

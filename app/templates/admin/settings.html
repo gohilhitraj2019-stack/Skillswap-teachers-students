@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Platform Parameters & Credit Packages — Admin{% endblock %}
+{% block title %}Platform Parameters & Wallet Packages — Admin{% endblock %}
 
 {% block content %}
 <div class="container py-4">
@@ -33,12 +33,12 @@
           </div>
 
           <div class="mb-3">
-            <label for="setting-free-trial" class="form-label small fw-semibold text-secondary">Free Trial Bonus Credits (New Students)</label>
+            <label for="setting-free-trial" class="form-label small fw-semibold text-secondary">Welcome Bonus Funds (₹ INR) (New Students)</label>
             <div class="input-group input-group-sm">
-              <input type="number" id="setting-free-trial" name="free_trial_credits" class="form-control" min="0" max="500" value="{{ settings.free_trial_credits }}" required>
-              <span class="input-group-text bg-white">Credits</span>
+              <span class="input-group-text bg-white">₹</span>
+              <input type="number" id="setting-free-trial" name="free_trial_credits" class="form-control" min="0" max="5000" value="{{ settings.free_trial_credits }}" required>
             </div>
-            <div class="form-text small">Automatically credited to new students upon registration.</div>
+            <div class="form-text small">Automatically credited in INR to new students upon registration.</div>
           </div>
 
           <div class="mb-3">
@@ -48,7 +48,7 @@
               <input type="number" step="0.5" id="setting-rate" name="credit_to_inr_rate" class="form-control" min="1" max="1000" value="{{ settings.credit_to_inr_rate }}" required>
               <span class="input-group-text bg-white">INR</span>
             </div>
-            <div class="form-text small">Used to calculate instructor withdrawal payouts.</div>
+            <div class="form-text small">Platform operates natively in INR (1.0).</div>
           </div>
 
           <div class="mb-3">
@@ -76,7 +76,7 @@
     <div class="col-lg-6">
       <div class="card border p-4 mb-4 bg-white shadow-sm" style="border-radius: 12px;">
         <div class="d-flex justify-content-between align-items-center mb-3">
-          <h6 class="fw-bold mb-0 text-dark text-uppercase" style="letter-spacing: 0.04em; font-size: 0.8rem;">Active Credit Packages</h6>
+          <h6 class="fw-bold mb-0 text-dark text-uppercase" style="letter-spacing: 0.04em; font-size: 0.8rem;">Active Wallet Packages</h6>
           <span class="badge bg-light text-muted border">{{ packages|length }} Total</span>
         </div>
 
@@ -95,7 +95,7 @@
                     <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle ms-1" style="font-size: 0.65rem;">Inactive</span>
                   {% endif %}
                 </div>
-                <div class="small text-muted">{{ pkg.credits }} Credits · <strong class="text-dark">₹{{ pkg.price_inr }}</strong></div>
+                <div class="small text-muted">{{ pkg.credits | inr }} Wallet Funds · <strong class="text-dark">{{ pkg.price_inr | inr }}</strong></div>
               </div>
 
               <div class="d-flex align-items-center gap-1">
@@ -126,7 +126,7 @@
                   <form method="POST" action="{{ url_for('admin.edit_package', package_id=pkg.id) }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="modal-header">
-                      <h6 class="modal-title fw-bold" id="editPkgModalLabel{{ pkg.id }}">Edit Credit Package: {{ pkg.name }}</h6>
+                      <h6 class="modal-title fw-bold" id="editPkgModalLabel{{ pkg.id }}">Edit Wallet Package: {{ pkg.name }}</h6>
                       <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
@@ -143,7 +143,7 @@
 
                       <div class="row g-2 mb-3">
                         <div class="col-md-6">
-                          <label for="edit-pkg-credits-{{ pkg.id }}" class="form-label small text-secondary">Credits *</label>
+                          <label for="edit-pkg-credits-{{ pkg.id }}" class="form-label small text-secondary">Wallet Funds (₹) *</label>
                           <input type="number" id="edit-pkg-credits-{{ pkg.id }}" name="credits" class="form-control form-control-sm" value="{{ pkg.credits }}" min="1" required>
                         </div>
                         <div class="col-md-6">
@@ -179,7 +179,7 @@
                       <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body small text-muted">
-                      Are you sure you want to delete <strong>{{ pkg.name }}</strong> ({{ pkg.credits }} Credits, ₹{{ pkg.price_inr }})? This action cannot be undone.
+                      Are you sure you want to delete <strong>{{ pkg.name }}</strong> ({{ pkg.credits | inr }}, {{ pkg.price_inr | inr }})? This action cannot be undone.
                     </div>
                     <div class="modal-footer">
                       <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancel</button>
@@ -190,7 +190,7 @@
               </div>
             </div>
           {% else %}
-            <div class="text-center py-4 text-muted small">No credit packages created yet.</div>
+            <div class="text-center py-4 text-muted small">No wallet packages created yet.</div>
           {% endfor %}
         </div>
 
@@ -212,8 +212,8 @@
 
           <div class="row g-2 mb-3">
             <div class="col-md-6">
-              <label for="pkg-credits" class="form-label small text-secondary">Credits *</label>
-              <input type="number" id="pkg-credits" name="credits" class="form-control form-control-sm" placeholder="e.g. 250" min="1" required>
+              <label for="pkg-credits" class="form-label small text-secondary">Wallet Funds (₹) *</label>
+              <input type="number" id="pkg-credits" name="credits" class="form-control form-control-sm" placeholder="e.g. 2500" min="1" required>
             </div>
             <div class="col-md-6">
               <label for="pkg-price-inr" class="form-label small text-secondary">Price (INR) *</label>
@@ -222,7 +222,7 @@
           </div>
 
           <button type="submit" class="btn btn-outline-secondary btn-sm w-100">
-            <i class="bi bi-plus-lg me-1"></i> Add Credit Package
+            <i class="bi bi-plus-lg me-1"></i> Add Wallet Package
           </button>
         </form>
       </div>

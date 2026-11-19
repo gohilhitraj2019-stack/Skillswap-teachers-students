@@ -573,3 +573,18 @@ def validate_time_slot(start_time: str, end_time: str) -> tuple[bool, str | None
         return False, f"Start time ({start_time}) must be earlier than end time ({end_time})."
 
     return True, None
+
+def validate_free_sessions(val, required: bool = True) -> tuple[bool, int | None, str | None]:
+    """Validate free session offer count (must be integer between 1 and 10)."""
+    if val is None or str(val).strip() == '':
+        if required:
+            return False, None, "Please select how many free sessions you can offer (1 to 10)."
+        return True, 0, None
+    try:
+        num = int(str(val).strip())
+    except (ValueError, TypeError):
+        return False, None, "Free sessions must be a valid whole number between 1 and 10."
+    if num < 1 or num > 10:
+        return False, None, "Please offer between 1 and 10 free sessions."
+    return True, num, None
+

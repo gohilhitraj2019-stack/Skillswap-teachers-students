@@ -33,8 +33,9 @@ from app.services.validation_service import (
     validate_demo_video, validate_bio, validate_url,
     validate_rate_amount, validate_rate_type,
     validate_session_duration, sanitize_description,
-    validate_time_slot
+    validate_time_slot, validate_free_sessions
 )
+from app.utils import format_inr
 
 def require_teacher(f):
     """Decorator or check ensuring the user is a teacher."""
@@ -79,7 +80,7 @@ def dashboard():
     ).distinct().count()
 
     # Pending earnings held in confirmed bookings
-    pending_earnings = sum(b.credits_amount for b in upcoming_classes)
+    pending_earnings = sum(b.effective_amount for b in upcoming_classes)
 
     # Recent transactions
     recent_transactions = wallet.transactions[:6] if wallet.transactions else []
@@ -427,6 +428,15 @@ def profile_edit():
             profile.hourly_rate = max(10, int(request.form.get('hourly_rate', profile.hourly_rate)))
         except ValueError:
             pass
+
+        # Update Free Sessions Offered (1 to 10)
+        free_sessions_raw = request.form.get('free_sessions_offered', '').strip()
+        if free_sessions_raw:
+            fs_ok, clean_fs, fs_err = validate_free_sessions(free_sessions_raw, required=True)
+            if not fs_ok:
+                flash(fs_err, 'danger')
+                return redirect(url_for('teacher.profile_edit'))
+            profile.free_sessions_offered = clean_fs
 
         # Manage skills checklist
         selected_skills = request.form.getlist('skills')
@@ -805,9 +815,9 @@ def earnings():
         status='completed'
     ).order_by(Booking.completed_at.desc()).all()
 
-    total_gross = sum(b.credits_amount for b in completed_bookings)
-    total_commission = sum(b.platform_commission_amount for b in completed_bookings)
-    total_net = sum(b.teacher_earnings_amount for b in completed_bookings)
+    total_gross = sum(b.effective_amount for b in completed_bookings)
+    total_commission = sum(float(b.platform_commission_amount or 0) for b in completed_bookings)
+    total_net = sum(float(b.teacher_earnings_amount or 0) for b in completed_bookings)
 
     earnings_transactions = [
         tx for tx in wallet.transactions
@@ -835,7 +845,7 @@ def withdrawal():
 
     if request.method == 'POST':
         try:
-            credits_amount = int(request.form.get('credits_amount', 0))
+            amount_val = float(request.form.get('amount_inr') or request.form.get('credits_amount', 0))
             payout_method = request.form.get('payout_method', 'upi')
             
             if payout_method == 'upi':
@@ -853,8 +863,8 @@ def withdrawal():
                     return redirect(url_for('teacher.withdrawal'))
                 payout_details = f"Bank Account: {account_no} | IFSC: {ifsc} | Name: {acc_name}"
 
-            submit_withdrawal_request(current_user.id, credits_amount, payout_method, payout_details)
-            flash(f'Withdrawal request for {credits_amount} credits submitted successfully! Pending admin approval.', 'success')
+            submit_withdrawal_request(current_user.id, amount_val, payout_method, payout_details)
+            flash(f'Withdrawal request for {format_inr(amount_val)} submitted successfully! Pending admin approval.', 'success')
             return redirect(url_for('teacher.withdrawal'))
         except (ValueError, PayoutError) as e:
             flash(str(e), 'danger')

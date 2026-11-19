@@ -68,6 +68,16 @@ def create_app(config_name=None):
         from flask import abort
         abort(404)
 
+    # Template filters for Indian Rupee currency formatting
+    from app.utils import format_inr
+    @app.template_filter('inr')
+    def inr_filter(value, decimals=False):
+        return format_inr(value, include_symbol=True, decimals=decimals)
+
+    @app.template_filter('inr_no_sym')
+    def inr_no_sym_filter(value, decimals=False):
+        return format_inr(value, include_symbol=False, decimals=decimals)
+
     # Auto-create tables and apply schema safeguards
     with app.app_context():
         db.create_all()

@@ -7,6 +7,7 @@ from app.models.transaction import CreditTransaction
 from app.models.settings import PlatformSettings
 from app.services.credit_service import ensure_wallet
 from app.services.payment_service import create_payment_order, verify_and_complete_payment, fail_payment, PaymentServiceError
+from app.utils import format_inr
 
 @wallet_bp.route('/wallet')
 @login_required
@@ -22,7 +23,7 @@ def index():
     transactions = CreditTransaction.query.filter_by(user_id=current_user.id)\
         .order_by(CreditTransaction.created_at.desc()).all()
 
-    # Free trial credits received
+    # Free trial welcome bonus received
     trial_tx = CreditTransaction.query.filter_by(
         user_id=current_user.id,
         transaction_type='free_trial'
@@ -42,7 +43,7 @@ def index():
 @login_required
 def purchase():
     if current_user.is_admin:
-        flash('Administrators cannot purchase platform credits.', 'warning')
+        flash('Administrators cannot purchase wallet balance packages.', 'warning')
         return redirect(url_for('admin.dashboard'))
 
     packages = CreditPackage.query.filter_by(is_active=True).order_by(CreditPackage.credits.asc()).all()
@@ -60,9 +61,9 @@ def purchase():
 @wallet_bp.route('/wallet/checkout/<int:package_id>', methods=['POST'])
 @login_required
 def checkout(package_id):
-    """Initiate an order for the selected credit package."""
+    """Initiate an order for the selected wallet package."""
     if current_user.is_admin:
-        flash('Administrators cannot purchase platform credits.', 'warning')
+        flash('Administrators cannot purchase wallet balance packages.', 'warning')
         return redirect(url_for('admin.dashboard'))
 
     use_simulator = request.form.get('payment_method') == 'simulator' or not current_app.config.get('RAZORPAY_KEY_ID')
@@ -103,7 +104,7 @@ def simulator_process(payment_ref):
     if action == 'success':
         try:
             verify_and_complete_payment(payment_ref)
-            flash(f'Payment successful! {payment.credits} credits have been added to your wallet.', 'success')
+            flash(f'Payment successful! {format_inr(payment.credits)} has been added to your wallet.', 'success')
             return redirect(url_for('wallet.index'))
         except PaymentServiceError as e:
             flash(str(e), 'danger')
@@ -134,7 +135,7 @@ def razorpay_callback():
             gateway_payment_id=razorpay_payment_id,
             gateway_signature=razorpay_signature
         )
-        flash('Payment verified successfully! Your credits have been updated.', 'success')
+        flash('Payment verified successfully! Your wallet balance has been updated.', 'success')
     except PaymentServiceError as e:
         flash(f"Payment verification failed: {e}", 'danger')
 

@@ -22,7 +22,7 @@
       <div class="kpi-card">
         <div>
           <div class="kpi-title">Gross Volume</div>
-          <div class="kpi-value text-dark">{{ total_gross }} Cr</div>
+          <div class="kpi-value text-dark">{{ total_gross | inr }}</div>
           <div class="small text-muted mt-1">{{ completed_bookings|length }} completed sessions</div>
         </div>
         <div class="kpi-icon"><i class="bi bi-coin"></i></div>
@@ -33,7 +33,7 @@
       <div class="kpi-card">
         <div>
           <div class="kpi-title">Platform Fee ({{ settings.commission_percent }}%)</div>
-          <div class="kpi-value text-secondary">{{ total_commission }} Cr</div>
+          <div class="kpi-value text-secondary">{{ total_commission | inr }}</div>
           <div class="small text-muted mt-1">Platform service charge</div>
         </div>
         <div class="kpi-icon"><i class="bi bi-percent"></i></div>
@@ -43,8 +43,8 @@
     <div class="col-md-3">
       <div class="kpi-card">
         <div>
-          <div class="kpi-title">Net Earned Credits</div>
-          <div class="kpi-value text-dark">{{ total_net }} Cr</div>
+          <div class="kpi-title">Net Earned (₹)</div>
+          <div class="kpi-value text-dark">{{ total_net | inr }}</div>
           <div class="small text-muted mt-1">Net instructor share (80%)</div>
         </div>
         <div class="kpi-icon"><i class="bi bi-graph-up text-success"></i></div>
@@ -55,8 +55,8 @@
       <div class="kpi-card">
         <div>
           <div class="kpi-title">Available for Payout</div>
-          <div class="kpi-value text-dark">{{ wallet.earned_balance }} Cr</div>
-          <div class="small text-muted mt-1">₹{{ wallet.earned_balance * settings.credit_to_inr_rate }} INR nominal value</div>
+          <div class="kpi-value text-dark">{{ wallet.earned_balance | inr }}</div>
+          <div class="small text-muted mt-1">Ready for UPI / Bank withdrawal</div>
         </div>
         <div class="kpi-icon"><i class="bi bi-bank"></i></div>
       </div>
@@ -80,7 +80,7 @@
                 <th>Completion Timestamp</th>
                 <th>Session Fee</th>
                 <th>Platform Fee ({{ settings.commission_percent }}%)</th>
-                <th>Net Credited</th>
+                <th>Net Earnings</th>
                 <th>Status</th>
               </tr>
             </thead>
@@ -90,9 +90,27 @@
                   <td><span class="ref-code">#{{ b.booking_ref }}</span></td>
                   <td class="fw-semibold text-dark">{{ b.student.name }}</td>
                   <td class="small text-muted">{{ b.completed_at.strftime('%b %d, %Y %H:%M') if b.completed_at else b.class_date.strftime('%b %d, %Y') }}</td>
-                  <td><span class="text-dark">{{ b.credits_amount }} Cr</span></td>
-                  <td class="text-secondary">-{{ b.platform_commission_amount }} Cr</td>
-                  <td class="fw-bold text-success">+{{ b.teacher_earnings_amount }} Cr</td>
+                  <td>
+                    {% if b.is_free %}
+                      <span class="badge bg-success-subtle text-success border border-success-subtle">Free Trial (₹0)</span>
+                    {% else %}
+                      <span class="text-dark">{{ b.effective_amount | inr }}</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if b.is_free %}
+                      <span class="text-muted">₹0</span>
+                    {% else %}
+                      <span class="text-secondary">-{{ b.platform_commission_amount | inr }}</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if b.is_free %}
+                      <span class="badge bg-light text-secondary border">Trial Session</span>
+                    {% else %}
+                      <span class="fw-bold text-success">+{{ b.teacher_earnings_amount | inr }}</span>
+                    {% endif %}
+                  </td>
                   <td><span class="badge badge-confirmed">Settled</span></td>
                 </tr>
               {% endfor %}
@@ -102,7 +120,7 @@
       {% else %}
         <div class="text-center py-5 text-muted">
           <i class="bi bi-receipt display-6 mb-2"></i>
-          <p class="small mb-0">No completed sessions yet. Conduct confirmed sessions to earn credits and view settlement breakdown.</p>
+          <p class="small mb-0">No completed sessions yet. Conduct confirmed sessions to earn income and view settlement breakdown.</p>
         </div>
       {% endif %}
     </div>

@@ -29,18 +29,18 @@
     <div class="col-md-4">
       <div class="kpi-card">
         <div>
-          <div class="kpi-title">Circulating Available Credits</div>
-          <div class="kpi-value text-dark">{{ total_available }} Cr</div>
+          <div class="kpi-title">Circulating Available Funds</div>
+          <div class="kpi-value text-dark">{{ total_available | inr }}</div>
           <div class="small text-muted mt-1">Purchased & earned in circulation</div>
         </div>
-        <div class="kpi-icon"><i class="bi bi-coin"></i></div>
+        <div class="kpi-icon"><i class="bi bi-currency-rupee text-success"></i></div>
       </div>
     </div>
     <div class="col-md-4">
       <div class="kpi-card">
         <div>
           <div class="kpi-title">Held in Booking Escrow</div>
-          <div class="kpi-value text-dark">{{ total_held }} Cr</div>
+          <div class="kpi-value text-dark">{{ total_held | inr }}</div>
           <div class="small text-muted mt-1">Locked awaiting session completion</div>
         </div>
         <div class="kpi-icon"><i class="bi bi-shield-lock"></i></div>
@@ -82,10 +82,10 @@
                   </td>
                   <td class="small text-secondary">{{ tx.description }}</td>
                   <td class="fw-bold {{ 'text-success' if tx.is_credit else 'text-dark' }}">
-                    {{ '+' if tx.is_credit else '-' }}{{ tx.amount }} Cr
+                    {{ '+' if tx.is_credit else '-' }}{{ tx.amount | inr }}
                   </td>
                   <td>
-                    <span class="font-monospace text-dark small">{{ tx.balance_after }} Cr</span>
+                    <span class="font-monospace text-dark small">{{ tx.balance_after | inr }}</span>
                   </td>
                   <td class="small text-muted">{{ tx.created_at.strftime('%b %d, %Y %H:%M') }}</td>
                 </tr>

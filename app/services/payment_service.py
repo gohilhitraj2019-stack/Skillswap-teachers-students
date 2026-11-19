@@ -28,11 +28,11 @@ def create_payment_order(user_id, package_id, use_simulator=False):
     """
     user = db.session.get(User, user_id)
     if user and user.is_admin:
-        raise PaymentServiceError("Administrators cannot purchase platform credits.")
+        raise PaymentServiceError("Administrators cannot purchase wallet packages.")
 
     package = db.session.get(CreditPackage, package_id)
     if not package or not package.is_active:
-        raise PaymentServiceError("Invalid credit package selected.")
+        raise PaymentServiceError("Invalid wallet package selected.")
 
     payment_ref = Payment.generate_ref()
     rz_client = get_razorpay_client()

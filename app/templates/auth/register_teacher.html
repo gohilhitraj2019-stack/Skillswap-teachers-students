@@ -102,7 +102,7 @@
             <i class="bi bi-briefcase fs-5"></i>
           </div>
           <h3 class="fw-bold mb-1 text-dark">Instructor Registration & Vetting</h3>
-          <p class="text-muted small">Complete the 4-step verified practitioner application to teach and earn escrow credits.</p>
+          <p class="text-muted small">Complete the 4-step verified practitioner application to teach and earn verified income in INR (₹).</p>
         </div>
 
         <!-- Multi-Step Progress Tracker -->
@@ -558,13 +558,36 @@
               </div>
             </div>
 
+            <!-- Free Sessions Offer (1 to 10) -->
+            <div class="mb-3">
+              <label for="free_sessions_offered" class="form-label small fw-semibold text-secondary">
+                How many free sessions are you willing to offer to students? *
+              </label>
+              <select class="form-select" id="free_sessions_offered" name="free_sessions_offered" required>
+                <option value="" disabled>-- Select Free Sessions Offer (1 to 10) --</option>
+                <option value="1">1 Free Session</option>
+                <option value="2">2 Free Sessions</option>
+                <option value="3" selected>3 Free Sessions</option>
+                <option value="4">4 Free Sessions</option>
+                <option value="5">5 Free Sessions</option>
+                <option value="6">6 Free Sessions</option>
+                <option value="7">7 Free Sessions</option>
+                <option value="8">8 Free Sessions</option>
+                <option value="9">9 Free Sessions</option>
+                <option value="10">10 Free Sessions</option>
+              </select>
+              <div class="form-text small text-muted">
+                Offer 1–10 free sessions so students can experience your teaching before booking paid sessions.
+              </div>
+            </div>
+
             <!-- Rates & Experience -->
             <div class="row g-3 mb-3">
               <div class="col-md-4">
-                <label for="hourly_rate" class="form-label small fw-semibold text-secondary">Default Hourly Rate (Credits / INR) *</label>
+                <label for="hourly_rate" class="form-label small fw-semibold text-secondary">Default Hourly Rate (₹ INR) *</label>
                 <div class="input-group">
-                  <span class="input-group-text bg-white">₹ / Cr</span>
-                  <input type="number" id="hourly_rate" name="hourly_rate" class="form-control" min="10" max="5000" value="50" required>
+                  <span class="input-group-text bg-white">₹</span>
+                  <input type="number" id="hourly_rate" name="hourly_rate" class="form-control" min="10" max="50000" value="500" required>
                 </div>
               </div>
               <div class="col-md-4">
@@ -689,6 +712,7 @@
                     <div><strong>Categories:</strong> <span id="rev-cats">—</span></div>
                     <div><strong>Subjects:</strong> <span id="rev-subs">—</span></div>
                     <div><strong>Languages:</strong> <span id="rev-langs">—</span></div>
+                    <div><strong>Free Trial:</strong> <span id="rev-free-sessions" class="badge bg-success-subtle text-success border border-success-subtle">3 Free Sessions</span></div>
                     <div><strong>Rate & Exp:</strong> <span id="rev-rate" class="fw-bold text-dark">—</span> · <span id="rev-exp">—</span> yrs exp</div>
                   </div>
                 </div>
@@ -1090,7 +1114,12 @@ function populateReviewSummary() {
   const langs = Array.from(document.querySelectorAll('.lang-checkbox:checked')).map(l => l.value);
   document.getElementById('rev-langs').textContent = langs.join(', ') || '—';
 
-  document.getElementById('rev-rate').textContent = (document.getElementById('hourly_rate').value || '50') + ' Credits / Hr';
+  const fsSelect = document.getElementById('free_sessions_offered');
+  const fsText = fsSelect ? (fsSelect.options[fsSelect.selectedIndex]?.text || '3 Free Sessions') : '3 Free Sessions';
+  const revFs = document.getElementById('rev-free-sessions');
+  if (revFs) revFs.textContent = fsText;
+
+  document.getElementById('rev-rate').textContent = '₹' + (document.getElementById('hourly_rate').value || '500') + ' / Hr';
   document.getElementById('rev-exp').textContent = document.getElementById('experience_years').value || '0';
 }
 

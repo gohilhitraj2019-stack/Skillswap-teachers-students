@@ -32,7 +32,7 @@
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 pb-3 border-bottom">
       <div>
         <h3 class="fw-bold mb-1">Instructor Studio</h3>
-        <p class="text-muted small mb-0">Manage incoming booking requests, scheduled live classes, and earned credits.</p>
+        <p class="text-muted small mb-0">Manage incoming booking requests, scheduled live classes, and earned income (₹).</p>
       </div>
       <div class="d-flex flex-wrap gap-2">
         <a href="{{ url_for('teacher.profile_edit') }}" class="btn btn-outline-secondary btn-sm">
@@ -53,7 +53,7 @@
         <div class="kpi-card">
           <div>
             <div class="kpi-title">Earned Balance</div>
-            <div class="kpi-value text-dark">{{ wallet.earned_balance }} Cr</div>
+            <div class="kpi-value text-dark">{{ wallet.earned_balance | inr }}</div>
             <div class="small text-muted mt-1">Eligible for payout</div>
           </div>
           <div class="kpi-icon">
@@ -66,7 +66,7 @@
         <div class="kpi-card">
           <div>
             <div class="kpi-title">Pending In Escrow</div>
-            <div class="kpi-value text-dark">{{ pending_earnings }} Cr</div>
+            <div class="kpi-value text-dark">{{ pending_earnings | inr }}</div>
             <div class="small text-muted mt-1">Confirmed upcoming sessions</div>
           </div>
           <div class="kpi-icon">
@@ -121,7 +121,7 @@
                     <div class="d-flex justify-content-between align-items-start mb-2">
                       <div>
                         <h6 class="fw-bold mb-0 text-dark">{{ b.student.name }}</h6>
-                        <div class="small text-muted">{{ b.skill.name if b.skill else "General Session" }} · <span class="fw-semibold text-dark">{{ b.credits_amount }} Credits</span></div>
+                        <div class="small text-muted">{{ b.skill.name if b.skill else "General Session" }} · {% if b.is_free %}<span class="badge bg-success-subtle text-success border border-success-subtle">Free Trial Session</span>{% else %}<span class="fw-semibold text-dark">{{ b.effective_amount | inr }}</span>{% endif %}</div>
                       </div>
                       <span class="badge badge-pending">Pending</span>
                     </div>
@@ -190,7 +190,13 @@
                           <div class="small fw-semibold text-dark">{{ b.class_date.strftime('%b %d') }}</div>
                           <div class="small text-muted">{{ b.start_time }}</div>
                         </td>
-                        <td><span class="fw-semibold">{{ b.credits_amount }} Cr</span></td>
+                        <td>
+                          {% if b.is_free %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">Free Trial</span>
+                          {% else %}
+                            <span class="fw-semibold">{{ b.effective_amount | inr }}</span>
+                          {% endif %}
+                        </td>
                         <td class="text-end">
                           {% if b.classroom_session %}
                             <a href="{{ url_for('classroom.room', room_id=b.classroom_session.room_id) }}" class="btn btn-primary btn-sm py-1 px-3">

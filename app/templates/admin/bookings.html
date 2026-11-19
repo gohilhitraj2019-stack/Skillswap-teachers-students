@@ -74,14 +74,18 @@
                     <div class="small text-muted">{{ b.start_time }} – {{ b.end_time }}</div>
                   </td>
                   <td>
-                    <span class="fw-semibold text-dark">{{ b.credits_amount }} Cr</span>
+                    {% if b.is_free %}
+                      <span class="badge bg-success-subtle text-success border border-success-subtle">Free Trial</span>
+                    {% else %}
+                      <span class="fw-semibold text-dark">{{ b.effective_amount | inr }}</span>
+                    {% endif %}
                   </td>
                   <td>
                     <span class="badge badge-{{ b.status }}">{{ b.status|capitalize }}</span>
                   </td>
                   <td class="text-end">
                     {% if b.status in ('pending', 'confirmed') %}
-                      <form method="POST" action="{{ url_for('admin.admin_cancel_booking', booking_id=b.id) }}" onsubmit="return confirm('Cancel this session and release {{ b.credits_amount }} held credits back to the student?');">
+                      <form method="POST" action="{{ url_for('admin.admin_cancel_booking', booking_id=b.id) }}" onsubmit="return confirm('Cancel this session and release held funds (if any) back to the student?');">
                         <button type="submit" class="btn btn-outline-danger btn-xs py-1 px-2" style="font-size: 0.75rem;">
                           Cancel & Refund
                         </button>

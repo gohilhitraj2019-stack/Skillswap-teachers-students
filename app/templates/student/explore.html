@@ -45,8 +45,8 @@
           </div>
 
           <div class="mb-3">
-            <label for="filter-max-price" class="form-label small fw-semibold text-secondary">Maximum Rate (Credits / Hr)</label>
-            <input type="number" id="filter-max-price" name="max_price" class="form-control form-control-sm" placeholder="e.g. 75" value="{{ max_price or '' }}" min="10" max="500">
+            <label for="filter-max-price" class="form-label small fw-semibold text-secondary">Maximum Rate (₹ INR / Hr)</label>
+            <input type="number" id="filter-max-price" name="max_price" class="form-control form-control-sm" placeholder="e.g. 1500" value="{{ max_price or '' }}" min="10" max="50000">
           </div>
 
           <div class="mb-3">
@@ -127,8 +127,13 @@
 
                 <div class="d-flex align-items-center justify-content-between pt-3 border-top mt-auto">
                   <div>
-                    <span class="price-display">{{ teacher.hourly_rate }}</span>
-                    <span class="text-muted small">Cr / Session</span>
+                    <span class="price-display">{{ teacher.hourly_rate | inr }}</span>
+                    <span class="text-muted small">/ Session</span>
+                    {% if teacher.has_free_sessions %}
+                      <div class="badge bg-success-subtle text-success border border-success-subtle d-block mt-1" style="font-size: 0.7rem;">
+                        <i class="bi bi-gift me-1"></i> {{ teacher.free_sessions_remaining }} Free Trial Available
+                      </div>
+                    {% endif %}
                   </div>
                   <div class="d-flex gap-2">
                     <a href="{{ url_for('student.teacher_profile', teacher_id=teacher.user_id) }}" class="btn btn-outline-secondary btn-sm py-1 px-3">

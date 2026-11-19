@@ -7,16 +7,20 @@ class CreditPackage(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
-    credits = db.Column(db.Integer, nullable=False)
-    price_inr = db.Column(db.Integer, nullable=False)
+    credits = db.Column(db.Integer, nullable=False)  # Wallet balance added (in INR)
+    price_inr = db.Column(db.Numeric(12, 2), nullable=False)
     discount_label = db.Column(db.String(50), nullable=True)
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
     payments = db.relationship('Payment', back_populates='package')
 
+    @property
+    def wallet_amount(self):
+        return float(self.credits)
+
     def __repr__(self):
-        return f'<CreditPackage {self.name} - {self.credits} credits (₹{self.price_inr})>'
+        return f'<CreditPackage {self.name} - ₹{self.credits} wallet (Price: ₹{self.price_inr})>'
 
 
 class Payment(db.Model):
@@ -27,8 +31,8 @@ class Payment(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     package_id = db.Column(db.Integer, db.ForeignKey('credit_packages.id', ondelete='SET NULL'), nullable=True)
     
-    amount = db.Column(db.Integer, nullable=False)  # in INR
-    credits = db.Column(db.Integer, nullable=False)
+    amount = db.Column(db.Numeric(12, 2), nullable=False)  # in INR
+    credits = db.Column(db.Integer, nullable=False)  # in INR
     gateway = db.Column(db.String(20), default='simulator', nullable=False)  # 'razorpay' or 'simulator'
     
     gateway_order_id = db.Column(db.String(100), nullable=True)

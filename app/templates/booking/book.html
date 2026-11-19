@@ -19,42 +19,96 @@
           <div>
             <h4 class="fw-bold mb-1 text-dark">Schedule 1-on-1 Session with {{ profile.display_name }}</h4>
             <div class="text-secondary small">{{ profile.title }}</div>
-            <div class="small text-muted mt-1">
-              <span class="rating-star"><i class="bi bi-star-fill"></i> {{ profile.avg_rating }}</span> · 
-              <span class="fw-semibold text-dark">{{ profile.hourly_rate }} Credits / Session</span>
+            <div class="small text-muted mt-1 d-flex flex-wrap align-items-center gap-2">
+              <span class="rating-star"><i class="bi bi-star-fill text-warning"></i> {{ profile.avg_rating }}</span> · 
+              <span class="fw-semibold text-dark">{{ profile.hourly_rate | inr }} / Session</span>
+              {% if profile.has_free_sessions %}
+                <span class="badge bg-success-subtle text-success border border-success-subtle">
+                  <i class="bi bi-gift me-1"></i> {{ profile.free_sessions_remaining }} Free Trial Session{{ 's' if profile.free_sessions_remaining > 1 else '' }} Available
+                </span>
+              {% endif %}
             </div>
           </div>
         </div>
 
-        <!-- Student Wallet Balance Status -->
-        <div class="card bg-light border p-3 mb-4 rounded-3">
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <div class="small text-muted">Your Available Balance:</div>
-              <div class="fw-bold fs-5 {{ 'text-success' if wallet.available_balance >= profile.hourly_rate else 'text-danger' }}">
-                {{ wallet.available_balance }} Credits
-              </div>
-            </div>
-            <div class="text-end">
-              <div class="small text-muted">Session Escrow Hold:</div>
-              <div class="fw-bold fs-5 text-dark">{{ profile.hourly_rate }} Credits</div>
-            </div>
-          </div>
-          {% if wallet.available_balance < profile.hourly_rate %}
-            <div class="alert alert-warning py-2 px-3 small mt-3 mb-0 d-flex justify-content-between align-items-center bg-white border">
-              <span><i class="bi bi-exclamation-triangle me-1 text-warning"></i> You need {{ profile.hourly_rate - wallet.available_balance }} more credits to book this session.</span>
-              <a href="{{ url_for('wallet.purchase') }}" class="btn btn-sm btn-dark">Top Up Credits</a>
-            </div>
-          {% else %}
-            <div class="small text-muted mt-2 border-top pt-2">
-              <i class="bi bi-shield-check text-primary me-1"></i> Credits are held in escrow and settled only after you mark the session complete.
-            </div>
-          {% endif %}
-        </div>
-
-        <form method="POST" action="{{ url_for('booking.book_class', teacher_id=profile.user_id) }}">
+        <form method="POST" action="{{ url_for('booking.book_class', teacher_id=profile.user_id) }}" id="bookingForm">
           <input type="hidden" id="teacher-profile-id" value="{{ profile.id }}">
           <input type="hidden" name="time_slot" id="selected-time-slot" value="">
+
+          <!-- Session Option Selection (Free Session vs Paid Session) -->
+          <div class="mb-4">
+            <label class="form-label fw-bold small text-secondary d-block mb-2">Choose Booking Type *</label>
+            
+            {% if can_claim_free %}
+              <div class="form-check p-3 border rounded bg-white mb-2 shadow-sm">
+                <input class="form-check-input" type="radio" name="booking_type" id="type_free" value="free" checked onchange="toggleBookingType()">
+                <label class="form-check-label w-100 cursor-pointer" for="type_free">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                      <strong class="text-success"><i class="bi bi-gift-fill me-1"></i> Book as Free Trial Session</strong>
+                      <div class="small text-muted">First-time introductory 1-on-1 session with {{ profile.display_name }}.</div>
+                    </div>
+                    <span class="badge bg-success fs-6 px-3 py-2">₹0 FREE</span>
+                  </div>
+                </label>
+              </div>
+            {% elif not profile.has_free_sessions %}
+              <div class="alert alert-secondary py-2 px-3 small mb-2 d-flex align-items-center gap-2">
+                <i class="bi bi-info-circle text-muted"></i>
+                <div>This mentor has completed all offered free trial sessions. You can book using standard paid rates below.</div>
+              </div>
+            {% else %}
+              <div class="alert alert-secondary py-2 px-3 small mb-2 d-flex align-items-center gap-2">
+                <i class="bi bi-info-circle text-muted"></i>
+                <div>You have already claimed your 1 eligible free trial session with this mentor. Book below using standard paid rates.</div>
+              </div>
+            {% endif %}
+
+            <div class="form-check p-3 border rounded bg-white shadow-sm">
+              <input class="form-check-input" type="radio" name="booking_type" id="type_paid" value="paid" {{ 'checked' if not can_claim_free else '' }} onchange="toggleBookingType()">
+              <label class="form-check-label w-100 cursor-pointer" for="type_paid">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <strong class="text-dark">Standard Paid Session</strong>
+                    <div class="small text-muted">Direct 1-on-1 mentoring billed at mentor's standard hourly rate.</div>
+                  </div>
+                  <span class="fs-6 fw-bold text-dark">{{ profile.hourly_rate | inr }}</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Student Wallet Balance / Escrow Status Card -->
+          <div class="card bg-light border p-3 mb-4 rounded-3" id="financialStatusCard">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <div class="small text-muted">Your Available Wallet Balance:</div>
+                <div class="fw-bold fs-5 text-dark" id="display-user-balance">
+                  {{ wallet.available_balance | inr }}
+                </div>
+              </div>
+              <div class="text-end">
+                <div class="small text-muted">Session Escrow Hold:</div>
+                <div class="fw-bold fs-5" id="display-hold-amount">
+                  {{ '₹0 FREE' if can_claim_free else (profile.hourly_rate | inr) }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Warning shown only for paid sessions when balance is insufficient -->
+            <div id="insufficientBalanceAlert" class="alert alert-warning py-2 px-3 small mt-3 mb-0 d-none d-flex justify-content-between align-items-center bg-white border">
+              <span><i class="bi bi-exclamation-triangle me-1 text-warning"></i> Insufficient funds to book paid session.</span>
+              <a href="{{ url_for('wallet.purchase') }}" class="btn btn-sm btn-dark">Add Wallet Funds</a>
+            </div>
+
+            <div id="freeSessionNote" class="small text-success mt-2 border-top pt-2 {{ '' if can_claim_free else 'd-none' }}">
+              <i class="bi bi-check-circle-fill me-1"></i> Free Trial Session: No deduction from your wallet.
+            </div>
+
+            <div id="escrowProtectedNote" class="small text-muted mt-2 border-top pt-2 {{ 'd-none' if can_claim_free else '' }}">
+              <i class="bi bi-shield-check text-primary me-1"></i> Funds are held securely in escrow and settled only after you mark the session complete.
+            </div>
+          </div>
 
           <!-- Skill topic -->
           <div class="mb-4">
@@ -87,7 +141,7 @@
           <!-- Notes -->
           <div class="mb-4">
             <label for="booking-notes" class="form-label fw-semibold small text-secondary">Goals for this Session (Optional)</label>
-            <textarea id="booking-notes" name="student_notes" rows="3" class="form-control" placeholder="Share specific topics, code repositories, or design files you want to review..."></textarea>
+            <textarea id="booking-notes" name="student_notes" rows="3" class="form-control" placeholder="Share specific topics, code repositories, or questions you want to cover..."></textarea>
           </div>
 
           <!-- Booking Actions -->
@@ -95,8 +149,9 @@
             <a href="{{ url_for('student.teacher_profile', teacher_id=profile.user_id) }}" class="btn btn-outline-secondary btn-sm">
               Back to Profile
             </a>
-            <button type="submit" id="btn-confirm-booking" class="btn btn-dark px-4 py-2" {{ 'disabled' if wallet.available_balance < profile.hourly_rate else '' }}>
-              <i class="bi bi-lock me-1"></i> Confirm & Hold {{ profile.hourly_rate }} Credits
+            <button type="submit" id="btn-confirm-booking" class="btn btn-dark px-4 py-2 fw-semibold">
+              <i class="bi bi-calendar-check me-1"></i>
+              <span id="btn-submit-text">Confirm Booking</span>
             </button>
           </div>
         </form>
@@ -109,4 +164,52 @@
 
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/booking.js') }}"></script>
+<script>
+const userBalance = {{ wallet.available_balance or 0 }};
+const hourlyRate = {{ profile.hourly_rate or 500 }};
+const hourlyRateFormatted = '{{ profile.hourly_rate | inr }}';
+
+function toggleBookingType() {
+  const isFree = document.getElementById('type_free') && document.getElementById('type_free').checked;
+  const holdDisplay = document.getElementById('display-hold-amount');
+  const insufficientAlert = document.getElementById('insufficientBalanceAlert');
+  const freeNote = document.getElementById('freeSessionNote');
+  const escrowNote = document.getElementById('escrowProtectedNote');
+  const submitBtn = document.getElementById('btn-confirm-booking');
+  const submitText = document.getElementById('btn-submit-text');
+
+  if (isFree) {
+    if (holdDisplay) {
+      holdDisplay.textContent = '₹0 FREE';
+      holdDisplay.className = 'fw-bold fs-5 text-success';
+    }
+    if (insufficientAlert) insufficientAlert.classList.add('d-none');
+    if (freeNote) freeNote.classList.remove('d-none');
+    if (escrowNote) escrowNote.classList.add('d-none');
+    if (submitBtn) submitBtn.disabled = false;
+    if (submitText) submitText.textContent = 'Confirm Free Trial Booking';
+  } else {
+    if (holdDisplay) {
+      holdDisplay.textContent = hourlyRateFormatted;
+      holdDisplay.className = 'fw-bold fs-5 text-dark';
+    }
+    const hasEnough = userBalance >= hourlyRate;
+    if (insufficientAlert) {
+      if (hasEnough) {
+        insufficientAlert.classList.add('d-none');
+      } else {
+        insufficientAlert.classList.remove('d-none');
+      }
+    }
+    if (freeNote) freeNote.classList.add('d-none');
+    if (escrowNote) escrowNote.classList.remove('d-none');
+    if (submitBtn) submitBtn.disabled = !hasEnough;
+    if (submitText) submitText.textContent = 'Confirm & Hold ' + hourlyRateFormatted;
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  toggleBookingType();
+});
+</script>
 {% endblock %}

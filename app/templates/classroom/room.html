@@ -331,25 +331,40 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <p>Conclude this session and execute credit settlement?</p>
+          <p>Conclude this session and execute settlement?</p>
           
           <div class="card bg-light border p-3 small mb-3">
-            <div class="d-flex justify-content-between mb-1">
-              <span>Total Session Charge:</span>
-              <strong>{{ booking.credits_amount }} Credits</strong>
-            </div>
-            <div class="d-flex justify-content-between mb-1">
-              <span>Instructor Earnings (80%):</span>
-              <strong class="text-success">+{{ (booking.credits_amount * 0.8)|int }} Credits</strong>
-            </div>
-            <div class="d-flex justify-content-between">
-              <span>Platform Service Fee (20%):</span>
-              <span class="text-muted">{{ (booking.credits_amount * 0.2)|int }} Credits</span>
-            </div>
+            {% if booking.is_free %}
+              <div class="d-flex justify-content-between mb-1">
+                <span>Total Session Charge:</span>
+                <span class="badge bg-success-subtle text-success border border-success-subtle">Free Trial (₹0)</span>
+              </div>
+              <div class="d-flex justify-content-between mb-1">
+                <span>Instructor Allowance:</span>
+                <strong class="text-success">1 Completed Free Trial</strong>
+              </div>
+              <div class="d-flex justify-content-between">
+                <span>Platform Service Fee:</span>
+                <span class="text-muted">₹0</span>
+              </div>
+            {% else %}
+              <div class="d-flex justify-content-between mb-1">
+                <span>Total Session Charge:</span>
+                <strong>{{ booking.effective_amount | inr }}</strong>
+              </div>
+              <div class="d-flex justify-content-between mb-1">
+                <span>Instructor Earnings (80%):</span>
+                <strong class="text-success">+{{ booking.teacher_earnings_amount | inr }}</strong>
+              </div>
+              <div class="d-flex justify-content-between">
+                <span>Platform Service Fee (20%):</span>
+                <span class="text-muted">{{ booking.platform_commission_amount | inr }}</span>
+              </div>
+            {% endif %}
           </div>
 
           <div class="small text-muted">
-            <i class="bi bi-shield-check text-success me-1"></i> Held escrow credits will be transferred to the instructor's wallet, and the student will be prompted to leave feedback.
+            <i class="bi bi-shield-check text-success me-1"></i> {% if booking.is_free %}This free trial session will be marked completed and recorded against the instructor's free session quota.{% else %}Held escrow funds will be transferred to the instructor's wallet, and the student will be prompted to leave feedback.{% endif %}
           </div>
         </div>
         <div class="modal-footer">

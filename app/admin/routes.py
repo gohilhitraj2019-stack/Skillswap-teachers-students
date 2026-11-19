@@ -100,7 +100,7 @@ def dashboard():
     pending_withdrawals = Withdrawal.query.filter_by(status='pending').count()
     
     total_revenue_inr = db.session.query(db.func.sum(Payment.amount)).filter_by(status='success').scalar() or 0
-    total_commission_credits = db.session.query(db.func.sum(Booking.platform_commission_amount)).filter_by(status='completed').scalar() or 0
+    total_commission_inr = db.session.query(db.func.sum(Booking.platform_commission_amount)).filter_by(status='completed').scalar() or 0
 
     recent_bookings = Booking.query.order_by(Booking.created_at.desc()).limit(6).all()
     recent_transactions = CreditTransaction.query.order_by(CreditTransaction.created_at.desc()).limit(8).all()
@@ -115,7 +115,7 @@ def dashboard():
         total_completed_classes=total_completed_classes,
         pending_withdrawals=pending_withdrawals,
         total_revenue_inr=total_revenue_inr,
-        total_commission_credits=total_commission_credits,
+        total_commission_inr=total_commission_inr,
         recent_bookings=recent_bookings,
         recent_transactions=recent_transactions,
         pending_teachers=pending_teachers
@@ -650,6 +650,8 @@ def api_ledger():
         'status': 'success',
         'ledger': {
             'total_held_escrow': total_held,
+            'total_available_inr': total_available,
+            'total_earned_inr': total_earned,
             'total_available_credits': total_available,
             'total_earned_credits': total_earned,
             'wallets_count': len(wallets)

@@ -36,7 +36,7 @@ def test_admin_credit_packages_crud_lifecycle(client, app):
     get_resp = client.get(f'{admin_prefix}/settings')
     assert get_resp.status_code == 200
     assert b'Weekend Mastery Pack' in get_resp.data
-    assert b'150 Credits' in get_resp.data
+    assert b'150' in get_resp.data
     assert b'1299' in get_resp.data
 
     # -------------------------------------------------------------

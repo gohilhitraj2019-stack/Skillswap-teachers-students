@@ -16,10 +16,15 @@ class Booking(db.Model):
     start_time = db.Column(db.String(5), nullable=False)  # HH:MM
     end_time = db.Column(db.String(5), nullable=False)    # HH:MM
     
-    credits_amount = db.Column(db.Integer, nullable=False)
-    platform_commission_amount = db.Column(db.Integer, default=0, nullable=False)
-    teacher_earnings_amount = db.Column(db.Integer, default=0, nullable=False)
+    amount_inr = db.Column(db.Numeric(12, 2), default=0.0, nullable=False)
+    credits_amount = db.Column(db.Integer, default=0, nullable=False)
+    platform_commission_amount = db.Column(db.Numeric(12, 2), default=0.0, nullable=False)
+    teacher_earnings_amount = db.Column(db.Numeric(12, 2), default=0.0, nullable=False)
     
+    # Free Session Tracking
+    is_free_session = db.Column(db.Boolean, default=False, nullable=False)
+    free_session_deducted = db.Column(db.Boolean, default=False, nullable=False)
+
     # Statuses: pending, confirmed, completed, cancelled_by_student, cancelled_by_teacher, rejected
     status = db.Column(db.String(25), default='pending', nullable=False, index=True)
     
@@ -53,6 +58,19 @@ class Booking(db.Model):
     def can_join_class(self):
         """Allow classroom access if confirmed or completed."""
         return self.status in ('confirmed', 'completed')
+
+    @property
+    def effective_amount(self):
+        """Returns the INR amount for this booking."""
+        if self.is_free_session:
+            return 0.0
+        if self.amount_inr is not None and float(self.amount_inr) > 0:
+            return float(self.amount_inr)
+        return float(self.credits_amount or 0.0)
+
+    @property
+    def is_free(self):
+        return bool(self.is_free_session)
 
     def __repr__(self):
         return f'<Booking {self.booking_ref} status={self.status} credits={self.credits_amount}>'

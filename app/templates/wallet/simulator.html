@@ -23,15 +23,15 @@
           </div>
           <div class="d-flex justify-content-between border-bottom pb-2 mb-2">
             <span class="text-muted small">Package:</span>
-            <span class="fw-semibold text-dark small">{{ payment.package.name if payment.package else 'Credit Top-up' }}</span>
+            <span class="fw-semibold text-dark small">{{ payment.package.name if payment.package else 'Wallet Top-up' }}</span>
           </div>
           <div class="d-flex justify-content-between border-bottom pb-2 mb-2">
-            <span class="text-muted small">Credits:</span>
-            <span class="fw-bold text-dark small">+{{ payment.credits }} Credits</span>
+            <span class="text-muted small">Wallet Addition:</span>
+            <span class="fw-bold text-success small">+{{ payment.credits | inr }}</span>
           </div>
           <div class="d-flex justify-content-between">
-            <span class="text-muted small">Amount:</span>
-            <span class="fw-bold text-dark fs-5">₹{{ payment.amount }} INR</span>
+            <span class="text-muted small">Amount Payable:</span>
+            <span class="fw-bold text-dark fs-5">{{ payment.amount | inr }}</span>
           </div>
         </div>
 
@@ -40,7 +40,7 @@
           <form method="POST" action="{{ url_for('wallet.simulator_process', payment_ref=payment.payment_ref) }}">
             <input type="hidden" name="action" value="success">
             <button type="submit" class="btn btn-dark w-100 py-2 fw-semibold">
-              <i class="bi bi-check2-circle me-1"></i> Authorize & Credit Wallet
+              <i class="bi bi-check2-circle me-1"></i> Authorize & Top Up Wallet
             </button>
           </form>
 

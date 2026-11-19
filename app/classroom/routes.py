@@ -56,7 +56,7 @@ def complete_class(room_id):
         session.is_active = False
         session.ended_at = db.func.now()
         db.session.commit()
-        flash('Class completed successfully! Credits have been settled.', 'success')
+        flash('Class completed successfully! The session has been settled.', 'success')
     except BookingError as e:
         flash(str(e), 'danger')
 

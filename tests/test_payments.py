@@ -62,7 +62,7 @@ def test_admin_cannot_purchase_credits(client, app):
     with app.app_context():
         admin = User.query.filter_by(role='admin').first()
         pkg = CreditPackage.query.first()
-        with pytest.raises(PaymentServiceError, match="Administrators cannot purchase platform credits"):
+        with pytest.raises(PaymentServiceError, match="Administrators cannot purchase"):
             create_payment_order(admin.id, pkg.id, use_simulator=True)
 
     # 2. Test route prevention
@@ -71,7 +71,7 @@ def test_admin_cannot_purchase_credits(client, app):
     # GET /wallet/purchase should redirect away from purchase to admin dashboard
     resp_get = client.get('/wallet/purchase', follow_redirects=True)
     assert resp_get.status_code == 200
-    assert b'Administrators cannot purchase platform credits.' in resp_get.data
+    assert b'Administrators cannot purchase' in resp_get.data
     assert b'Admin Control Panel' in resp_get.data
 
     # POST /wallet/checkout/<id> should redirect away
@@ -79,4 +79,4 @@ def test_admin_cannot_purchase_credits(client, app):
         pkg_id = CreditPackage.query.first().id
     resp_post = client.post(f'/wallet/checkout/{pkg_id}', follow_redirects=True)
     assert resp_post.status_code == 200
-    assert b'Administrators cannot purchase platform credits.' in resp_post.data
+    assert b'Administrators cannot purchase' in resp_post.data

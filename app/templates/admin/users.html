@@ -53,7 +53,7 @@
               <tr>
                 <th>User Account</th>
                 <th>Role</th>
-                <th>Wallet Credits</th>
+                <th>Wallet Balance</th>
                 <th>Account Status</th>
                 <th>Registered Date</th>
                 <th class="text-end">Account Control</th>
@@ -70,9 +70,9 @@
                     <span class="badge bg-light text-dark border text-uppercase font-monospace" style="font-size: 0.7rem;">{{ u.role }}</span>
                   </td>
                   <td>
-                    <span class="fw-bold text-dark">{{ u.wallet.available_balance if u.wallet else 0 }} Cr</span>
+                    <span class="fw-bold text-dark">{{ (u.wallet.available_balance if u.wallet else 0) | inr }}</span>
                     {% if u.wallet and u.wallet.held_balance > 0 %}
-                      <span class="small text-muted font-monospace">({{ u.wallet.held_balance }} held)</span>
+                      <span class="small text-muted font-monospace">({{ u.wallet.held_balance | inr }} held)</span>
                     {% endif %}
                   </td>
                   <td>

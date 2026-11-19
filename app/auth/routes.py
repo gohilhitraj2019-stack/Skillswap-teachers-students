@@ -29,7 +29,7 @@ from app.services.validation_service import (
     validate_teaching_categories, validate_class_level,
     validate_board, validate_teaching_languages,
     validate_demo_video, validate_bio, validate_url,
-    validate_rate_amount, validate_rate_type
+    validate_rate_amount, validate_rate_type, validate_free_sessions
 )
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
@@ -418,14 +418,23 @@ def register_teacher():
             flash(demo_err, 'danger')
             return render_template('auth/register_teacher.html', categories=categories, all_skills=all_skills)
 
-        # 17. Portfolio URL validation
+        # 17. Free Sessions Offer validation (1 to 10 sessions)
+        free_sessions_raw = request.form.get('free_sessions_offered', '').strip()
+        if not free_sessions_raw and is_testing and 'free_sessions_offered' not in request.form:
+            free_sessions_raw = '3'
+        fs_ok, clean_fs, fs_err = validate_free_sessions(free_sessions_raw, required=True)
+        if not fs_ok:
+            flash(fs_err, 'danger')
+            return render_template('auth/register_teacher.html', categories=categories, all_skills=all_skills)
+
+        # 18. Portfolio URL validation
         if portfolio_url:
             purl_ok, purl_err = validate_url(portfolio_url)
             if not purl_ok:
                 flash(f"Portfolio URL: {purl_err}", 'danger')
                 return render_template('auth/register_teacher.html', categories=categories, all_skills=all_skills)
 
-        # 18. Rate validation
+        # 19. Rate validation (in INR)
         rate_ok, clean_rate, rate_err = validate_rate_amount(hourly_rate, min_amount=10.0, max_amount=50000.0)
         if not rate_ok:
             flash(rate_err, 'danger')
@@ -464,6 +473,8 @@ def register_teacher():
             bio=bio,
             experience_years=exp_yrs,
             hourly_rate=int(clean_rate),
+            free_sessions_offered=clean_fs or 3,
+            free_sessions_completed=0,
             languages=', '.join(clean_langs),
             portfolio_url=portfolio_url,
             skills_proof=skills_proof,

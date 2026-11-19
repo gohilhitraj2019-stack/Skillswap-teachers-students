@@ -8,8 +8,8 @@ class Withdrawal(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     withdrawal_ref = db.Column(db.String(40), unique=True, nullable=False, index=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
-    credits_amount = db.Column(db.Integer, nullable=False)
-    inr_amount = db.Column(db.Float, nullable=False)
+    credits_amount = db.Column(db.Numeric(12, 2), default=0.0, nullable=False)
+    inr_amount = db.Column(db.Numeric(12, 2), nullable=False)
     payout_method = db.Column(db.String(30), default='upi', nullable=False)  # 'upi' or 'bank_transfer'
     payout_details = db.Column(db.Text, nullable=False)
     

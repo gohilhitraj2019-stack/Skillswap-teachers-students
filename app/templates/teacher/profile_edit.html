@@ -449,6 +449,63 @@
                 </div>
               </div>
 
+              <!-- Free Sessions Management & Live Tracker -->
+              <div class="card border rounded-3 p-3 mb-4 bg-light">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <h6 class="fw-bold text-dark small text-uppercase mb-0">
+                    <i class="bi bi-gift text-success me-1"></i> Free Trial Session Policy & Tracking
+                  </h6>
+                  <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                    {{ profile.free_sessions_remaining }} Sessions Remaining
+                  </span>
+                </div>
+                <p class="small text-muted mb-3">
+                  Offer 1–10 free sessions so students can experience your teaching before booking paid sessions.
+                </p>
+
+                <!-- Metric Cards -->
+                <div class="row g-2 mb-3">
+                  <div class="col-4">
+                    <div class="bg-white border rounded p-2 text-center">
+                      <div class="text-muted small" style="font-size: 0.75rem;">Total Offered</div>
+                      <div class="fs-5 fw-bold text-dark">{{ profile.free_sessions_offered or 3 }}</div>
+                    </div>
+                  </div>
+                  <div class="col-4">
+                    <div class="bg-white border rounded p-2 text-center">
+                      <div class="text-muted small" style="font-size: 0.75rem;">Completed</div>
+                      <div class="fs-5 fw-bold text-primary">{{ profile.free_sessions_completed or 0 }}</div>
+                    </div>
+                  </div>
+                  <div class="col-4">
+                    <div class="bg-white border rounded p-2 text-center">
+                      <div class="text-muted small" style="font-size: 0.75rem;">Remaining</div>
+                      <div class="fs-5 fw-bold text-success">{{ profile.free_sessions_remaining }}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="row align-items-center">
+                  <div class="col-md-6">
+                    <label for="edit_free_sessions_offered" class="form-label small fw-semibold text-secondary">
+                      Update Free Sessions Allowance (1–10)
+                    </label>
+                    <select class="form-select form-select-sm" id="edit_free_sessions_offered" name="free_sessions_offered" required>
+                      {% for n in range(1, 11) %}
+                        <option value="{{ n }}" {% if (profile.free_sessions_offered or 3) == n %}selected{% endif %}>
+                          {{ n }} Free Session{{ 's' if n > 1 else '' }}
+                        </option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="small text-muted mt-2 mt-md-4">
+                      <i class="bi bi-shield-check text-primary me-1"></i> Deductions only happen after a student successfully completes a free trial session.
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <!-- Bio with 500 word limit -->
               <div class="mb-4">
                 <div class="d-flex justify-content-between align-items-center mb-1">

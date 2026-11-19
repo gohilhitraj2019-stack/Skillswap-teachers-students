@@ -228,7 +228,7 @@ def test_complete_e2e_acceptance_flow(client, app):
         wd = Withdrawal.query.filter_by(user_id=elena_id).first()
         assert wd.status == 'pending'
         assert wd.credits_amount == 80
-        assert wd.inr_amount == 800.0  # 80 * 10 INR
+        assert float(wd.inr_amount) == 80.0  # Native INR withdrawal
         wd_id = wd.id
 
     # -------------------------------------------------------------

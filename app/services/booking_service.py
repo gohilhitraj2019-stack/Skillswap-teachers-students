@@ -32,9 +32,10 @@ def is_slot_available(teacher_profile_id, class_date, start_time, end_time, excl
             return False
     return True
 
-def create_booking(student_id, teacher_profile_id, skill_id, class_date, start_time, end_time, student_notes=None):
+def create_booking(student_id, teacher_profile_id, skill_id, class_date, start_time, end_time, student_notes=None, is_free_session=False):
     """
-    Create a new booking and hold student credits atomically.
+    Create a new booking and hold student funds atomically.
+    Free trial sessions require zero payment/hold, subject to eligibility.
     """
     teacher_profile = db.session.get(TeacherProfile, teacher_profile_id)
     if not teacher_profile:
@@ -56,7 +57,23 @@ def create_booking(student_id, teacher_profile_id, skill_id, class_date, start_t
     if not is_slot_available(teacher_profile_id, class_date, start_time, end_time):
         raise BookingError("The selected time slot is already booked. Please choose another time.")
 
-    credits_required = teacher_profile.hourly_rate
+    # Validate Free Session eligibility
+    is_free = bool(is_free_session)
+    if is_free:
+        if not teacher_profile.has_free_sessions:
+            raise BookingError("This instructor has no remaining free trial sessions available.")
+
+        # Prevent duplicate free session claims by the same student with this instructor
+        existing_free = Booking.query.filter(
+            Booking.student_id == student_id,
+            Booking.teacher_profile_id == teacher_profile_id,
+            Booking.is_free_session == True,
+            Booking.status.in_(['pending', 'confirmed', 'completed'])
+        ).first()
+        if existing_free:
+            raise BookingError("You have already claimed a free trial session with this instructor.")
+
+    cost_inr = 0.0 if is_free else float(teacher_profile.hourly_rate or 500.0)
 
     # Create the booking object
     booking = Booking(
@@ -68,14 +85,16 @@ def create_booking(student_id, teacher_profile_id, skill_id, class_date, start_t
         class_date=class_date,
         start_time=start_time,
         end_time=end_time,
-        credits_amount=credits_required,
+        amount_inr=cost_inr,
+        credits_amount=int(cost_inr),
+        is_free_session=is_free,
         status='pending',
         student_notes=student_notes
     )
     db.session.add(booking)
     db.session.flush()
 
-    # Hold the credits from student's wallet
+    # Hold the funds from student's wallet (0 for free sessions)
     hold_credits_for_booking(student_id, booking)
 
     # Initialize Classroom Session with unique room_id

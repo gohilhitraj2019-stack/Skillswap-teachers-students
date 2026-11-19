@@ -43,8 +43,7 @@
               <tr>
                 <th>Reference</th>
                 <th>Instructor</th>
-                <th>Credits</th>
-                <th>INR Net</th>
+                <th>Amount (₹)</th>
                 <th>Destination Details</th>
                 <th>Status</th>
                 <th>Payout Ref (UTR)</th>
@@ -59,8 +58,7 @@
                     <div class="fw-semibold text-dark">{{ w.user.name }}</div>
                     <div class="small text-muted">{{ w.user.email }}</div>
                   </td>
-                  <td><span class="fw-semibold text-dark">{{ w.credits_amount }} Cr</span></td>
-                  <td class="fw-bold text-dark">₹{{ w.inr_amount }}</td>
+                  <td><span class="fw-bold text-dark">{{ w.inr_amount | inr }}</span></td>
                   <td class="small text-secondary" style="max-width: 220px;">{{ w.payout_details }}</td>
                   <td><span class="badge badge-{{ w.status }}">{{ w.status|capitalize }}</span></td>
                   <td class="small text-muted">
@@ -94,7 +92,7 @@
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                               </div>
                               <div class="modal-body">
-                                <p class="small text-muted mb-3">Confirm external bank/UPI transfer of <strong class="text-dark">₹{{ w.inr_amount }} INR</strong> ({{ w.credits_amount }} Credits) to <strong class="text-dark">{{ w.user.name }}</strong>.</p>
+                                <p class="small text-muted mb-3">Confirm external bank/UPI transfer of <strong class="text-dark">{{ w.inr_amount | inr }}</strong> to <strong class="text-dark">{{ w.user.name }}</strong>.</p>
                                 <div class="bg-light p-2 rounded mb-3 small border">
                                   <strong>Payout Destination:</strong> {{ w.payout_details }}
                                 </div>
@@ -128,7 +126,7 @@
                               <div class="modal-body">
                                 <p class="small text-muted mb-2">Decline payout request <strong class="text-dark">#{{ w.withdrawal_ref }}</strong> for <strong class="text-dark">{{ w.user.name }}</strong>?</p>
                                 <div class="alert alert-light border py-2 small text-muted mb-3">
-                                  <i class="bi bi-shield-check text-primary me-1"></i> The {{ w.credits_amount }} credits will automatically be restored to the teacher's wallet.
+                                  <i class="bi bi-shield-check text-primary me-1"></i> The {{ w.inr_amount | inr }} funds will automatically be restored to the teacher's wallet.
                                 </div>
                                 <div class="mb-2">
                                   <label for="reject_notes_{{ w.id }}" class="form-label small fw-semibold text-secondary">Reason for Declining *</label>

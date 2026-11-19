@@ -62,9 +62,9 @@
             {% else %}
               <!-- Wallet Badge for Students & Teachers -->
               <a href="{{ url_for('wallet.index') }}" class="credit-badge-pill" title="View Wallet Balance">
-                <i class="bi bi-coin text-warning"></i>
-                <span>{{ current_wallet.available_balance if current_wallet else 0 }} Credits</span>
-                <span class="credit-add-btn" title="Buy Credits"><i class="bi bi-plus"></i></span>
+                <i class="bi bi-wallet2 text-success"></i>
+                <span>{{ (current_wallet.available_balance if current_wallet else 0) | inr }}</span>
+                <span class="credit-add-btn" title="Add Funds"><i class="bi bi-plus"></i></span>
               </a>
             {% endif %}
 
@@ -118,7 +118,7 @@
 
                   <li><a class="dropdown-item py-2 small" href="{{ url_for('student.dashboard') }}"><i class="bi bi-grid text-secondary me-2"></i> Student Workspace</a></li>
                   <li><a class="dropdown-item py-2 small" href="{{ url_for('student.bookings') }}"><i class="bi bi-calendar-check text-secondary me-2"></i> Scheduled Sessions</a></li>
-                  <li><a class="dropdown-item py-2 small" href="{{ url_for('wallet.index') }}"><i class="bi bi-wallet2 text-secondary me-2"></i> Credit Wallet & Ledger</a></li>
+                  <li><a class="dropdown-item py-2 small" href="{{ url_for('wallet.index') }}"><i class="bi bi-wallet2 text-secondary me-2"></i> Wallet & Ledger</a></li>
                 {% endif %}
                 <li><hr class="dropdown-divider my-1"></li>
                 <li><a class="dropdown-item py-2 small text-danger" href="{{ url_for('auth.logout') }}"><i class="bi bi-box-arrow-right me-2"></i> Log Out</a></li>
@@ -128,7 +128,7 @@
           {% else %}
             <a href="{{ url_for('auth.login') }}" class="btn btn-outline-secondary btn-sm px-3">Log In</a>
             <a href="{{ url_for('auth.register_student') }}" class="btn btn-dark btn-sm px-3">
-              Get Started <span class="text-white-50 ms-1" style="font-size: 0.75rem;">(+50 Cr)</span>
+              Get Started <span class="text-white-50 ms-1" style="font-size: 0.75rem;">(+₹500)</span>
             </a>
           {% endif %}
         </div>
@@ -181,7 +181,7 @@
               <li class="list-inline-item">·</li>
               <li class="list-inline-item"><a href="{{ url_for('auth.register_teacher') }}">Apply to Teach</a></li>
               <li class="list-inline-item">·</li>
-              <li class="list-inline-item"><a href="{{ url_for('wallet.purchase') }}">Credit Packages</a></li>
+              <li class="list-inline-item"><a href="{{ url_for('wallet.purchase') }}">Wallet Top-Up</a></li>
               <li class="list-inline-item">·</li>
               <li class="list-inline-item"><a href="{{ url_for('main.index') }}#how-it-works">Escrow Security</a></li>
             </ul>

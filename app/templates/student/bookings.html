@@ -64,7 +64,11 @@
                     <div class="small text-muted">{{ b.start_time }} - {{ b.end_time }}</div>
                   </td>
                   <td>
-                    <span class="fw-semibold text-dark">{{ b.credits_amount }} Cr</span>
+                    {% if b.is_free_session %}
+                      <span class="badge bg-success-subtle text-success border border-success-subtle">Free Session</span>
+                    {% else %}
+                      <span class="fw-semibold text-dark">{{ b.effective_amount | inr }}</span>
+                    {% endif %}
                   </td>
                   <td>
                     <span class="badge badge-{{ b.status }}">{{ b.status|replace('_', ' ')|capitalize }}</span>
@@ -94,7 +98,12 @@
                                 <div class="modal-body">
                                   <p class="small text-secondary mb-2">Cancel booking <strong>#{{ b.booking_ref }}</strong> with {{ b.teacher_user.name }}?</p>
                                   <div class="alert alert-light border small text-muted mb-3">
-                                    <i class="bi bi-shield-check text-primary me-1"></i> Your <strong>{{ b.credits_amount }} held credits</strong> will be restored to your available balance immediately.
+                                    <i class="bi bi-shield-check text-primary me-1"></i>
+                                    {% if b.is_free_session %}
+                                      This was a <strong>Free Trial Session</strong> (no funds were held).
+                                    {% else %}
+                                      Your <strong>{{ b.effective_amount | inr }} held balance</strong> will be restored to your available wallet balance immediately.
+                                    {% endif %}
                                   </div>
                                   <div class="mb-3">
                                     <label for="cancel-reason-{{ b.id }}" class="form-label small fw-semibold text-secondary">Reason for cancellation</label>

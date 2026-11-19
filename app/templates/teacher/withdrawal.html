@@ -7,7 +7,7 @@
   <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
     <div>
       <h3 class="fw-bold mb-1">Instructor Payouts & Withdrawals</h3>
-      <p class="text-muted small mb-0">Withdraw your earned credits to real currency (INR) via instant UPI or direct Bank Transfer.</p>
+      <p class="text-muted small mb-0">Withdraw your earned earnings directly in Indian Rupees (₹) via instant UPI or direct Bank Transfer.</p>
     </div>
     <a href="{{ url_for('teacher.dashboard') }}" class="btn btn-outline-secondary btn-sm">
       Studio
@@ -22,25 +22,21 @@
         
         <div class="p-3 bg-light rounded mb-4 border">
           <div class="d-flex justify-content-between align-items-center mb-1">
-            <span class="text-muted small">Eligible Earned Credits:</span>
-            <span class="fw-bold text-dark fs-5">{{ wallet.earned_balance }} Cr</span>
-          </div>
-          <div class="d-flex justify-content-between align-items-center">
-            <span class="text-muted small">Payout Value:</span>
-            <span class="fw-bold text-dark">₹{{ wallet.earned_balance * settings.credit_to_inr_rate }} INR</span>
+            <span class="text-muted small">Eligible Earned Balance:</span>
+            <span class="fw-bold text-dark fs-5">{{ wallet.earned_balance | inr }}</span>
           </div>
           <div class="small text-muted mt-2 border-top pt-2" style="font-size: 0.75rem;">
-            Conversion: 1 Credit = ₹{{ settings.credit_to_inr_rate }} INR
+            <i class="bi bi-shield-check text-success me-1"></i> Net earnings from completed sessions are ready for payout.
           </div>
         </div>
 
         {% if wallet.earned_balance > 0 %}
           <form method="POST" action="{{ url_for('teacher.withdrawal') }}">
             <div class="mb-3">
-              <label for="withdraw-credits" class="form-label small fw-semibold text-secondary">Credits to Withdraw *</label>
+              <label for="withdraw-credits" class="form-label small fw-semibold text-secondary">Amount to Withdraw (₹) *</label>
               <div class="input-group input-group-sm">
+                <span class="input-group-text bg-white">₹</span>
                 <input type="number" id="withdraw-credits" name="credits_amount" class="form-control" min="1" max="{{ wallet.earned_balance }}" value="{{ wallet.earned_balance }}" required>
-                <span class="input-group-text bg-white">Credits</span>
               </div>
             </div>
 
@@ -80,7 +76,7 @@
           </form>
         {% else %}
           <div class="alert alert-light border mb-0 small text-muted">
-            <i class="bi bi-info-circle me-1"></i> You currently have 0 earned credits available for payout. Complete confirmed sessions to earn credits.
+            <i class="bi bi-info-circle me-1"></i> You currently have ₹0 earned balance available for payout. Complete confirmed sessions to earn funds.
           </div>
         {% endif %}
       </div>
@@ -100,8 +96,7 @@
                 <thead>
                   <tr>
                     <th>Reference</th>
-                    <th>Credits</th>
-                    <th>Amount</th>
+                    <th>Amount (₹)</th>
                     <th>Account</th>
                     <th>Status</th>
                     <th>Transaction Ref</th>
@@ -111,8 +106,7 @@
                   {% for w in withdrawals %}
                     <tr>
                       <td><span class="ref-code">#{{ w.withdrawal_ref }}</span></td>
-                      <td>{{ w.credits_amount }} Cr</td>
-                      <td class="fw-bold text-dark">₹{{ w.inr_amount }}</td>
+                      <td class="fw-bold text-dark">{{ w.inr_amount | inr }}</td>
                       <td class="small text-muted text-truncate" style="max-width: 140px;" title="{{ w.payout_details }}">{{ w.payout_details }}</td>
                       <td>
                         <span class="badge badge-{{ w.status }}">{{ w.status|capitalize }}</span>

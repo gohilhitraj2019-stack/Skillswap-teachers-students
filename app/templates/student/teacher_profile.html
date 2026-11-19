@@ -91,17 +91,31 @@
         <div class="d-flex justify-content-between align-items-center mb-3">
           <span class="text-muted small text-uppercase" style="letter-spacing: 0.04em;">Session Rate:</span>
           <div>
-            <span class="fs-3 fw-bold text-dark">{{ profile.hourly_rate }}</span>
-            <span class="text-muted small">Cr / Session</span>
+            <span class="fs-3 fw-bold text-dark">{{ profile.hourly_rate | inr }}</span>
+            <span class="text-muted small">/ Session</span>
           </div>
         </div>
 
+        {% if profile.has_free_sessions %}
+          <div class="alert alert-success py-2 px-3 small mb-3 border d-flex align-items-center gap-2">
+            <i class="bi bi-gift-fill text-success fs-5"></i>
+            <div>
+              <strong>{{ profile.free_sessions_remaining }} Free Trial Session{{ 's' if profile.free_sessions_remaining > 1 else '' }} Available!</strong>
+              <div class="text-muted" style="font-size: 0.75rem;">Eligible new students can book 1 free trial session.</div>
+            </div>
+          </div>
+        {% endif %}
+
         <div class="alert alert-light border small text-muted mb-4">
-          <i class="bi bi-shield-check text-primary me-1"></i> Credits are held in escrow and settled only after you complete the live session.
+          <i class="bi bi-shield-check text-primary me-1"></i> Funds are held securely in escrow and settled only after you complete the live session.
         </div>
 
-        <a href="{{ url_for('booking.book_class', teacher_id=profile.user_id) }}" class="btn btn-dark w-100 py-2 mb-4">
-          Schedule 1-on-1 Session
+        <a href="{{ url_for('booking.book_class', teacher_id=profile.user_id) }}" class="btn btn-dark w-100 py-2 mb-4 fw-semibold">
+          {% if profile.has_free_sessions %}
+            <i class="bi bi-gift me-1 text-warning"></i> Book Session (Free Trial Available)
+          {% else %}
+            Schedule 1-on-1 Session
+          {% endif %}
         </a>
 
         <!-- Teacher's Weekly Available Schedule -->

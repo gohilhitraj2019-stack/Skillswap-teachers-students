@@ -21,6 +21,10 @@ class TeacherProfile(db.Model):
     review_count = db.Column(db.Integer, default=0, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
+    # Free Sessions Offering (1 to 10 sessions)
+    free_sessions_offered = db.Column(db.Integer, default=3, nullable=False)
+    free_sessions_completed = db.Column(db.Integer, default=0, nullable=False)
+
     # Personal Information fields
     dob = db.Column(db.Date, nullable=True)
     gender = db.Column(db.String(20), nullable=True)  # Male, Female, Other, Prefer not to say
@@ -49,6 +53,16 @@ class TeacherProfile(db.Model):
     @property
     def display_name(self):
         return self.user.name if self.user else "Teacher"
+
+    @property
+    def free_sessions_remaining(self):
+        offered = self.free_sessions_offered if self.free_sessions_offered is not None else 3
+        completed = self.free_sessions_completed if self.free_sessions_completed is not None else 0
+        return max(0, offered - completed)
+
+    @property
+    def has_free_sessions(self):
+        return self.free_sessions_remaining > 0
 
     def recalculate_rating(self):
         from app.models.review import Review

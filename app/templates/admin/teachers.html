@@ -44,6 +44,7 @@
                 <th>Instructor</th>
                 <th>Title & Experience</th>
                 <th>Rate</th>
+                <th>Free Sessions</th>
                 <th>Skills</th>
                 <th>Proof / Portfolio</th>
                 <th>Status</th>
@@ -63,7 +64,13 @@
                     <div class="small text-muted">{{ t.experience_years }} yrs exp · {{ t.languages }}</div>
                   </td>
                   <td>
-                    <span class="fw-semibold text-dark">{{ t.hourly_rate }} Cr/hr</span>
+                    <span class="fw-semibold text-dark">{{ t.hourly_rate | inr }}/hr</span>
+                  </td>
+                  <td>
+                    <span class="badge bg-light text-dark border">
+                      {{ t.free_sessions_remaining }} / {{ t.free_sessions_offered or 3 }} left
+                    </span>
+                    <div class="small text-muted" style="font-size: 0.72rem;">{{ t.free_sessions_completed or 0 }} completed</div>
                   </td>
                   <td>
                     <div style="max-width: 200px;">
@@ -295,7 +302,34 @@
                               </div>
                             </div>
 
-                            <!-- 5. Configured Rates -->
+                            <!-- 5. Free Session Policy & Stats -->
+                            <div class="card bg-light border p-3 mb-4 rounded-3">
+                              <h6 class="fw-bold text-dark small text-uppercase mb-2" style="letter-spacing: 0.04em;">
+                                <i class="bi bi-gift text-success me-1"></i> Free Trial Session Policy & Stats
+                              </h6>
+                              <div class="row g-2 text-center">
+                                <div class="col-4">
+                                  <div class="bg-white border rounded p-2">
+                                    <div class="text-muted small" style="font-size: 0.72rem;">Offered Allowance</div>
+                                    <div class="fw-bold fs-6 text-dark">{{ t.free_sessions_offered or 3 }} Sessions</div>
+                                  </div>
+                                </div>
+                                <div class="col-4">
+                                  <div class="bg-white border rounded p-2">
+                                    <div class="text-muted small" style="font-size: 0.72rem;">Completed Sessions</div>
+                                    <div class="fw-bold fs-6 text-primary">{{ t.free_sessions_completed or 0 }}</div>
+                                  </div>
+                                </div>
+                                <div class="col-4">
+                                  <div class="bg-white border rounded p-2">
+                                    <div class="text-muted small" style="font-size: 0.72rem;">Remaining Available</div>
+                                    <div class="fw-bold fs-6 text-success">{{ t.free_sessions_remaining }}</div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            <!-- 6. Configured Rates -->
                             <h6 class="fw-bold text-dark small text-uppercase mb-2" style="letter-spacing: 0.04em;">
                               <i class="bi bi-tag text-primary me-1"></i> Configured Teaching Rates ({{ t.rates|length }})
                             </h6>
@@ -329,7 +363,7 @@
                                 </table>
                               </div>
                             {% else %}
-                              <div class="small text-muted mb-2">No individual subject rates configured yet. Default hourly rate: {{ t.hourly_rate }} Cr/hr.</div>
+                              <div class="small text-muted mb-2">No individual subject rates configured yet. Default hourly rate: {{ t.hourly_rate | inr }}/hr.</div>
                             {% endif %}
 
                           </div>

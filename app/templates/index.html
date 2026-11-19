@@ -15,7 +15,7 @@
           Master new skills with focused, 1-on-1 technical coaching.
         </h1>
         <p class="hero-subtitle-clean mb-4">
-          Connect directly with industry practitioners for live video sessions, portfolio reviews, and code debugging. Book securely with escrow-backed platform credits.
+          Connect directly with industry practitioners for live video sessions, portfolio reviews, and code debugging. Book securely with escrow-backed Indian Rupee (₹) payments or claim free trial sessions.
         </p>
 
         <!-- Search Bar Widget -->
@@ -76,7 +76,7 @@
           <div class="row g-2 text-center small">
             <div class="col-4">
               <div class="p-2 border rounded bg-light">
-                <div class="fw-bold text-dark">50 Cr</div>
+                <div class="fw-bold text-dark">₹500</div>
                 <div class="text-muted" style="font-size: 0.7rem;">Session Fee</div>
               </div>
             </div>
@@ -112,8 +112,8 @@
         <div class="metric-strip-lbl">Private video coaching</div>
       </div>
       <div class="col-6 col-md-3 metric-strip-item">
-        <div class="metric-strip-val">50 Credits</div>
-        <div class="metric-strip-lbl">Free trial welcome bonus</div>
+        <div class="metric-strip-val">₹500 Bonus</div>
+        <div class="metric-strip-lbl">Welcome bonus & free trial classes</div>
       </div>
       <div class="col-6 col-md-3 metric-strip-item">
         <div class="metric-strip-val">20%</div>
@@ -204,8 +204,11 @@
 
             <div class="d-flex align-items-center justify-content-between pt-3 border-top mt-auto">
               <div>
-                <span class="price-display">{{ teacher.hourly_rate }}</span>
-                <span class="text-muted small">Cr / Session</span>
+                <span class="price-display">{{ teacher.hourly_rate | inr }}</span>
+                <span class="text-muted small">/ Session</span>
+                {% if teacher.has_free_sessions %}
+                  <div><span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.65rem;">Free Trial Available</span></div>
+                {% endif %}
               </div>
               <div class="d-flex gap-2">
                 <a href="{{ url_for('student.teacher_profile', teacher_id=teacher.user_id) }}" class="btn btn-outline-secondary btn-sm py-1 px-3">
@@ -228,15 +231,15 @@
   <div class="container">
     <div class="text-center mb-5" style="max-width: 650px; margin: 0 auto;">
       <h3 class="fw-bold mb-2">How SkillSwap Works</h3>
-      <p class="text-muted small">Our escrow credit model protects both learners and mentors throughout the booking and completion lifecycle.</p>
+      <p class="text-muted small">Our escrow payment model protects both learners and mentors throughout the booking and completion lifecycle.</p>
     </div>
 
     <div class="row g-4">
       <div class="col-md-4">
         <div class="p-4 border rounded-3 h-100 bg-white">
           <div class="text-primary fw-bold font-monospace mb-2" style="font-size: 0.9rem;">STEP 01</div>
-          <h5 class="fw-bold mb-2">Select Instructor & Hold Credits</h5>
-          <p class="text-muted small mb-0">Browse verified mentors, check their open schedule, and select an hourly time slot. Required credits are held in escrow—never deducted until the class is complete.</p>
+          <h5 class="fw-bold mb-2">Select Instructor & Book Session</h5>
+          <p class="text-muted small mb-0">Browse verified mentors, check their open schedule, and select an hourly time slot or eligible free trial session. Paid session fees are held safely in escrow—never deducted until the class is complete.</p>
         </div>
       </div>
 
@@ -252,7 +255,7 @@
         <div class="p-4 border rounded-3 h-100 bg-white">
           <div class="text-primary fw-bold font-monospace mb-2" style="font-size: 0.9rem;">STEP 03</div>
           <h5 class="fw-bold mb-2">Safe Settlement & Cash Out</h5>
-          <p class="text-muted small mb-0">When the class finishes, credits are automatically settled: the instructor receives their net earnings, and can withdraw directly to their bank account or UPI.</p>
+          <p class="text-muted small mb-0">When the class finishes, funds are automatically settled: the instructor receives their net earnings, and can withdraw directly to their bank account or UPI.</p>
         </div>
       </div>
     </div>
@@ -268,7 +271,7 @@
           <span class="badge bg-white bg-opacity-10 text-white border border-white border-opacity-20 mb-3 px-3 py-1">Teach on SkillSwap</span>
           <h2 class="fw-bold mb-3 text-white">Monetize your technical and design expertise.</h2>
           <p class="text-white-50 mb-0" style="max-width: 620px; font-size: 1.05rem; line-height: 1.6;">
-            Set your own hourly credit pricing, define your calendar availability, and mentor students 1-on-1 worldwide. Withdraw your earnings easily with full payout transparency.
+            Set your own hourly pricing in INR (₹), offer free trial sessions, define your calendar availability, and mentor students 1-on-1 worldwide. Withdraw your earnings easily with full payout transparency.
           </p>
         </div>
         <div class="col-lg-4 text-lg-end">
