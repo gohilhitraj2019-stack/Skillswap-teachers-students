@@ -66,7 +66,7 @@ class User(UserMixin, db.Model):
 
     @property
     def is_super_admin(self):
-        return self.role == 'super_admin'
+        return self.is_admin
 
     @property
     def is_admin(self):

@@ -150,8 +150,7 @@ def test_scenario_7_super_admin_full_access(client, app):
 
 def test_scenario_8_regular_admin_access_and_boundaries(client, app):
     """
-    Verify Regular Admin has access to operations (users, teachers, bookings)
-    but cannot alter system settings.
+    Verify Unified Admin has full access to operations, system settings, and audit logs.
     """
     admin_prefix = app.config['ADMIN_ROUTE_PREFIX']
     client.post('/login', data={'email': 'admin@test.com', 'password': 'Admin@123'}, follow_redirects=True)
@@ -160,20 +159,20 @@ def test_scenario_8_regular_admin_access_and_boundaries(client, app):
     dash = client.get(f'{admin_prefix}/dashboard')
     assert dash.status_code == 200
 
-    # Regular admin viewing settings is permitted
+    # Admin viewing settings is permitted
     settings_view = client.get(f'{admin_prefix}/settings')
     assert settings_view.status_code == 200
 
-    # Regular admin POSTing to update system settings is rejected with 403
+    # Admin POSTing to update system settings is permitted
     update_attempt = client.post(f'{admin_prefix}/settings', data={
         'action': 'update_settings',
         'commission_percent': '50'
-    })
-    assert update_attempt.status_code == 403
+    }, follow_redirects=True)
+    assert update_attempt.status_code == 200
 
-    # Regular admin accessing audit logs is rejected (403)
+    # Admin accessing audit logs is permitted
     logs_resp = client.get(f'{admin_prefix}/audit-logs')
-    assert logs_resp.status_code == 403
+    assert logs_resp.status_code == 200
 
 def test_scenario_9_existing_student_and_teacher_dashboards_continue_working(client):
     """

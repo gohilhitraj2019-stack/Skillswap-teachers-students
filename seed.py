@@ -99,30 +99,14 @@ def seed_database():
         db.session.commit()
 
         # 4. Users & Roles
-        # Super Admin Account
-        super_admin = User.query.filter_by(email="superadmin@skillswap.com").first()
-        if not super_admin:
-            super_admin = User(
-                name="Platform Super Administrator",
-                email="superadmin@skillswap.com",
-                phone="+91 9876543200",
-                role="super_admin",
-                is_active=True
-            )
-            super_admin.set_password("SuperAdmin@123")
-            db.session.add(super_admin)
-            db.session.flush()
-            ensure_wallet(super_admin.id)
-            print("  ✓ Created Super Admin: superadmin@skillswap.com / SuperAdmin@123")
-
-        # Admin Account
+        # Single Admin Account (Unified Platform Administrator)
         admin = User.query.filter_by(email="admin@skillswap.com").first()
         if not admin:
             admin = User(
                 name="Platform Administrator",
                 email="admin@skillswap.com",
                 phone="+91 9876543210",
-                role="super_admin",
+                role="admin",
                 is_active=True
             )
             admin.set_password("Admin@123")
@@ -130,6 +114,17 @@ def seed_database():
             db.session.flush()
             ensure_wallet(admin.id)
             print("  ✓ Created Admin: admin@skillswap.com / Admin@123")
+        else:
+            admin.role = "admin"
+            admin.set_password("Admin@123")
+            db.session.commit()
+
+        # Remove any legacy superadmin account if present
+        legacy_superadmin = User.query.filter_by(email="superadmin@skillswap.com").first()
+        if legacy_superadmin:
+            db.session.delete(legacy_superadmin)
+            db.session.commit()
+            print("  ✓ Removed legacy Super Admin: superadmin@skillswap.com")
 
         # Teacher 1 (Sarah Jenkins - Python & Full Stack)
         t1_user = User.query.filter_by(email="sarah.dev@skillswap.com").first()

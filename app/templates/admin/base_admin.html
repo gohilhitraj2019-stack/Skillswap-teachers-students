@@ -201,7 +201,7 @@
             </div>
             <div class="admin-meta d-none d-md-flex">
               <span class="admin-name">{{ current_user.name.split()[0] }}</span>
-              <span class="admin-role-badge">{{ 'Super Admin' if current_user.is_super_admin else 'Admin' }}</span>
+              <span class="admin-role-badge">Admin</span>
             </div>
           </button>
           
@@ -210,7 +210,7 @@
               <div class="fw-bold text-dark">{{ current_user.name }}</div>
               <div class="small text-muted text-truncate">{{ current_user.email }}</div>
               <span class="badge bg-light text-dark border mt-1 font-monospace" style="font-size: 0.65rem;">
-                {{ 'SUPER ADMIN' if current_user.is_super_admin else 'ADMINISTRATOR' }}
+                ADMINISTRATOR
               </span>
             </li>
             <li><hr class="dropdown-divider my-1"></li>
@@ -219,13 +219,11 @@
                 <i data-lucide="sliders" class="bi bi-sliders text-secondary me-2"></i> Commission & Settings
               </a>
             </li>
-            {% if current_user.is_super_admin %}
             <li>
               <a class="dropdown-item py-2 small" href="{{ url_for('admin.audit_logs') }}">
                 <i data-lucide="shield-check" class="bi bi-shield-check text-danger me-2"></i> Security Audit Logs
               </a>
             </li>
-            {% endif %}
             <li>
               <a class="dropdown-item py-2 small" href="{{ url_for('student.dashboard') }}">
                 <i data-lucide="grid" class="bi bi-grid text-primary me-2"></i> Student Workspace

@@ -56,26 +56,27 @@ def require_admin(f):
 
 def require_super_admin(f):
     """
-    Ensure user is authenticated and holds Super Admin privileges.
+    Ensure user is authenticated and holds Administrator privileges.
+    Consolidated into unified admin privileges.
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not current_user.is_authenticated:
             if is_api_request():
                 return jsonify({'error': 'Unauthorized', 'message': 'Authentication required.'}), 401
-            flash('Super Administrator login required.', 'warning')
+            flash('Administrator login required.', 'warning')
             return redirect(url_for('auth.login', next=request.path))
 
-        if not current_user.is_super_admin:
+        if not current_user.is_admin:
             AdminAuditLog.log(
-                action='UNAUTHORIZED_SUPER_ADMIN_ATTEMPT',
+                action='UNAUTHORIZED_ADMIN_ATTEMPT',
                 admin=current_user,
                 ip_address=request.remote_addr,
                 user_agent=request.user_agent.string if request.user_agent else None,
-                details=f"Denied Super Admin action on {request.path} for role {current_user.role}"
+                details=f"Denied Admin action on {request.path} for role {current_user.role}"
             )
             if is_api_request():
-                return jsonify({'error': 'Forbidden', 'message': 'Super Administrator privileges required.'}), 403
+                return jsonify({'error': 'Forbidden', 'message': 'Administrator privileges required.'}), 403
             abort(403)
 
         return f(*args, **kwargs)

@@ -65,9 +65,7 @@
                 {% endif %}
               </td>
               <td>
-                {% if log.admin_role == 'super_admin' %}
-                  <span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size: 0.65rem;">Super Admin</span>
-                {% elif log.admin_role == 'admin' %}
+                {% if log.admin_role in ('admin', 'super_admin') %}
                   <span class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size: 0.65rem;">Admin</span>
                 {% else %}
                   <span class="badge bg-light text-muted border" style="font-size: 0.65rem;">{{ log.admin_role }}</span>
