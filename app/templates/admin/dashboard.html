@@ -22,12 +22,12 @@
         <a href="{{ url_for('admin.withdrawals', status='pending') }}" class="btn btn-outline-secondary btn-sm">
           Payout Requests ({{ pending_withdrawals }})
         </a>
+        <a href="{{ url_for('admin.settings') }}" class="btn btn-dark btn-sm">
+          <i class="bi bi-sliders me-1"></i> Commission & Settings
+        </a>
         {% if current_user.is_super_admin %}
         <a href="{{ url_for('admin.audit_logs') }}" class="btn btn-outline-danger btn-sm">
           <i class="bi bi-shield-check me-1"></i> Audit Logs
-        </a>
-        <a href="{{ url_for('admin.settings') }}" class="btn btn-dark btn-sm">
-          <i class="bi bi-sliders me-1"></i> System Settings
         </a>
         {% endif %}
       </div>
@@ -69,14 +69,19 @@
       </div>
 
       <div class="col-sm-6 col-lg-3">
-        <div class="kpi-card">
-          <div>
-            <div class="kpi-title">Commission Retained</div>
-            <div class="kpi-value text-dark">{{ total_commission_inr | inr }}</div>
-            <div class="small text-muted mt-1">Platform service share</div>
+        <a href="{{ url_for('admin.settings') }}" class="text-decoration-none">
+          <div class="kpi-card h-100">
+            <div>
+              <div class="kpi-title d-flex align-items-center justify-content-between">
+                <span>Commission Retained</span>
+                <i class="bi bi-arrow-up-right text-muted" style="font-size: 0.75rem;"></i>
+              </div>
+              <div class="kpi-value text-dark">{{ total_commission_inr | inr }}</div>
+              <div class="small text-muted mt-1">Platform rate: <strong>{{ settings.commission_percent }}%</strong> (Manage)</div>
+            </div>
+            <div class="kpi-icon"><i class="bi bi-percent text-primary"></i></div>
           </div>
-          <div class="kpi-icon"><i class="bi bi-percent text-primary"></i></div>
-        </div>
+        </a>
       </div>
     </div>
 
@@ -88,9 +93,9 @@
         <a href="{{ url_for('admin.bookings') }}" class="btn btn-light btn-sm text-dark"><i class="bi bi-calendar-check me-1"></i> Bookings</a>
         <a href="{{ url_for('admin.transactions') }}" class="btn btn-light btn-sm text-dark"><i class="bi bi-receipt me-1"></i> Ledger & Wallets</a>
         <a href="{{ url_for('admin.withdrawals') }}" class="btn btn-light btn-sm text-dark"><i class="bi bi-bank me-1"></i> Withdrawals</a>
+        <a href="{{ url_for('admin.settings') }}" class="btn btn-light btn-sm text-dark"><i class="bi bi-sliders me-1"></i> Commission & Settings</a>
         {% if current_user.is_super_admin %}
         <a href="{{ url_for('admin.audit_logs') }}" class="btn btn-light btn-sm text-dark"><i class="bi bi-shield-check me-1"></i> Audit Logs</a>
-        <a href="{{ url_for('admin.settings') }}" class="btn btn-light btn-sm text-dark"><i class="bi bi-gear me-1"></i> Parameters</a>
         {% endif %}
       </div>
     </div>

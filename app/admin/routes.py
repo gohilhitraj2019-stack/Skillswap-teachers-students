@@ -105,6 +105,7 @@ def dashboard():
     recent_bookings = Booking.query.order_by(Booking.created_at.desc()).limit(6).all()
     recent_transactions = CreditTransaction.query.order_by(CreditTransaction.created_at.desc()).limit(8).all()
     pending_teachers = TeacherProfile.query.filter_by(approval_status='pending').all()
+    settings = PlatformSettings.get_settings()
 
     return render_template(
         'admin/dashboard.html',
@@ -118,7 +119,8 @@ def dashboard():
         total_commission_inr=total_commission_inr,
         recent_bookings=recent_bookings,
         recent_transactions=recent_transactions,
-        pending_teachers=pending_teachers
+        pending_teachers=pending_teachers,
+        settings=settings
     )
 
 

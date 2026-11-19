@@ -122,7 +122,7 @@ def seed_database():
                 name="Platform Administrator",
                 email="admin@skillswap.com",
                 phone="+91 9876543210",
-                role="admin",
+                role="super_admin",
                 is_active=True
             )
             admin.set_password("Admin@123")
